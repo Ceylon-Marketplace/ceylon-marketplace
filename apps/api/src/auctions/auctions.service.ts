@@ -30,6 +30,7 @@ export class AuctionsService {
   ) {
     const listing = await this.prisma.listing.findUnique({
       where: { id: data.listingId },
+      include: { auction: true },
     });
     if (!listing) throw new NotFoundException("Listing not found");
     if (listing.sellerId !== sellerId) throw new ForbiddenException();

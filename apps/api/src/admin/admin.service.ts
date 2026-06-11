@@ -68,7 +68,6 @@ export class AdminService {
           subscription: { include: { plan: true } },
           _count: { select: { listings: true, bids: true } },
         },
-        omit: { passwordHash: true },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
         take: limit,
@@ -76,7 +75,8 @@ export class AdminService {
       this.prisma.user.count({ where }),
     ]);
 
-    return { users, total, page, limit };
+    const safeUsers = users.map(({ passwordHash: _, ...u }) => u);
+    return { users: safeUsers, total, page, limit };
   }
 
   async moderateListing(

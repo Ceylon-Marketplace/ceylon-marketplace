@@ -100,14 +100,16 @@ export class AuthService {
   }
 
   async getMe(userId: string) {
-    return this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
         profile: true,
         subscription: { include: { plan: true } },
         storefront: true,
       },
-      omit: { passwordHash: true },
     });
+    if (!user) return null;
+    const { passwordHash: _, ...safeUser } = user;
+    return safeUser;
   }
 }

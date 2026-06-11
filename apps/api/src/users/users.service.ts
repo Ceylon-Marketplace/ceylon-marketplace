@@ -18,10 +18,10 @@ export class UsersService {
           },
         },
       },
-      omit: { passwordHash: true },
     });
     if (!user) throw new NotFoundException("User not found");
-    return user;
+    const { passwordHash: _, ...safeUser } = user;
+    return safeUser;
   }
 
   async updateProfile(
@@ -59,10 +59,10 @@ export class UsersService {
           },
         },
       },
-      omit: { passwordHash: true, email: true },
     });
     if (!user) throw new NotFoundException("User not found");
-    return user;
+    const { passwordHash: _, email: __, ...safeUser } = user;
+    return safeUser;
   }
 
   async blockUser(blockerId: string, blockedId: string) {
