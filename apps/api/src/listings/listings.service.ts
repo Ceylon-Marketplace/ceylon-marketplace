@@ -16,16 +16,10 @@ export class ListingsService {
     await this.checkCanCreateListing(sellerId);
     await this.checkDuplicate(sellerId, dto.title);
 
-    const mediaCount =
-      (dto.media?.filter((m) => m.type === "IMAGE").length ?? 0) +
-      (dto.media?.filter((m) => m.type === "VIDEO").length ?? 0);
     const imageCount = dto.media?.filter((m) => m.type === "IMAGE").length ?? 0;
     const videoCount = dto.media?.filter((m) => m.type === "VIDEO").length ?? 0;
-
-    if (imageCount > 20)
-      throw new BadRequestException("Maximum 20 images allowed");
-    if (videoCount > 3)
-      throw new BadRequestException("Maximum 3 videos allowed");
+    if (imageCount > 20) throw new BadRequestException("Maximum 20 images allowed");
+    if (videoCount > 3) throw new BadRequestException("Maximum 3 videos allowed");
 
     return this.prisma.listing.create({
       data: {
@@ -40,31 +34,34 @@ export class ListingsService {
         listingType: dto.listingType ?? "FIXED_PRICE",
         status: "PENDING_REVIEW",
         media: dto.media
-          ? {
-              create: dto.media.map((m) => ({
-                url: m.url,
-                type: m.type,
-                order: m.order,
-              })),
-            }
+          ? { create: dto.media.map((m) => ({ url: m.url, type: m.type, order: m.order })) }
+          : undefined,
+        attributeValues: dto.attributes
+          ? { create: dto.attributes.map((a) => ({ attributeId: a.attributeId, value: a.value })) }
           : undefined,
       },
-      include: { media: true, category: true },
+      include: {
+        media: { orderBy: { order: "asc" } },
+        category: true,
+        attributeValues: { include: { attribute: true } },
+      },
     });
   }
 
   async search(params: {
     keyword?: string;
     categoryId?: string;
+    sellerId?: string;
     minPrice?: number;
     maxPrice?: number;
     location?: string;
     condition?: string;
     listingType?: string;
+    sortBy?: string;
     page?: number;
     limit?: number;
   }) {
-    const { page = 1, limit = 20 } = params;
+    const { page = 1, limit = 24 } = params;
     const skip = (page - 1) * limit;
 
     const where: any = {
@@ -76,11 +73,11 @@ export class ListingsService {
         ],
       }),
       ...(params.categoryId && { categoryId: params.categoryId }),
-      ...(params.minPrice !== undefined && {
-        price: { gte: params.minPrice },
-      }),
-      ...(params.maxPrice !== undefined && {
-        price: { lte: params.maxPrice },
+      ...(params.sellerId && { sellerId: params.sellerId }),
+      ...(params.minPrice !== undefined && { price: { gte: params.minPrice } }),
+      ...(params.maxPrice !== undefined && { price: { lte: params.maxPrice } }),
+      ...(params.minPrice !== undefined && params.maxPrice !== undefined && {
+        price: { gte: params.minPrice, lte: params.maxPrice },
       }),
       ...(params.location && {
         location: { contains: params.location, mode: "insensitive" },
@@ -88,6 +85,8 @@ export class ListingsService {
       ...(params.condition && { condition: params.condition }),
       ...(params.listingType && { listingType: params.listingType }),
     };
+
+    const orderBy = this.buildOrderBy(params.sortBy);
 
     const [listings, total] = await Promise.all([
       this.prisma.listing.findMany({
@@ -97,7 +96,7 @@ export class ListingsService {
           category: true,
           seller: { include: { profile: true } },
         },
-        orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+        orderBy,
         skip,
         take: limit,
       }),
@@ -112,9 +111,10 @@ export class ListingsService {
       where: { id },
       include: {
         media: { orderBy: { order: "asc" } },
-        category: { include: { parent: true } },
+        category: { include: { parent: true, attributes: true } },
         seller: { include: { profile: true, storefront: true } },
         auction: true,
+        attributeValues: { include: { attribute: true } },
       },
     });
     if (!listing) throw new NotFoundException("Listing not found");
@@ -122,25 +122,50 @@ export class ListingsService {
     if (listing.status !== "ACTIVE" && listing.sellerId !== userId)
       throw new NotFoundException("Listing not found");
 
-    // Increment view count
     await this.prisma.listing.update({
       where: { id },
       data: { viewCount: { increment: 1 } },
     });
 
-    return listing;
+    let isSaved = false;
+    if (userId) {
+      const saved = await this.prisma.savedListing.findUnique({
+        where: { userId_listingId: { userId, listingId: id } },
+      });
+      isSaved = !!saved;
+    }
+
+    return { ...listing, isSaved };
   }
 
-  async update(id: string, sellerId: string, data: Partial<CreateListingDto>) {
+  async update(
+    id: string,
+    sellerId: string,
+    data: Partial<CreateListingDto> & {
+      mediaToAdd?: { url: string; type: "IMAGE" | "VIDEO"; order: number }[];
+      mediaToRemove?: string[];
+    },
+  ) {
     const listing = await this.prisma.listing.findUnique({ where: { id } });
     if (!listing) throw new NotFoundException("Listing not found");
     if (listing.sellerId !== sellerId) throw new ForbiddenException();
-
-    if (listing.status === "ACTIVE" || listing.status === "SOLD")
-      throw new ForbiddenException("Cannot edit an active or sold listing");
+    if (listing.status === "SOLD" || listing.status === "ARCHIVED")
+      throw new ForbiddenException("Cannot edit a sold or archived listing");
 
     if (data.title && (data.title.length < 10 || data.title.length > 120))
-      throw new BadRequestException("Title must be 10-120 characters");
+      throw new BadRequestException("Title must be 10–120 characters");
+
+    // Handle media removals
+    if (data.mediaToRemove?.length) {
+      await this.prisma.listingMedia.deleteMany({
+        where: { id: { in: data.mediaToRemove }, listingId: id },
+      });
+    }
+
+    // Handle attribute updates: delete existing and recreate
+    if (data.attributes !== undefined) {
+      await this.prisma.listingAttributeValue.deleteMany({ where: { listingId: id } });
+    }
 
     return this.prisma.listing.update({
       where: { id },
@@ -148,9 +173,22 @@ export class ListingsService {
         ...(data.title && { title: data.title }),
         ...(data.description && { description: data.description }),
         ...(data.price !== undefined && { price: data.price }),
+        ...(data.quantity !== undefined && { quantity: data.quantity }),
         ...(data.location && { location: data.location }),
         ...(data.condition && { condition: data.condition }),
+        ...(data.listingType && { listingType: data.listingType }),
         status: "PENDING_REVIEW",
+        media: data.mediaToAdd?.length
+          ? { create: data.mediaToAdd.map((m) => ({ url: m.url, type: m.type, order: m.order })) }
+          : undefined,
+        attributeValues: data.attributes?.length
+          ? { create: data.attributes.map((a) => ({ attributeId: a.attributeId, value: a.value })) }
+          : undefined,
+      },
+      include: {
+        media: { orderBy: { order: "asc" } },
+        category: true,
+        attributeValues: { include: { attribute: true } },
       },
     });
   }
@@ -196,6 +234,7 @@ export class ListingsService {
           include: {
             media: { orderBy: { order: "asc" }, take: 1 },
             category: true,
+            seller: { include: { profile: true } },
           },
         },
       },
@@ -206,7 +245,11 @@ export class ListingsService {
   async getMyListings(sellerId: string, status?: ListingStatus) {
     return this.prisma.listing.findMany({
       where: { sellerId, ...(status && { status }) },
-      include: { media: { take: 1 }, category: true },
+      include: {
+        media: { orderBy: { order: "asc" }, take: 1 },
+        category: true,
+        _count: { select: { offers: true } },
+      },
       orderBy: { createdAt: "desc" },
     });
   }
@@ -221,54 +264,47 @@ export class ListingsService {
     });
   }
 
+  private buildOrderBy(sortBy?: string) {
+    switch (sortBy) {
+      case "price_asc":
+        return [{ price: "asc" as const }];
+      case "price_desc":
+        return [{ price: "desc" as const }];
+      case "oldest":
+        return [{ createdAt: "asc" as const }];
+      case "most_viewed":
+        return [{ viewCount: "desc" as const }];
+      default:
+        return [{ isFeatured: "desc" as const }, { createdAt: "desc" as const }];
+    }
+  }
+
   private async checkCanCreateListing(sellerId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: sellerId },
       include: { subscription: { include: { plan: true } } },
     });
-
     if (!user) throw new NotFoundException("User not found");
 
-    if (user.role !== "SELLER" && user.role !== "BUSINESS_SELLER") {
-      throw new ForbiddenException(
-        "Only sellers can create listings. Please upgrade your account.",
-      );
-    }
+    if (user.role !== "SELLER" && user.role !== "BUSINESS_SELLER")
+      throw new ForbiddenException("Only sellers can create listings. Please upgrade your account.");
 
-    if (!user.subscription) {
-      throw new ForbiddenException(
-        "An active subscription is required to create listings.",
-      );
-    }
+    if (!user.subscription)
+      throw new ForbiddenException("An active subscription is required to create listings.");
 
-    if (
-      user.subscription.status !== "ACTIVE" &&
-      user.subscription.status !== "GRACE_PERIOD"
-    ) {
-      throw new ForbiddenException(
-        "Your subscription has expired. Renew to create new listings.",
-      );
-    }
+    if (user.subscription.status !== "ACTIVE" && user.subscription.status !== "GRACE_PERIOD")
+      throw new ForbiddenException("Your subscription has expired. Renew to create new listings.");
 
-    if (user.subscription.status === "GRACE_PERIOD") {
-      throw new ForbiddenException(
-        "Subscription expired. Existing listings remain active during grace period but you cannot create new ones.",
-      );
-    }
+    if (user.subscription.status === "GRACE_PERIOD")
+      throw new ForbiddenException("Subscription expired. Renew to create new listings.");
 
-    // Check listing count against plan limit
     const activeCount = await this.prisma.listing.count({
-      where: {
-        sellerId,
-        status: { in: ["ACTIVE", "PENDING_REVIEW", "APPROVED"] },
-      },
+      where: { sellerId, status: { in: ["ACTIVE", "PENDING_REVIEW", "APPROVED"] } },
     });
-
-    if (activeCount >= user.subscription.plan.maxListings) {
+    if (activeCount >= user.subscription.plan.maxListings)
       throw new ForbiddenException(
         `Your plan allows a maximum of ${user.subscription.plan.maxListings} active listings.`,
       );
-    }
   }
 
   private async checkDuplicate(sellerId: string, title: string) {
@@ -279,9 +315,6 @@ export class ListingsService {
         status: { notIn: ["ARCHIVED", "SOLD"] },
       },
     });
-    if (existing)
-      throw new BadRequestException(
-        "A listing with this title already exists.",
-      );
+    if (existing) throw new BadRequestException("A listing with this title already exists.");
   }
 }

@@ -11,18 +11,24 @@ interface ListingCardProps {
     location: string;
     condition: string;
     status: string;
+    listingType?: string;
     viewCount: number;
     saveCount: number;
     isFeatured: boolean;
     createdAt: string;
     media: { url: string; type: string }[];
     category: { name: string };
-    seller: {
+    seller?: {
       id: string;
       profile: { firstName: string; lastName: string } | null;
     };
   };
 }
+
+const TYPE_BADGES: Record<string, { label: string; cls: string }> = {
+  OFFER: { label: "Offers", cls: "bg-blue-500 text-white" },
+  AUCTION: { label: "Auction", cls: "bg-brand-500 text-white" },
+};
 
 const CONDITION_LABELS: Record<string, string> = {
   NEW: "New",
@@ -59,6 +65,11 @@ export function ListingCard({ listing }: ListingCardProps) {
         {listing.isFeatured && (
           <span className="absolute left-2 top-2 badge bg-brand-500 text-white">
             Featured
+          </span>
+        )}
+        {listing.listingType && TYPE_BADGES[listing.listingType] && (
+          <span className={`absolute left-2 bottom-2 badge ${TYPE_BADGES[listing.listingType].cls}`}>
+            {TYPE_BADGES[listing.listingType].label}
           </span>
         )}
         <span className="absolute right-2 top-2 badge bg-white text-gray-700 shadow">

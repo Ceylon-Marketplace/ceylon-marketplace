@@ -27,13 +27,13 @@ export class ListingsController {
   @Get("saved")
   @UseGuards(JwtAuthGuard)
   getSaved(@CurrentUser() user: any) {
-    return this.listingsService.getSavedListings(user.id);
+    return this.listingsService.getSavedListings(user.sub);
   }
 
   @Get("mine")
   @UseGuards(JwtAuthGuard)
   getMine(@CurrentUser() user: any, @Query("status") status?: any) {
-    return this.listingsService.getMyListings(user.id, status);
+    return this.listingsService.getMyListings(user.sub, status);
   }
 
   @Get()
@@ -41,13 +41,15 @@ export class ListingsController {
     return this.listingsService.search({
       keyword: query.keyword,
       categoryId: query.categoryId,
+      sellerId: query.sellerId,
       minPrice: query.minPrice ? Number(query.minPrice) : undefined,
       maxPrice: query.maxPrice ? Number(query.maxPrice) : undefined,
       location: query.location,
       condition: query.condition,
       listingType: query.listingType,
+      sortBy: query.sortBy,
       page: query.page ? Number(query.page) : 1,
-      limit: query.limit ? Number(query.limit) : 20,
+      limit: query.limit ? Number(query.limit) : 24,
     });
   }
 

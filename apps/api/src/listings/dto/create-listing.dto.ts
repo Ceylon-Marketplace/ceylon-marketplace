@@ -42,4 +42,8 @@ export class CreateListingDto {
   @IsArray()
   @IsOptional()
   media?: { url: string; type: "IMAGE" | "VIDEO"; order: number }[];
+
+  @IsArray()
+  @IsOptional()
+  attributes?: { attributeId: string; value: string }[];
 }

@@ -261,7 +261,8 @@ model CategoryAttribute {
   required   Boolean  @default(false)
   options    String[]
 
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category        Category               @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  listingValues   ListingAttributeValue[]
 }
 
 model Listing {
@@ -309,12 +310,13 @@ model ListingMedia {
 }
 
 model ListingAttributeValue {
-  id          String   @id @default(cuid())
+  id          String            @id @default(cuid())
   listingId   String
   attributeId String
   value       String
 
-  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listing     Listing           @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  attribute   CategoryAttribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
 }
 
 model SavedListing {
