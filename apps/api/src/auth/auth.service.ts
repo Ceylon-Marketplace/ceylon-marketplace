@@ -28,6 +28,7 @@ export class AuthService {
       data: {
         email: dto.email,
         passwordHash,
+        role: dto.role ?? "USER",
         verificationLevel: "EMAIL",
         profile: {
           create: {

@@ -6,6 +6,7 @@ import {
   Length,
   Min,
   IsArray,
+  IsIn,
 } from "class-validator";
 import { ListingCondition, ListingType } from "@prisma/client";
 
@@ -42,4 +43,12 @@ export class CreateListingDto {
   @IsArray()
   @IsOptional()
   media?: { url: string; type: "IMAGE" | "VIDEO"; order: number }[];
+
+  @IsArray()
+  @IsOptional()
+  attributes?: { attributeId: string; value: string }[];
+
+  @IsIn(["DRAFT", "PENDING_REVIEW"])
+  @IsOptional()
+  status?: "DRAFT" | "PENDING_REVIEW";
 }

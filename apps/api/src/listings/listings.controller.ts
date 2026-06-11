@@ -41,13 +41,15 @@ export class ListingsController {
     return this.listingsService.search({
       keyword: query.keyword,
       categoryId: query.categoryId,
+      sellerId: query.sellerId,
       minPrice: query.minPrice ? Number(query.minPrice) : undefined,
       maxPrice: query.maxPrice ? Number(query.maxPrice) : undefined,
       location: query.location,
       condition: query.condition,
       listingType: query.listingType,
+      sortBy: query.sortBy,
       page: query.page ? Number(query.page) : 1,
-      limit: query.limit ? Number(query.limit) : 20,
+      limit: query.limit ? Number(query.limit) : 24,
     });
   }
 
