@@ -27,13 +27,13 @@ export class ListingsController {
   @Get("saved")
   @UseGuards(JwtAuthGuard)
   getSaved(@CurrentUser() user: any) {
-    return this.listingsService.getSavedListings(user.sub);
+    return this.listingsService.getSavedListings(user.id);
   }
 
   @Get("mine")
   @UseGuards(JwtAuthGuard)
   getMine(@CurrentUser() user: any, @Query("status") status?: any) {
-    return this.listingsService.getMyListings(user.sub, status);
+    return this.listingsService.getMyListings(user.id, status);
   }
 
   @Get()

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -52,10 +52,11 @@ export default function OffersPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["offers-sent"] }),
   });
 
-  if (!user) {
-    router.push("/login");
-    return null;
-  }
+  useEffect(() => {
+    if (!user) router.push("/login");
+  }, [user, router]);
+
+  if (!user) return null;
 
   const offers = tab === "received" ? received : sent;
   const isLoading = tab === "received" ? receivedLoading : sentLoading;

@@ -6,10 +6,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import api from "@/lib/api";
-import { Bell, MessageSquare, User, LogOut, Plus, Gavel, TrendingUp, ChevronDown } from "lucide-react";
+import { Bell, MessageSquare, User, LogOut, Plus, Gavel, TrendingUp, ChevronDown, ShoppingBag, Store, ArrowLeftRight } from "lucide-react";
 
 export function Navbar() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, mode, setMode } = useAuthStore();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -37,6 +37,8 @@ export function Navbar() {
   }, [router]);
 
   const isSeller = user?.role === "SELLER" || user?.role === "BUSINESS_SELLER";
+  const isBuyerOnly = user?.role === "USER";
+  const inSellerMode = isSeller && mode === "seller";
   const isAdmin = [
     "SUPER_ADMIN",
     "OPERATIONS_MANAGER",
@@ -83,7 +85,7 @@ export function Navbar() {
           <div className="flex items-center gap-2">
             {user ? (
               <>
-                {isSeller && (
+                {inSellerMode && (
                   <Link href="/listings/create" className="btn-primary gap-1">
                     <Plus className="h-4 w-4" />
                     <span className="hidden sm:inline">List Item</span>
@@ -146,11 +148,22 @@ export function Navbar() {
                           {user.profile?.firstName} {user.profile?.lastName}
                         </p>
                         <p className="truncate text-xs text-gray-400">{user.email}</p>
-                        {isAdmin && (
-                          <span className="mt-1 inline-block rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-medium text-brand-700">
-                            {user.role.replace("_", " ")}
-                          </span>
-                        )}
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {isAdmin && (
+                            <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-medium text-brand-700">
+                              {user.role.replace(/_/g, " ")}
+                            </span>
+                          )}
+                          {isSeller && (
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                              inSellerMode
+                                ? "bg-green-50 text-green-700"
+                                : "bg-blue-50 text-blue-700"
+                            }`}>
+                              {inSellerMode ? "Seller mode" : "Buyer mode"}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       <Link
@@ -181,7 +194,7 @@ export function Navbar() {
                       >
                         Saved Listings
                       </Link>
-                      {isSeller && (
+                      {inSellerMode && (
                         <Link
                           href="/listings/mine"
                           onClick={() => setMenuOpen(false)}
@@ -198,6 +211,57 @@ export function Navbar() {
                         >
                           Admin Panel
                         </Link>
+                      )}
+
+                      {/* Mode switcher for sellers */}
+                      {isSeller && (
+                        <>
+                          <hr className="my-1 border-gray-100" />
+                          <div className="px-4 py-2">
+                            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                              Switch mode
+                            </p>
+                            <div className="flex rounded-lg border border-gray-200 p-0.5">
+                              <button
+                                onClick={() => { setMode("buyer"); setMenuOpen(false); }}
+                                className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium transition-colors ${
+                                  mode === "buyer"
+                                    ? "bg-blue-500 text-white"
+                                    : "text-gray-500 hover:text-gray-700"
+                                }`}
+                              >
+                                <ShoppingBag className="h-3.5 w-3.5" />
+                                Buyer
+                              </button>
+                              <button
+                                onClick={() => { setMode("seller"); setMenuOpen(false); }}
+                                className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium transition-colors ${
+                                  mode === "seller"
+                                    ? "bg-green-500 text-white"
+                                    : "text-gray-500 hover:text-gray-700"
+                                }`}
+                              >
+                                <Store className="h-3.5 w-3.5" />
+                                Seller
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Upgrade prompt for buyer-only accounts */}
+                      {isBuyerOnly && (
+                        <>
+                          <hr className="my-1 border-gray-100" />
+                          <Link
+                            href="/become-seller"
+                            onClick={() => setMenuOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-brand-600 hover:bg-brand-50"
+                          >
+                            <ArrowLeftRight className="h-4 w-4" />
+                            Start selling
+                          </Link>
+                        </>
                       )}
 
                       <hr className="my-1 border-gray-100" />

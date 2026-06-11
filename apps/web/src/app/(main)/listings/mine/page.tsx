@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import Image from "next/image";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth.store";
 import { formatPrice, timeAgo } from "@/lib/utils";
-import { Plus, Package, Edit, Eye } from "lucide-react";
+import { Plus, Package, Edit, Eye, Store, Info } from "lucide-react";
 
 const STATUS_STYLES: Record<string, string> = {
   ACTIVE: "bg-green-50 text-green-700",
@@ -30,7 +30,7 @@ const STATUS_OPTIONS = [
 ];
 
 export default function MyListingsPage() {
-  const { user } = useAuthStore();
+  const { user, mode, setMode } = useAuthStore();
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState("ALL");
 
@@ -44,22 +44,40 @@ export default function MyListingsPage() {
     enabled: !!user,
   });
 
-  if (!user) {
-    router.push("/login");
-    return null;
-  }
+  useEffect(() => {
+    if (!user) router.push("/login");
+  }, [user, router]);
+
+  if (!user) return null;
 
   const isSeller =
     user.role === "SELLER" || user.role === "BUSINESS_SELLER";
 
   if (!isSeller) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-        <Package className="mb-4 h-12 w-12 text-gray-300" />
-        <p className="text-lg font-medium">Become a seller to list items</p>
-        <Link href="/subscriptions" className="btn-primary mt-4">
-          View Subscription Plans
+      <div className="flex flex-col items-center justify-center py-20 text-center text-gray-500">
+        <Store className="mb-4 h-12 w-12 text-gray-300" />
+        <p className="text-lg font-medium text-gray-900">Seller account required</p>
+        <p className="mt-1 mb-4 text-sm">Upgrade your account to list and manage items for sale.</p>
+        <Link href="/become-seller" className="btn-primary">
+          Become a Seller
         </Link>
+      </div>
+    );
+  }
+
+  if (mode !== "seller") {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center text-gray-500">
+        <Info className="mb-4 h-12 w-12 text-gray-300" />
+        <p className="text-lg font-medium text-gray-900">You're in buyer mode</p>
+        <p className="mt-1 mb-4 text-sm">Switch to seller mode to view and manage your listings.</p>
+        <button
+          onClick={() => { setMode("seller"); router.push("/listings/mine"); }}
+          className="btn-primary"
+        >
+          Switch to Seller Mode
+        </button>
       </div>
     );
   }

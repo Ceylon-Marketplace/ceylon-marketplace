@@ -27,6 +27,12 @@ export class UsersController {
     return this.usersService.updateProfile(user.id, body);
   }
 
+  @Patch("me/become-seller")
+  @UseGuards(JwtAuthGuard)
+  becomeSeller(@CurrentUser() user: any) {
+    return this.usersService.becomeSeller(user.id);
+  }
+
   @Post(":id/block")
   @UseGuards(JwtAuthGuard)
   blockUser(@CurrentUser() user: any, @Param("id") targetId: string) {

@@ -13,7 +13,7 @@ export class ListingsService {
   constructor(private prisma: PrismaService) {}
 
   async create(sellerId: string, dto: CreateListingDto) {
-    await this.checkCanCreateListing(sellerId);
+    await this.checkCanCreateListing(sellerId, dto.status === "DRAFT");
     await this.checkDuplicate(sellerId, dto.title);
 
     const imageCount = dto.media?.filter((m) => m.type === "IMAGE").length ?? 0;
@@ -32,7 +32,7 @@ export class ListingsService {
         quantity: dto.quantity ?? 1,
         location: dto.location,
         listingType: dto.listingType ?? "FIXED_PRICE",
-        status: "PENDING_REVIEW",
+        status: dto.status ?? "PENDING_REVIEW",
         media: dto.media
           ? { create: dto.media.map((m) => ({ url: m.url, type: m.type, order: m.order })) }
           : undefined,
@@ -279,7 +279,7 @@ export class ListingsService {
     }
   }
 
-  private async checkCanCreateListing(sellerId: string) {
+  private async checkCanCreateListing(sellerId: string, isDraft = false) {
     const user = await this.prisma.user.findUnique({
       where: { id: sellerId },
       include: { subscription: { include: { plan: true } } },
@@ -298,13 +298,15 @@ export class ListingsService {
     if (user.subscription.status === "GRACE_PERIOD")
       throw new ForbiddenException("Subscription expired. Renew to create new listings.");
 
-    const activeCount = await this.prisma.listing.count({
-      where: { sellerId, status: { in: ["ACTIVE", "PENDING_REVIEW", "APPROVED"] } },
-    });
-    if (activeCount >= user.subscription.plan.maxListings)
-      throw new ForbiddenException(
-        `Your plan allows a maximum of ${user.subscription.plan.maxListings} active listings.`,
-      );
+    if (!isDraft) {
+      const activeCount = await this.prisma.listing.count({
+        where: { sellerId, status: { in: ["ACTIVE", "PENDING_REVIEW", "APPROVED"] } },
+      });
+      if (activeCount >= user.subscription.plan.maxListings)
+        throw new ForbiddenException(
+          `Your plan allows a maximum of ${user.subscription.plan.maxListings} active listings.`,
+        );
+    }
   }
 
   private async checkDuplicate(sellerId: string, title: string) {

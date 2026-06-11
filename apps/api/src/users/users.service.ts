@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
@@ -62,6 +62,21 @@ export class UsersService {
     });
     if (!user) throw new NotFoundException("User not found");
     const { passwordHash: _, email: __, ...safeUser } = user;
+    return safeUser;
+  }
+
+  async becomeSeller(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException("User not found");
+    if (user.role !== "USER")
+      throw new BadRequestException("Only buyer accounts can upgrade to seller");
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { role: "SELLER" },
+      include: { profile: true },
+    });
+    const { passwordHash: _, ...safeUser } = updated;
     return safeUser;
   }
 
