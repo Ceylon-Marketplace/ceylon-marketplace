@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,9 +11,10 @@ import {
   MapPin,
   Tag,
   Eye,
-  Heart,
   MessageSquare,
   ArrowLeft,
+  TrendingUp,
+  ExternalLink,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -21,13 +22,33 @@ export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuthStore();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [activeImage, setActiveImage] = useState(0);
+  const [offerAmount, setOfferAmount] = useState("");
+  const [offerMessage, setOfferMessage] = useState("");
+  const [showOfferForm, setShowOfferForm] = useState(false);
+  const [offerError, setOfferError] = useState("");
+  const [offerSuccess, setOfferSuccess] = useState(false);
 
   const { data: listing, isLoading } = useQuery({
     queryKey: ["listing", id],
     queryFn: async () => {
       const { data } = await api.get(`/listings/${id}`);
       return data;
+    },
+  });
+
+  const submitOffer = useMutation({
+    mutationFn: (data: { listingId: string; amount: number; message?: string }) =>
+      api.post("/offers", data),
+    onSuccess: () => {
+      setOfferSuccess(true);
+      setShowOfferForm(false);
+      setOfferAmount("");
+      setOfferMessage("");
+    },
+    onError: (err: any) => {
+      setOfferError(err?.response?.data?.message || "Failed to submit offer");
     },
   });
 
@@ -42,6 +63,17 @@ export default function ListingDetailPage() {
     } catch (err: any) {
       alert(err?.response?.data?.message || "Could not start conversation");
     }
+  };
+
+  const handleSubmitOffer = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) { router.push("/login"); return; }
+    setOfferError("");
+    submitOffer.mutate({
+      listingId: id,
+      amount: parseFloat(offerAmount),
+      message: offerMessage || undefined,
+    });
   };
 
   if (isLoading) {
@@ -151,7 +183,10 @@ export default function ListingDetailPage() {
           {/* Seller */}
           <div className="card p-4">
             <p className="mb-2 text-sm font-semibold text-gray-700">Seller</p>
-            <div className="flex items-center gap-3">
+            <Link
+              href={`/profile/${listing.seller.id}`}
+              className="flex items-center gap-3 hover:opacity-80"
+            >
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-lg font-bold text-gray-600">
                 {listing.seller.profile?.firstName?.[0] ?? "?"}
               </div>
@@ -161,19 +196,91 @@ export default function ListingDetailPage() {
                   {listing.seller.profile?.lastName}
                 </p>
                 {listing.seller.storefront && (
-                  <p className="text-xs text-brand-600">
+                  <p className="text-xs text-brand-600 flex items-center gap-1">
+                    <ExternalLink className="h-3 w-3" />
                     {listing.seller.storefront.name}
                   </p>
                 )}
               </div>
-            </div>
+            </Link>
+            {listing.seller.storefront && (
+              <Link
+                href={`/store/${listing.seller.storefront.slug}`}
+                className="mt-2 block text-center text-xs text-brand-600 hover:underline"
+              >
+                View store →
+              </Link>
+            )}
           </div>
+
+          {offerSuccess && (
+            <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
+              Your offer was submitted successfully!
+            </div>
+          )}
 
           {!isOwnListing && (
             <div className="space-y-2">
               <button onClick={handleContact} className="btn-primary w-full gap-2">
                 <MessageSquare className="h-4 w-4" /> Contact Seller
               </button>
+              {listing.listingType === "OFFER" && !offerSuccess && (
+                <>
+                  <button
+                    onClick={() => {
+                      if (!user) { router.push("/login"); return; }
+                      setShowOfferForm((v) => !v);
+                    }}
+                    className="btn-secondary w-full gap-2"
+                  >
+                    <TrendingUp className="h-4 w-4" />
+                    {showOfferForm ? "Cancel Offer" : "Make an Offer"}
+                  </button>
+                  {showOfferForm && (
+                    <form
+                      onSubmit={handleSubmitOffer}
+                      className="card space-y-3 p-4"
+                    >
+                      {offerError && (
+                        <p className="text-xs text-red-600">{offerError}</p>
+                      )}
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">
+                          Your offer (LKR)
+                        </label>
+                        <input
+                          type="number"
+                          value={offerAmount}
+                          onChange={(e) => setOfferAmount(e.target.value)}
+                          className="input text-sm"
+                          placeholder={`Listed at ${formatPrice(listing.price)}`}
+                          min={1}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">
+                          Message (optional)
+                        </label>
+                        <textarea
+                          value={offerMessage}
+                          onChange={(e) => setOfferMessage(e.target.value)}
+                          className="input min-h-[60px] text-sm"
+                          placeholder="Add a message to your offer..."
+                          maxLength={300}
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={submitOffer.isPending}
+                        className="btn-primary w-full text-sm"
+                      >
+                        {submitOffer.isPending ? "Submitting..." : "Submit Offer"}
+                      </button>
+                    </form>
+                  )}
+                </>
+              )}
               {listing.listingType === "AUCTION" && listing.auction && (
                 <Link
                   href={`/auctions/${listing.auction.id}`}

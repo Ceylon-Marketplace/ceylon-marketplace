@@ -11,7 +11,11 @@ interface User {
     firstName: string;
     lastName: string;
     avatar?: string;
+    bio?: string;
+    phone?: string;
+    location?: string;
   } | null;
+  storefront?: { id: string; slug: string; name: string } | null;
 }
 
 interface AuthState {

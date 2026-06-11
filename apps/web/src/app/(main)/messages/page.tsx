@@ -53,7 +53,7 @@ export default function MessagesPage() {
       setMessages((prev) => [...prev, msg]);
     });
 
-    return () => socket.disconnect();
+    return () => { socket.disconnect(); };
   }, [user, router]);
 
   useEffect(() => {

@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth.store";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Bell, MessageSquare, User, LogOut, Plus, Gavel } from "lucide-react";
+import api from "@/lib/api";
+import { Bell, MessageSquare, User, LogOut, Plus, Gavel, TrendingUp } from "lucide-react";
 
 export function Navbar() {
   const { user, logout } = useAuthStore();
@@ -23,6 +25,16 @@ export function Navbar() {
     "FINANCE_MANAGER",
     "SUPPORT_AGENT",
   ].includes(user?.role ?? "");
+
+  const { data: notifData } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: async () => {
+      const { data } = await api.get("/notifications?limit=1");
+      return data;
+    },
+    enabled: !!user,
+    refetchInterval: 30000,
+  });
 
   return (
     <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
@@ -68,10 +80,22 @@ export function Navbar() {
                   <MessageSquare className="h-5 w-5" />
                 </Link>
                 <Link
-                  href="/notifications"
+                  href="/offers"
                   className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                  title="Offers"
+                >
+                  <TrendingUp className="h-5 w-5" />
+                </Link>
+                <Link
+                  href="/notifications"
+                  className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                 >
                   <Bell className="h-5 w-5" />
+                  {(notifData?.unreadCount ?? 0) > 0 && (
+                    <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                      {notifData.unreadCount > 9 ? "9+" : notifData.unreadCount}
+                    </span>
+                  )}
                 </Link>
                 <div className="relative group">
                   <button className="flex items-center gap-2 rounded-lg p-2 text-gray-500 hover:bg-gray-100">
@@ -87,6 +111,26 @@ export function Navbar() {
                     >
                       Dashboard
                     </Link>
+                    <Link
+                      href={`/profile/${user.id}`}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      My Profile
+                    </Link>
+                    <Link
+                      href="/profile/edit"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      Edit Profile
+                    </Link>
+                    {isSeller && (
+                      <Link
+                        href="/listings/mine"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        My Listings
+                      </Link>
+                    )}
                     {isAdmin && (
                       <Link
                         href="/admin"
@@ -95,6 +139,7 @@ export function Navbar() {
                         Admin Panel
                       </Link>
                     )}
+                    <hr className="my-1 border-gray-100" />
                     <button
                       onClick={handleLogout}
                       className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
