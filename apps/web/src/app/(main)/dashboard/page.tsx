@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import Link from "next/link";
 import { ListingCard } from "@/components/listing-card";
-import { formatDate } from "@/lib/utils";
 import {
   Plus,
   Package,
@@ -23,14 +22,6 @@ function SellerDashboard({ user }: { user: any }) {
     queryKey: ["my-listings"],
     queryFn: async () => {
       const { data } = await api.get("/listings/mine");
-      return data;
-    },
-  });
-
-  const { data: subscription } = useQuery({
-    queryKey: ["my-subscription"],
-    queryFn: async () => {
-      const { data } = await api.get("/subscriptions/mine");
       return data;
     },
   });
@@ -51,7 +42,7 @@ function SellerDashboard({ user }: { user: any }) {
             Seller Dashboard
           </h1>
           <p className="text-sm text-gray-500">
-            Manage your listings, offers, and subscription
+            Manage your listings and offers
           </p>
         </div>
         <Link href="/listings/create" className="btn-primary gap-2">
@@ -81,36 +72,14 @@ function SellerDashboard({ user }: { user: any }) {
           </div>
         </div>
 
-        {/* Subscription card */}
-        <div className="card p-5 sm:col-span-2">
-          {subscription ? (
+        <div className="card p-5">
+          <div className="flex items-center gap-3">
+            <Store className="h-8 w-8 text-green-500" />
             <div>
-              <p className="text-xs text-gray-500 mb-1">Subscription</p>
-              <p className="font-semibold text-gray-900">
-                {subscription.plan.name} Plan
-              </p>
-              <p className="text-xs text-gray-400">
-                {subscription.status === "ACTIVE"
-                  ? `Expires ${formatDate(subscription.endDate)}`
-                  : subscription.status === "GRACE_PERIOD"
-                    ? "Grace period — renew to create listings"
-                    : subscription.status}
-              </p>
-              <Link href="/subscriptions" className="mt-2 inline-block text-xs text-brand-600 hover:underline">
-                Manage plan
-              </Link>
+              <p className="text-2xl font-bold">Free</p>
+              <p className="text-xs text-gray-500">Listing is free</p>
             </div>
-          ) : (
-            <div>
-              <p className="text-sm font-medium text-gray-900 mb-1">No active plan</p>
-              <p className="text-xs text-gray-500 mb-3">
-                Subscribe to start creating listings.
-              </p>
-              <Link href="/subscriptions" className="btn-primary text-sm">
-                View Plans
-              </Link>
-            </div>
-          )}
+          </div>
         </div>
       </div>
 

@@ -58,7 +58,7 @@ export default function RegisterPage() {
     setError("");
     try {
       await register({ ...form, role });
-      router.push(role === "SELLER" ? "/subscriptions" : "/dashboard");
+      router.push("/dashboard");
     } catch (err: any) {
       setError(
         err?.response?.data?.message || "Registration failed. Please try again.",
@@ -145,11 +145,6 @@ export default function RegisterPage() {
                 );
               })}
             </div>
-            {role === "SELLER" && (
-              <p className="mt-2 text-xs text-amber-600">
-                A subscription plan is required to create listings. You&apos;ll choose one after signing up.
-              </p>
-            )}
           </fieldset>
 
           {/* Account fields */}

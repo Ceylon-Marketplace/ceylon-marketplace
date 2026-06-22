@@ -279,34 +279,12 @@ export class ListingsService {
     }
   }
 
-  private async checkCanCreateListing(sellerId: string, isDraft = false) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: sellerId },
-      include: { subscription: { include: { plan: true } } },
-    });
+  private async checkCanCreateListing(sellerId: string, _isDraft = false) {
+    const user = await this.prisma.user.findUnique({ where: { id: sellerId } });
     if (!user) throw new NotFoundException("User not found");
 
     if (user.role !== "SELLER" && user.role !== "BUSINESS_SELLER")
       throw new ForbiddenException("Only sellers can create listings. Please upgrade your account.");
-
-    if (!user.subscription)
-      throw new ForbiddenException("An active subscription is required to create listings.");
-
-    if (user.subscription.status !== "ACTIVE" && user.subscription.status !== "GRACE_PERIOD")
-      throw new ForbiddenException("Your subscription has expired. Renew to create new listings.");
-
-    if (user.subscription.status === "GRACE_PERIOD")
-      throw new ForbiddenException("Subscription expired. Renew to create new listings.");
-
-    if (!isDraft) {
-      const activeCount = await this.prisma.listing.count({
-        where: { sellerId, status: { in: ["ACTIVE", "PENDING_REVIEW", "APPROVED"] } },
-      });
-      if (activeCount >= user.subscription.plan.maxListings)
-        throw new ForbiddenException(
-          `Your plan allows a maximum of ${user.subscription.plan.maxListings} active listings.`,
-        );
-    }
   }
 
   private async checkDuplicate(sellerId: string, title: string) {

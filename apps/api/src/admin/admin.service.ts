@@ -1,10 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { NotificationsService } from "../notifications/notifications.service";
 import { ListingStatus } from "@prisma/client";
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notifications: NotificationsService,
+  ) {}
 
   async getDashboardStats() {
     const [
@@ -101,6 +105,18 @@ export class AdminService {
         targetId: listingId,
         details: { reason },
       },
+    });
+
+    // Notify the seller
+    await this.notifications.create({
+      userId: listing.sellerId,
+      type: action === "approve" ? "LISTING_APPROVED" : "LISTING_REJECTED",
+      title: action === "approve" ? "Listing approved!" : "Listing rejected",
+      content:
+        action === "approve"
+          ? `Your listing "${listing.title}" has been approved and is now live.`
+          : `Your listing "${listing.title}" was rejected${reason ? `: ${reason}` : "."}`,
+      metadata: { listingId },
     });
 
     return listing;

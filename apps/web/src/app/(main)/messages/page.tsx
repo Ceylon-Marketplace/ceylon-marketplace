@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, useRouter } from "next/navigation";
 import { io, Socket } from "socket.io-client";
@@ -10,6 +10,14 @@ import { timeAgo, cn } from "@/lib/utils";
 import { Send } from "lucide-react";
 
 export default function MessagesPage() {
+  return (
+    <Suspense>
+      <MessagesContent />
+    </Suspense>
+  );
+}
+
+function MessagesContent() {
   const { user } = useAuthStore();
   const router = useRouter();
   const searchParams = useSearchParams();

@@ -23,8 +23,7 @@ export default function BecomeSellerPage() {
 
   useEffect(() => {
     if (!user) { router.push("/login?redirect=/become-seller"); return; }
-    // Already a seller — send straight to subscriptions
-    if (isSeller) { router.replace("/subscriptions"); }
+    if (isSeller) { router.replace("/dashboard"); }
   }, [user, isSeller, router]);
 
   if (!user || isSeller) return null;
@@ -35,7 +34,7 @@ export default function BecomeSellerPage() {
     try {
       await becomeSeller();
       setMode("seller");
-      router.push("/subscriptions");
+      router.push("/dashboard");
     } catch (err: any) {
       setError(err?.response?.data?.message || "Something went wrong. Please try again.");
       setLoading(false);
@@ -53,8 +52,7 @@ export default function BecomeSellerPage() {
         </div>
         <h1 className="text-3xl font-bold text-gray-900">Start selling on Ceylon</h1>
         <p className="mt-2 text-gray-500">
-          Upgrade your account to access seller features. Choose a subscription plan after
-          upgrading to start creating listings.
+          Upgrade your account to start listing items and selling on Ceylon Marketplace.
         </p>
       </div>
 
@@ -79,7 +77,7 @@ export default function BecomeSellerPage() {
         <ol className="space-y-3">
           {[
             "Click \"Upgrade to Seller\" below — your account is upgraded instantly.",
-            "Choose a seller subscription plan (Basic, Pro, or Business).",
+            "Switch to seller mode using the toggle in the navbar.",
             "Start creating listings and selling right away.",
           ].map((step, i) => (
             <li key={i} className="flex items-start gap-3 text-sm text-gray-600">
@@ -119,10 +117,6 @@ export default function BecomeSellerPage() {
         </Link>
       </div>
 
-      <p className="mt-4 text-center text-xs text-gray-400">
-        A subscription plan is required after upgrading to create listings.
-        You can browse plans for free before committing.
-      </p>
     </div>
   );
 }

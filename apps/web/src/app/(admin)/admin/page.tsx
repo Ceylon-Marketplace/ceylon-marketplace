@@ -114,7 +114,7 @@ function StatsPanel() {
 }
 
 function PendingListings({ qc }: { qc: any }) {
-  const { data } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["pending-listings"],
     queryFn: async () => {
       const { data } = await api.get("/admin/listings/pending");
@@ -138,6 +138,23 @@ function PendingListings({ qc }: { qc: any }) {
     if (reason !== null) rejectMut.mutate({ id, reason });
   };
 
+  if (isLoading)
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-20 animate-pulse rounded-xl bg-gray-100" />
+        ))}
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
+        Failed to load pending listings:{" "}
+        {(error as any)?.response?.data?.message ?? (error as any)?.message ?? "Unknown error"}
+      </div>
+    );
+
   return (
     <div className="space-y-3">
       {!data?.length && (
@@ -146,24 +163,37 @@ function PendingListings({ qc }: { qc: any }) {
       {data?.map((listing: any) => (
         <div key={listing.id} className="card flex items-start gap-4 p-4">
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-gray-900">{listing.title}</p>
-            <p className="text-sm text-gray-500 truncate">
-              {listing.description.slice(0, 100)}
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-medium text-gray-900">{listing.title}</p>
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
+                {listing.listingType}
+              </span>
+              {listing.category && (
+                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                  {listing.category.name}
+                </span>
+              )}
+            </div>
+            <p className="mt-1 text-sm text-gray-500 truncate">
+              {(listing.description ?? "").slice(0, 120)}
             </p>
-            <p className="text-xs text-gray-400">
-              by {listing.seller.profile?.firstName} · {timeAgo(listing.createdAt)}
+            <p className="mt-1 text-xs text-gray-400">
+              by {listing.seller?.profile?.firstName ?? "Unknown"}{" "}
+              {listing.seller?.profile?.lastName ?? ""} · {timeAgo(listing.createdAt)}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 items-end shrink-0">
             <button
               onClick={() => approveMut.mutate(listing.id)}
-              className="btn-primary text-xs"
+              disabled={approveMut.isPending}
+              className="btn-primary text-xs disabled:opacity-50"
             >
               Approve
             </button>
             <button
               onClick={() => handleReject(listing.id)}
-              className="btn-secondary text-xs text-red-600"
+              disabled={rejectMut.isPending}
+              className="btn-secondary text-xs text-red-600 disabled:opacity-50"
             >
               Reject
             </button>
