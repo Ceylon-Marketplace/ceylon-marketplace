@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, getAuthUser, handleError, ApiError } from "@/lib/auth";
-import * as bcrypt from "bcryptjs";
 
 export async function GET(req: NextRequest) {
   try {
