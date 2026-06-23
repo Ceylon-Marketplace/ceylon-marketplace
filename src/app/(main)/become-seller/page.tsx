@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth.store";
 import { Store, Package, Gavel, TrendingUp, Star, ChevronRight, Check } from "lucide-react";
+import { getApiErrorMessage } from "@/lib/types";
 
 const PERKS = [
   { icon: <Package className="h-5 w-5" />, title: "List items for sale", body: "Create detailed listings with photos, descriptions, and category attributes." },
@@ -35,8 +36,8 @@ export default function BecomeSellerPage() {
       await becomeSeller();
       setMode("seller");
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Something went wrong. Please try again.");
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Something went wrong. Please try again."));
       setLoading(false);
     }
   };

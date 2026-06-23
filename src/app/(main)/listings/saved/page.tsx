@@ -8,6 +8,7 @@ import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth.store";
 import { ListingCard } from "@/components/listing-card";
 import { Heart, Package } from "lucide-react";
+import type { ListingSummary, SavedListingSummary } from "@/lib/types";
 
 export default function SavedListingsPage() {
   const { user } = useAuthStore();
@@ -18,7 +19,7 @@ export default function SavedListingsPage() {
     queryKey: ["saved-listings"],
     queryFn: async () => {
       const { data } = await api.get("/listings/saved");
-      return data;
+      return data as SavedListingSummary[];
     },
     enabled: !!user,
   });
@@ -34,7 +35,7 @@ export default function SavedListingsPage() {
 
   if (!user) return null;
 
-  const listings = saved?.map((s: any) => s.listing).filter(Boolean) ?? [];
+  const listings = saved?.map((s) => s.listing).filter((listing): listing is ListingSummary => Boolean(listing)) ?? [];
 
   return (
     <div>
@@ -65,7 +66,7 @@ export default function SavedListingsPage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {listings.map((listing: any) => (
+          {listings.map((listing) => (
             <div key={listing.id} className="group relative">
               <ListingCard listing={listing} />
               <button

@@ -6,6 +6,13 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth.store";
 import { Plus, X, ImageIcon, ChevronLeft, Trash2 } from "lucide-react";
+import {
+  getApiErrorMessage,
+  type CategoryAttributeSummary,
+  type CategorySummary,
+  type ListingAttributeValueSummary,
+  type ListingSummary,
+} from "@/lib/types";
 
 const CONDITIONS = [
   { value: "NEW", label: "New" },
@@ -15,7 +22,7 @@ const CONDITIONS = [
   { value: "POOR", label: "Poor" },
 ];
 
-type ExistingMedia = { id: string; url: string; type: string; order: number };
+type ExistingMedia = { id: string; url: string; type: string; order?: number };
 type AttributeValue = { attributeId: string; value: string };
 
 export default function EditListingPage() {
@@ -27,7 +34,7 @@ export default function EditListingPage() {
     queryKey: ["listing-edit", id],
     queryFn: async () => {
       const { data } = await api.get(`/listings/${id}`);
-      return data;
+      return data as ListingSummary;
     },
   });
 
@@ -35,7 +42,7 @@ export default function EditListingPage() {
     queryKey: ["categories"],
     queryFn: async () => {
       const { data } = await api.get("/categories");
-      return data;
+      return data as CategorySummary[];
     },
   });
 
@@ -71,8 +78,8 @@ export default function EditListingPage() {
       location: listing.location ?? "",
       listingType: listing.listingType ?? "FIXED_PRICE",
     });
-    setExistingMedia(listing.media ?? []);
-    const existingAttrs = listing.attributeValues?.map((av: any) => ({
+    setExistingMedia((listing.media ?? []).filter((m): m is ExistingMedia => Boolean(m.id)));
+    const existingAttrs = listing.attributeValues?.map((av: ListingAttributeValueSummary) => ({
       attributeId: av.attributeId,
       value: av.value,
     })) ?? [];
@@ -86,10 +93,10 @@ export default function EditListingPage() {
   }, [listing, user, id, router]);
 
   const selectedCategory = categories
-    ?.flatMap((c: any) => [c, ...(c.children ?? [])])
-    .find((c: any) => c.id === form.categoryId);
+    ?.flatMap((c) => [c, ...(c.children ?? [])])
+    .find((c) => c.id === form.categoryId);
 
-  const categoryAttributes: any[] = selectedCategory?.attributes ?? [];
+  const categoryAttributes: CategoryAttributeSummary[] = selectedCategory?.attributes ?? [];
 
   if (isLoading) {
     return (
@@ -148,8 +155,8 @@ export default function EditListingPage() {
         attributes: attributes.filter((a) => a.value.trim()),
       });
       router.push(`/listings/${id}`);
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Failed to save changes.");
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Failed to save changes."));
     } finally {
       setSaving(false);
     }
@@ -161,8 +168,8 @@ export default function EditListingPage() {
     try {
       await api.delete(`/listings/${id}`);
       router.push("/listings/mine");
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Failed to archive listing.");
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Failed to archive listing."));
     } finally {
       setDeleting(false);
     }
@@ -323,15 +330,16 @@ export default function EditListingPage() {
           <section className="card space-y-4 p-6">
             <h2 className="font-semibold text-gray-900">{selectedCategory?.name} Details</h2>
             <div className="grid gap-4 sm:grid-cols-2">
-              {categoryAttributes.map((attr: any) => {
+              {categoryAttributes.map((attr) => {
                 const current = attributes.find((a) => a.attributeId === attr.id);
+                const options = attr.options ?? [];
                 return (
                   <div key={attr.id}>
                     <label className="mb-1 block text-sm font-medium text-gray-700">
                       {attr.name}
                       {attr.required && <span className="ml-1 text-red-500">*</span>}
                     </label>
-                    {attr.options?.length > 0 ? (
+                    {options.length > 0 ? (
                       <select
                         value={current?.value ?? ""}
                         onChange={(e) =>
@@ -345,7 +353,7 @@ export default function EditListingPage() {
                         disabled={!canEdit}
                       >
                         <option value="">Select…</option>
-                        {attr.options.map((opt: string) => (
+                        {options.map((opt) => (
                           <option key={opt} value={opt}>{opt}</option>
                         ))}
                       </select>

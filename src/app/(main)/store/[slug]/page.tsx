@@ -8,6 +8,15 @@ import api from "@/lib/api";
 import { ListingCard } from "@/components/listing-card";
 import { MapPin, Star, Shield, Package, MessageSquare } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
+import type { ListingSummary, StorefrontSummary } from "@/lib/types";
+
+type StorefrontResponse = {
+  storefront: StorefrontSummary;
+  listings: ListingSummary[];
+  total: number;
+  avgRating?: number | null;
+  reviewCount: number;
+};
 
 const VERIFICATION_COLORS: Record<string, string> = {
   NONE: "text-gray-400",
@@ -25,7 +34,7 @@ export default function StorefrontPage() {
     queryKey: ["storefront", slug],
     queryFn: async () => {
       const { data } = await api.get(`/storefront/${slug}`);
-      return data;
+      return data as StorefrontResponse;
     },
   });
 
@@ -162,7 +171,7 @@ export default function StorefrontPage() {
             All Listings
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {listings.map((l: any) => (
+            {listings.map((l) => (
               <ListingCard key={l.id} listing={l} />
             ))}
           </div>

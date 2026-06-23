@@ -4,15 +4,16 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { AuctionCard } from "@/components/auction-card";
 import { useState } from "react";
+import type { AuctionSummary } from "@/lib/types";
 
 export default function AuctionsPage() {
-  const [page, setPage] = useState(1);
+  const [page, _setPage] = useState(1);
 
   const { data, isLoading } = useQuery({
     queryKey: ["auctions", page],
     queryFn: async () => {
       const { data } = await api.get(`/auctions?page=${page}&limit=20`);
-      return data;
+      return data as { auctions: AuctionSummary[] };
     },
     refetchInterval: 10_000, // refresh every 10s
   });
@@ -23,7 +24,7 @@ export default function AuctionsPage() {
         <h1 className="text-2xl font-bold text-gray-900">Live Auctions</h1>
         <span className="flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 text-sm font-medium text-green-700">
           <span className="h-2 w-2 rounded-full bg-green-500" />
-          {data?.auctions?.filter((a: any) => a.status === "LIVE").length ?? 0}{" "}
+          {data?.auctions?.filter((a) => a.status === "LIVE").length ?? 0}{" "}
           Live
         </span>
       </div>
@@ -43,7 +44,7 @@ export default function AuctionsPage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {data?.auctions?.map((auction: any) => (
+          {data?.auctions?.map((auction) => (
             <AuctionCard key={auction.id} auction={auction} />
           ))}
         </div>

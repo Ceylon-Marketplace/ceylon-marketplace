@@ -1,6 +1,22 @@
 import { NextRequest } from "next/server";
+import type { ListingCondition, ListingType, MediaType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, getAuthUser, handleError, ApiError } from "@/lib/auth";
+
+type ListingMediaInput = { url: string; type: MediaType; order: number };
+type ListingAttributeInput = { attributeId: string; value: string };
+type UpdateListingDto = {
+  title?: string;
+  description?: string;
+  price?: number;
+  quantity?: number;
+  location?: string;
+  condition?: ListingCondition;
+  listingType?: ListingType;
+  mediaToAdd?: ListingMediaInput[];
+  mediaToRemove?: string[];
+  attributes?: ListingAttributeInput[];
+};
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -42,7 +58,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const { id } = await params;
     const user = requireAuth(req);
-    const body = await req.json();
+    const body = (await req.json()) as UpdateListingDto;
 
     const listing = await prisma.listing.findUnique({ where: { id } });
     if (!listing) throw new ApiError("Listing not found", 404);
@@ -71,8 +87,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         ...(body.condition && { condition: body.condition }),
         ...(body.listingType && { listingType: body.listingType }),
         ...(needsReview && { status: "PENDING_REVIEW" }),
-        media: body.mediaToAdd?.length ? { create: body.mediaToAdd.map((m: any) => ({ url: m.url, type: m.type, order: m.order })) } : undefined,
-        attributeValues: body.attributes?.length ? { create: body.attributes.map((a: any) => ({ attributeId: a.attributeId, value: a.value })) } : undefined,
+        media: body.mediaToAdd?.length ? { create: body.mediaToAdd.map((m) => ({ url: m.url, type: m.type, order: m.order })) } : undefined,
+        attributeValues: body.attributes?.length ? { create: body.attributes.map((a) => ({ attributeId: a.attributeId, value: a.value })) } : undefined,
       },
       include: { media: { orderBy: { order: "asc" } }, category: true, attributeValues: { include: { attribute: true } } },
     });

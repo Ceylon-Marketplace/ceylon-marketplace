@@ -7,6 +7,7 @@ import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth.store";
 import { timeAgo, cn } from "@/lib/utils";
 import { Send } from "lucide-react";
+import type { ConversationSummary, MessageSummary } from "@/lib/types";
 
 export default function MessagesPage() {
   return (
@@ -32,7 +33,7 @@ function MessagesContent() {
     queryKey: ["conversations"],
     queryFn: async () => {
       const { data } = await api.get("/conversations");
-      return data;
+      return data as ConversationSummary[];
     },
     enabled: !!user,
     refetchInterval: 10_000,
@@ -42,7 +43,7 @@ function MessagesContent() {
     queryKey: ["messages", activeConvId],
     queryFn: async () => {
       const { data } = await api.get(`/conversations/${activeConvId}/messages`);
-      return [...data].reverse();
+      return ([...data] as MessageSummary[]).reverse();
     },
     enabled: !!activeConvId,
     refetchInterval: 3_000,
@@ -88,7 +89,7 @@ function MessagesContent() {
         {!conversations?.length ? (
           <p className="p-6 text-sm text-gray-400">No conversations yet.</p>
         ) : (
-          conversations.map((conv: any) => {
+          conversations.map((conv) => {
             const other = conv.buyerId === user.id ? conv.seller : conv.buyer;
             const lastMsg = conv.messages[0];
             return (
@@ -120,7 +121,7 @@ function MessagesContent() {
       {activeConvId ? (
         <div className="flex flex-1 flex-col">
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {messages.map((msg: any) => {
+            {messages.map((msg) => {
               const isMe = msg.senderId === user.id;
               return (
                 <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>

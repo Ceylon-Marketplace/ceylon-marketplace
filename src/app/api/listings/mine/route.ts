@@ -1,11 +1,12 @@
 import { NextRequest } from "next/server";
+import type { ListingStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, handleError } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   try {
     const user = requireAuth(req);
-    const status = req.nextUrl.searchParams.get("status") as any;
+    const status = req.nextUrl.searchParams.get("status") as ListingStatus | null;
     const listings = await prisma.listing.findMany({
       where: { sellerId: user.sub, ...(status && { status }) },
       include: {

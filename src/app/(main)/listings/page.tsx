@@ -4,7 +4,8 @@ import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { ListingCard } from "@/components/listing-card";
-import { Search, SlidersHorizontal, X, ChevronDown } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
+import type { CategorySummary, ListingSummary } from "@/lib/types";
 
 const CONDITIONS = [
   { value: "NEW", label: "New" },
@@ -88,7 +89,7 @@ export default function ListingsPage() {
         limit: "24",
       });
       const { data } = await api.get(`/listings?${params}`);
-      return data;
+      return data as { listings: ListingSummary[]; total: number; pages: number };
     },
     staleTime: 30_000,
   });
@@ -97,10 +98,11 @@ export default function ListingsPage() {
     queryKey: ["categories"],
     queryFn: async () => {
       const { data } = await api.get("/categories");
-      return data;
+      return data as CategorySummary[];
     },
     staleTime: 5 * 60_000,
   });
+  const totalPages = data?.pages ?? 0;
 
   return (
     <div>
@@ -164,10 +166,10 @@ export default function ListingsPage() {
               className="input text-sm"
             >
               <option value="">All Categories</option>
-              {categories?.map((c: any) => (
+              {categories?.map((c) => (
                 <optgroup key={c.id} label={c.name}>
                   <option value={c.id}>{c.name} (All)</option>
-                  {c.children?.map((sub: any) => (
+                  {c.children?.map((sub) => (
                     <option key={sub.id} value={sub.id}>
                       — {sub.name}
                     </option>
@@ -261,7 +263,7 @@ export default function ListingsPage() {
         <div className="mb-4 flex flex-wrap gap-2">
           {keyword && (
             <span className="flex items-center gap-1 rounded-full bg-brand-50 px-3 py-1 text-xs text-brand-700">
-              "{keyword}"
+              &quot;{keyword}&quot;
               <button onClick={() => { setKeyword(""); setPage(1); }}>
                 <X className="h-3 w-3" />
               </button>
@@ -325,12 +327,12 @@ export default function ListingsPage() {
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {data?.listings?.map((listing: any) => (
+            {data?.listings?.map((listing) => (
               <ListingCard key={listing.id} listing={listing} />
             ))}
           </div>
 
-          {data?.pages > 1 && (
+          {totalPages > 1 && (
             <div className="mt-8 flex items-center justify-center gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -340,8 +342,8 @@ export default function ListingsPage() {
                 Previous
               </button>
               <div className="flex gap-1">
-                {Array.from({ length: Math.min(5, data.pages) }, (_, i) => {
-                  const p = Math.max(1, Math.min(data.pages - 4, page - 2)) + i;
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const p = Math.max(1, Math.min(totalPages - 4, page - 2)) + i;
                   return (
                     <button
                       key={p}
@@ -358,8 +360,8 @@ export default function ListingsPage() {
                 })}
               </div>
               <button
-                onClick={() => setPage((p) => Math.min(data.pages, p + 1))}
-                disabled={page === data.pages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
                 className="btn-secondary disabled:opacity-50"
               >
                 Next
@@ -383,10 +385,10 @@ function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }
   );
 }
 
-function findCategoryName(categories: any[], id: string): string {
+function findCategoryName(categories: CategorySummary[], id: string): string {
   for (const c of categories) {
     if (c.id === id) return c.name;
-    const sub = c.children?.find((s: any) => s.id === id);
+    const sub = c.children?.find((s) => s.id === id);
     if (sub) return sub.name;
   }
   return id;

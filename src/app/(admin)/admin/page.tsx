@@ -7,6 +7,16 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { timeAgo } from "@/lib/utils";
 import {
+  getApiErrorMessage,
+  type AdminStats,
+  type AdminUserSummary,
+  type AppQueryClient,
+  type AuthUser,
+  type CategorySummary,
+  type ListingSummary,
+  type ReportSummary,
+} from "@/lib/types";
+import {
   Users,
   Package,
   Flag,
@@ -22,6 +32,11 @@ import {
 } from "lucide-react";
 
 type Tab = "overview" | "pending" | "users" | "reports" | "categories";
+type CategoryFormValues = { name: string; slug: string; imageUrl?: string; parentId?: string };
+type AttributeFormValues = { name: string; type: string; required: boolean; options: string[] };
+type CategoryUpdateValues = CategoryFormValues & { id: string };
+type AttributeCreateValues = AttributeFormValues & { id: string };
+type AttributeDeleteValues = { catId: string; attrId: string };
 
 export default function AdminPage() {
   const { user } = useAuthStore();
@@ -86,7 +101,7 @@ function StatsPanel() {
     queryKey: ["admin-stats"],
     queryFn: async () => {
       const { data } = await api.get("/admin/stats");
-      return data;
+      return data as AdminStats;
     },
   });
 
@@ -113,12 +128,12 @@ function StatsPanel() {
   );
 }
 
-function PendingListings({ qc }: { qc: any }) {
+function PendingListings({ qc }: { qc: AppQueryClient }) {
   const { data, isLoading, error } = useQuery({
     queryKey: ["pending-listings"],
     queryFn: async () => {
       const { data } = await api.get("/admin/listings");
-      return data;
+      return data as ListingSummary[];
     },
   });
 
@@ -152,7 +167,7 @@ function PendingListings({ qc }: { qc: any }) {
     return (
       <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
         Failed to load pending listings:{" "}
-        {(error as any)?.response?.data?.message ?? (error as any)?.message ?? "Unknown error"}
+        {getApiErrorMessage(error, "Unknown error")}
       </div>
     );
 
@@ -161,7 +176,7 @@ function PendingListings({ qc }: { qc: any }) {
       {!data?.length && (
         <p className="text-sm text-gray-400">No listings pending review.</p>
       )}
-      {data?.map((listing: any) => (
+      {data?.map((listing) => (
         <div key={listing.id} className="card flex items-start gap-4 p-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
@@ -205,7 +220,7 @@ function PendingListings({ qc }: { qc: any }) {
   );
 }
 
-function UsersPanel({ user: admin, qc }: { user: any; qc: any }) {
+function UsersPanel({ user: admin, qc }: { user: AuthUser; qc: AppQueryClient }) {
   const [search, setSearch] = useState("");
 
   const { data } = useQuery({
@@ -214,7 +229,7 @@ function UsersPanel({ user: admin, qc }: { user: any; qc: any }) {
       const { data } = await api.get(
         `/admin/users?search=${search}&limit=30`,
       );
-      return data;
+      return data as { users: AdminUserSummary[] };
     },
   });
 
@@ -251,7 +266,7 @@ function UsersPanel({ user: admin, qc }: { user: any; qc: any }) {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {data?.users?.map((u: any) => (
+            {data?.users?.map((u) => (
               <tr key={u.id} className="text-gray-700">
                 <td className="py-3 pr-4">
                   {u.profile?.firstName} {u.profile?.lastName}
@@ -312,19 +327,19 @@ function CategoriesPanel() {
     queryKey: ["admin-categories"],
     queryFn: async () => {
       const { data } = await api.get("/categories");
-      return data;
+      return data as CategorySummary[];
     },
   });
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-categories"] });
 
   const createMut = useMutation({
-    mutationFn: (body: any) => api.post("/categories", body),
+    mutationFn: (body: CategoryFormValues) => api.post("/categories", body),
     onSuccess: () => { invalidate(); setAddingParent(false); setAddingSubOf(null); },
   });
 
   const updateMut = useMutation({
-    mutationFn: ({ id, ...body }: any) => api.patch(`/categories/${id}`, body),
+    mutationFn: ({ id, ...body }: CategoryUpdateValues) => api.patch(`/categories/${id}`, body),
     onSuccess: () => { invalidate(); setEditingId(null); },
   });
 
@@ -334,12 +349,12 @@ function CategoriesPanel() {
   });
 
   const addAttrMut = useMutation({
-    mutationFn: ({ id, ...body }: any) => api.post(`/categories/${id}/attributes`, body),
+    mutationFn: ({ id, ...body }: AttributeCreateValues) => api.post(`/categories/${id}/attributes`, body),
     onSuccess: () => { invalidate(); setAddingAttrOf(null); },
   });
 
   const delAttrMut = useMutation({
-    mutationFn: ({ catId, attrId }: any) =>
+    mutationFn: ({ catId, attrId }: AttributeDeleteValues) =>
       api.delete(`/categories/${catId}/attributes/${attrId}`),
     onSuccess: invalidate,
   });
@@ -347,7 +362,7 @@ function CategoriesPanel() {
   const toggleExpand = (id: string) =>
     setExpandedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
 
@@ -387,9 +402,13 @@ function CategoriesPanel() {
       )}
 
       <div className="space-y-3">
-        {categories?.map((cat: any) => {
+        {categories?.map((cat) => {
           const expanded = expandedIds.has(cat.id);
           const isEditing = editingId === cat.id;
+          const children = cat.children ?? [];
+          const attributes = cat.attributes ?? [];
+          const childCount = children.length;
+          const attrCount = attributes.length;
           return (
             <div key={cat.id} className="card overflow-hidden">
               {/* Category header */}
@@ -418,11 +437,11 @@ function CategoriesPanel() {
                   <div className="flex-1 min-w-0">
                     <span className="font-medium text-gray-900">{cat.name}</span>
                     <span className="ml-2 text-xs text-gray-400">/{cat.slug}</span>
-                    {(cat.children?.length > 0 || cat.attributes?.length > 0) && (
+                    {(childCount > 0 || attrCount > 0) && (
                       <span className="ml-2 text-xs text-gray-400">
-                        {cat.children?.length > 0 && `${cat.children.length} sub`}
-                        {cat.children?.length > 0 && cat.attributes?.length > 0 && " · "}
-                        {cat.attributes?.length > 0 && `${cat.attributes.length} attrs`}
+                        {childCount > 0 && `${childCount} sub`}
+                        {childCount > 0 && attrCount > 0 && " · "}
+                        {attrCount > 0 && `${attrCount} attrs`}
                       </span>
                     )}
                   </div>
@@ -480,14 +499,15 @@ function CategoriesPanel() {
                   )}
 
                   {/* Subcategories */}
-                  {cat.children?.length > 0 && (
+                  {childCount > 0 && (
                     <div>
                       <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
                         Subcategories
                       </p>
                       <div className="space-y-1">
-                        {cat.children.map((sub: any) => {
+                        {children.map((sub) => {
                           const isEditingSub = editingId === sub.id;
+                          const subAttrCount = sub.attributes?.length ?? 0;
                           return (
                             <div key={sub.id} className="rounded-lg border border-gray-100 bg-white px-3 py-2">
                               {isEditingSub ? (
@@ -504,9 +524,9 @@ function CategoriesPanel() {
                                     {sub.name}
                                   </span>
                                   <span className="text-xs text-gray-400">/{sub.slug}</span>
-                                  {sub.attributes?.length > 0 && (
+                                  {subAttrCount > 0 && (
                                     <span className="text-xs text-gray-400">
-                                      · {sub.attributes.length} attrs
+                                      · {subAttrCount} attrs
                                     </span>
                                   )}
                                   <div className="ml-auto flex gap-1">
@@ -559,34 +579,37 @@ function CategoriesPanel() {
                       />
                     )}
 
-                    {cat.attributes?.length > 0 ? (
+                    {attrCount > 0 ? (
                       <div className="flex flex-wrap gap-2">
-                        {cat.attributes.map((attr: any) => (
-                          <span
-                            key={attr.id}
-                            className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs text-gray-700"
-                          >
-                            <span className="font-medium">{attr.name}</span>
-                            <span className="text-gray-400">
-                              {attr.type}
-                              {attr.required ? " *" : ""}
-                            </span>
-                            {attr.options?.length > 0 && (
-                              <span className="text-gray-300">
-                                [{attr.options.slice(0, 2).join(", ")}
-                                {attr.options.length > 2 ? "…" : ""}]
-                              </span>
-                            )}
-                            <button
-                              onClick={() =>
-                                delAttrMut.mutate({ catId: cat.id, attrId: attr.id })
-                              }
-                              className="ml-0.5 text-gray-300 hover:text-red-500"
+                        {attributes.map((attr) => {
+                          const options = attr.options ?? [];
+                          return (
+                            <span
+                              key={attr.id}
+                              className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs text-gray-700"
                             >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </span>
-                        ))}
+                              <span className="font-medium">{attr.name}</span>
+                              <span className="text-gray-400">
+                                {attr.type}
+                                {attr.required ? " *" : ""}
+                              </span>
+                              {options.length > 0 && (
+                                <span className="text-gray-300">
+                                  [{options.slice(0, 2).join(", ")}
+                                  {options.length > 2 ? "…" : ""}]
+                                </span>
+                              )}
+                              <button
+                                onClick={() =>
+                                  delAttrMut.mutate({ catId: cat.id, attrId: attr.id })
+                                }
+                                className="ml-0.5 text-gray-300 hover:text-red-500"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </span>
+                          );
+                        })}
                       </div>
                     ) : (
                       !addingAttrOf && (
@@ -770,12 +793,12 @@ function AttributeForm({
   );
 }
 
-function ReportsPanel({ user: admin, qc }: { user: any; qc: any }) {
+function ReportsPanel({ user: _admin, qc }: { user: AuthUser; qc: AppQueryClient }) {
   const { data } = useQuery({
     queryKey: ["admin-reports"],
     queryFn: async () => {
       const { data } = await api.get("/reports?status=PENDING");
-      return data;
+      return data as { reports: ReportSummary[] };
     },
   });
 
@@ -795,7 +818,7 @@ function ReportsPanel({ user: admin, qc }: { user: any; qc: any }) {
       {!data?.reports?.length && (
         <p className="text-sm text-gray-400">No open reports.</p>
       )}
-      {data?.reports?.map((r: any) => (
+      {data?.reports?.map((r) => (
         <div key={r.id} className="card p-4">
           <div className="flex items-start justify-between gap-4">
             <div>

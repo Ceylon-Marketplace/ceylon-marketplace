@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
     const { refreshToken } = await req.json();
     if (!refreshToken) throw new ApiError("Refresh token required");
 
-    let payload: any;
+    let payload: ReturnType<typeof verifyRefreshToken>;
     try {
       payload = verifyRefreshToken(refreshToken);
     } catch {

@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/auth.store";
+import { getApiErrorMessage } from "@/lib/types";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -29,8 +30,8 @@ function LoginForm() {
       } else {
         router.push("/dashboard");
       }
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Invalid email or password");
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Invalid email or password"));
     }
   };
 

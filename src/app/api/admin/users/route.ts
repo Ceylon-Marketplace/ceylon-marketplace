@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import type { Prisma, UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireRole, handleError } from "@/lib/auth";
 
@@ -13,14 +14,14 @@ export async function GET(req: NextRequest) {
     const search = q.get("search");
     const role = q.get("role");
 
-    const where: any = {
+    const where: Prisma.UserWhereInput = {
       ...(search && {
         OR: [
           { email: { contains: search, mode: "insensitive" } },
           { profile: { OR: [{ firstName: { contains: search, mode: "insensitive" } }, { lastName: { contains: search, mode: "insensitive" } }] } },
         ],
       }),
-      ...(role && { role }),
+      ...(role && { role: role as UserRole }),
     };
 
     const [users, total] = await Promise.all([

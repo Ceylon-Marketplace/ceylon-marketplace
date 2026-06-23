@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth.store";
 import { User, MapPin, Phone, FileText, ChevronLeft } from "lucide-react";
+import { getApiErrorMessage } from "@/lib/types";
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -46,8 +47,8 @@ export default function EditProfilePage() {
       await api.patch("/users/me/profile", form);
       await fetchMe();
       setSuccess(true);
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Failed to save profile");
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Failed to save profile"));
     } finally {
       setSaving(false);
     }

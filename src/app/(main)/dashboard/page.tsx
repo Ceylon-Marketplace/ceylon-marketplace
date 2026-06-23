@@ -7,6 +7,12 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import Link from "next/link";
 import { ListingCard } from "@/components/listing-card";
+import type {
+  AuthUser,
+  ListingSummary,
+  NotificationSummary,
+  SavedListingSummary,
+} from "@/lib/types";
 import {
   Plus,
   Package,
@@ -17,12 +23,12 @@ import {
   Store,
 } from "lucide-react";
 
-function SellerDashboard({ user }: { user: any }) {
+function SellerDashboard({ user: _user }: { user: AuthUser }) {
   const { data: myListings } = useQuery({
     queryKey: ["my-listings"],
     queryFn: async () => {
       const { data } = await api.get("/listings/mine");
-      return data;
+      return data as ListingSummary[];
     },
   });
 
@@ -30,9 +36,10 @@ function SellerDashboard({ user }: { user: any }) {
     queryKey: ["notifications"],
     queryFn: async () => {
       const { data } = await api.get("/notifications?limit=5");
-      return data;
+      return data as { notifications: NotificationSummary[]; unreadCount: number };
     },
   });
+  const recentNotifications = notifications?.notifications ?? [];
 
   return (
     <div className="space-y-8">
@@ -84,13 +91,13 @@ function SellerDashboard({ user }: { user: any }) {
       </div>
 
       {/* Notifications */}
-      {(notifications?.notifications?.length ?? 0) > 0 && (
+      {recentNotifications.length > 0 && (
         <div>
           <h2 className="mb-3 text-lg font-semibold text-gray-900">
             Recent Notifications
           </h2>
           <div className="card divide-y">
-            {notifications.notifications.map((n: any) => (
+            {recentNotifications.map((n) => (
               <div
                 key={n.id}
                 className={`flex items-start gap-3 p-4 ${!n.isRead ? "bg-blue-50" : ""}`}
@@ -126,7 +133,7 @@ function SellerDashboard({ user }: { user: any }) {
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {myListings.slice(0, 4).map((l: any) => (
+            {myListings.slice(0, 4).map((l) => (
               <ListingCard key={l.id} listing={l} />
             ))}
           </div>
@@ -136,12 +143,12 @@ function SellerDashboard({ user }: { user: any }) {
   );
 }
 
-function BuyerDashboard({ user }: { user: any }) {
+function BuyerDashboard({ user }: { user: AuthUser }) {
   const { data: saved } = useQuery({
     queryKey: ["saved-listings"],
     queryFn: async () => {
       const { data } = await api.get("/listings/saved");
-      return data;
+      return data as SavedListingSummary[];
     },
   });
 
@@ -149,7 +156,7 @@ function BuyerDashboard({ user }: { user: any }) {
     queryKey: ["offers-sent"],
     queryFn: async () => {
       const { data } = await api.get("/offers/sent");
-      return data;
+      return data as unknown[];
     },
   });
 
@@ -157,11 +164,12 @@ function BuyerDashboard({ user }: { user: any }) {
     queryKey: ["notifications"],
     queryFn: async () => {
       const { data } = await api.get("/notifications?limit=5");
-      return data;
+      return data as { notifications: NotificationSummary[]; unreadCount: number };
     },
   });
 
-  const savedListings = saved?.map((s: any) => s.listing).filter(Boolean) ?? [];
+  const savedListings = saved?.map((s) => s.listing).filter((listing): listing is ListingSummary => Boolean(listing)) ?? [];
+  const recentNotifications = notifications?.notifications ?? [];
 
   return (
     <div className="space-y-8">
@@ -240,7 +248,7 @@ function BuyerDashboard({ user }: { user: any }) {
             </Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {savedListings.slice(0, 4).map((l: any) => (
+            {savedListings.slice(0, 4).map((l) => (
               <ListingCard key={l.id} listing={l} />
             ))}
           </div>
@@ -248,13 +256,13 @@ function BuyerDashboard({ user }: { user: any }) {
       )}
 
       {/* Notifications */}
-      {(notifications?.notifications?.length ?? 0) > 0 && (
+      {recentNotifications.length > 0 && (
         <div>
           <h2 className="mb-3 text-lg font-semibold text-gray-900">
             Recent Notifications
           </h2>
           <div className="card divide-y">
-            {notifications.notifications.map((n: any) => (
+            {recentNotifications.map((n) => (
               <div
                 key={n.id}
                 className={`flex items-start gap-3 p-4 ${!n.isRead ? "bg-blue-50" : ""}`}

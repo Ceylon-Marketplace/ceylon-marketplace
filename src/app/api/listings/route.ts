@@ -1,7 +1,23 @@
 import { NextRequest } from "next/server";
+import type { ListingCondition, ListingStatus, ListingType, MediaType, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, getAuthUser, handleError, ApiError } from "@/lib/auth";
-import * as bcrypt from "bcryptjs";
+import { requireAuth, handleError, ApiError } from "@/lib/auth";
+
+type ListingMediaInput = { url: string; type: MediaType; order: number };
+type ListingAttributeInput = { attributeId: string; value: string };
+type CreateListingDto = {
+  title: string;
+  description: string;
+  categoryId: string;
+  condition: ListingCondition;
+  price: number;
+  quantity?: number;
+  location: string;
+  listingType?: ListingType;
+  status?: ListingStatus;
+  media?: ListingMediaInput[];
+  attributes?: ListingAttributeInput[];
+};
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,27 +26,35 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(Number(q.get("limit") || 24), 100);
     const skip = (page - 1) * limit;
 
-    const where: any = {
+    const where: Prisma.ListingWhereInput = {
       status: "ACTIVE",
-      ...(q.get("keyword") && {
-        OR: [
-          { title: { contains: q.get("keyword"), mode: "insensitive" } },
-          { description: { contains: q.get("keyword"), mode: "insensitive" } },
-        ],
-      }),
-      ...(q.get("categoryId") && { categoryId: q.get("categoryId") }),
-      ...(q.get("sellerId") && { sellerId: q.get("sellerId") }),
-      ...(q.get("location") && { location: { contains: q.get("location"), mode: "insensitive" } }),
-      ...(q.get("condition") && { condition: q.get("condition") }),
-      ...(q.get("listingType") && { listingType: q.get("listingType") }),
-      ...(q.get("minPrice") && q.get("maxPrice")
-        ? { price: { gte: Number(q.get("minPrice")), lte: Number(q.get("maxPrice")) } }
-        : q.get("minPrice")
-        ? { price: { gte: Number(q.get("minPrice")) } }
-        : q.get("maxPrice")
-        ? { price: { lte: Number(q.get("maxPrice")) } }
-        : {}),
     };
+    const keyword = q.get("keyword");
+    const categoryId = q.get("categoryId");
+    const sellerId = q.get("sellerId");
+    const location = q.get("location");
+    const condition = q.get("condition");
+    const listingType = q.get("listingType");
+    const minPrice = q.get("minPrice");
+    const maxPrice = q.get("maxPrice");
+
+    if (keyword) {
+      where.OR = [
+        { title: { contains: keyword, mode: "insensitive" } },
+        { description: { contains: keyword, mode: "insensitive" } },
+      ];
+    }
+    if (categoryId) where.categoryId = categoryId;
+    if (sellerId) where.sellerId = sellerId;
+    if (location) where.location = { contains: location, mode: "insensitive" };
+    if (condition) where.condition = condition as ListingCondition;
+    if (listingType) where.listingType = listingType as ListingType;
+    if (minPrice || maxPrice) {
+      where.price = {
+        ...(minPrice && { gte: Number(minPrice) }),
+        ...(maxPrice && { lte: Number(maxPrice) }),
+      };
+    }
 
     const sortBy = q.get("sortBy");
     const orderBy =
@@ -64,7 +88,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const user = requireAuth(req);
-    const dto = await req.json();
+    const dto = (await req.json()) as CreateListingDto;
 
     const dbUser = await prisma.user.findUnique({ where: { id: user.sub } });
     if (!dbUser) throw new ApiError("User not found", 404);
@@ -88,8 +112,8 @@ export async function POST(req: NextRequest) {
         location: dto.location,
         listingType: dto.listingType ?? "FIXED_PRICE",
         status: dto.status ?? "PENDING_REVIEW",
-        media: dto.media ? { create: dto.media.map((m: any) => ({ url: m.url, type: m.type, order: m.order })) } : undefined,
-        attributeValues: dto.attributes ? { create: dto.attributes.map((a: any) => ({ attributeId: a.attributeId, value: a.value })) } : undefined,
+        media: dto.media ? { create: dto.media.map((m) => ({ url: m.url, type: m.type, order: m.order })) } : undefined,
+        attributeValues: dto.attributes ? { create: dto.attributes.map((a) => ({ attributeId: a.attributeId, value: a.value })) } : undefined,
       },
       include: {
         media: { orderBy: { order: "asc" } },

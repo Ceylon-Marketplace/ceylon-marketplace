@@ -6,8 +6,9 @@ import Image from "next/image";
 import Link from "next/link";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth.store";
-import { formatDate, timeAgo } from "@/lib/utils";
+import { timeAgo } from "@/lib/utils";
 import { ListingCard } from "@/components/listing-card";
+import type { ListingSummary, ReviewSummary, UserSummary } from "@/lib/types";
 import {
   MapPin,
   Star,
@@ -41,7 +42,7 @@ export default function PublicProfilePage() {
     queryKey: ["public-profile", id],
     queryFn: async () => {
       const { data } = await api.get(`/users/${id}`);
-      return data;
+      return data as UserSummary;
     },
   });
 
@@ -49,7 +50,7 @@ export default function PublicProfilePage() {
     queryKey: ["user-reviews", id],
     queryFn: async () => {
       const { data } = await api.get(`/reviews/${id}`);
-      return data;
+      return data as { reviews: ReviewSummary[]; avgRating?: number };
     },
     enabled: !!id,
   });
@@ -58,7 +59,7 @@ export default function PublicProfilePage() {
     queryKey: ["user-listings", id],
     queryFn: async () => {
       const { data } = await api.get(`/listings?sellerId=${id}&limit=8`);
-      return data;
+      return data as { listings: ListingSummary[] };
     },
     enabled: !!id,
   });
@@ -83,6 +84,8 @@ export default function PublicProfilePage() {
     VERIFICATION_LABELS[profile.verificationLevel ?? "NONE"];
   const verificationColor =
     VERIFICATION_COLORS[profile.verificationLevel ?? "NONE"];
+  const activeListings = listings?.listings ?? [];
+  const userReviews = reviews?.reviews ?? [];
 
   return (
     <div className="space-y-8">
@@ -176,7 +179,7 @@ export default function PublicProfilePage() {
       </div>
 
       {/* Active Listings */}
-      {listings?.listings?.length > 0 && (
+      {activeListings.length > 0 && (
         <div>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
@@ -184,7 +187,7 @@ export default function PublicProfilePage() {
             </h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {listings.listings.slice(0, 8).map((l: any) => (
+            {activeListings.slice(0, 8).map((l) => (
               <ListingCard key={l.id} listing={l} />
             ))}
           </div>
@@ -192,13 +195,13 @@ export default function PublicProfilePage() {
       )}
 
       {/* Reviews */}
-      {reviews?.reviews?.length > 0 && (
+      {userReviews.length > 0 && (
         <div>
           <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
             <Star className="h-5 w-5 text-yellow-400" /> Reviews
           </h2>
           <div className="space-y-3">
-            {reviews.reviews.map((r: any) => (
+            {userReviews.map((r) => (
               <div key={r.id} className="card p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">

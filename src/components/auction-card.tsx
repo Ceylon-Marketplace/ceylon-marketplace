@@ -5,22 +5,10 @@ import Image from "next/image";
 import { Clock, Gavel } from "lucide-react";
 import { formatPrice, timeUntil } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import type { AuctionSummary } from "@/lib/types";
 
 interface AuctionCardProps {
-  auction: {
-    id: string;
-    currentPrice: number | string;
-    startPrice: number | string;
-    endTime: string;
-    status: string;
-    bidCount: number;
-    listing: {
-      id: string;
-      title: string;
-      location: string;
-      media: { url: string; type: string }[];
-    };
-  };
+  auction: AuctionSummary;
 }
 
 export function AuctionCard({ auction }: AuctionCardProps) {

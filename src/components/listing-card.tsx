@@ -2,27 +2,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Eye, Heart } from "lucide-react";
 import { formatPrice, timeAgo, cn } from "@/lib/utils";
+import type { ListingSummary } from "@/lib/types";
 
 interface ListingCardProps {
-  listing: {
-    id: string;
-    title: string;
-    price: number | string;
-    location: string;
-    condition: string;
-    status: string;
-    listingType?: string;
-    viewCount: number;
-    saveCount: number;
-    isFeatured: boolean;
-    createdAt: string;
-    media: { url: string; type: string }[];
-    category: { name: string };
-    seller?: {
-      id: string;
-      profile: { firstName: string; lastName: string } | null;
-    };
-  };
+  listing: ListingSummary;
 }
 
 const TYPE_BADGES: Record<string, { label: string; cls: string }> = {

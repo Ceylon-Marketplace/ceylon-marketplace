@@ -9,6 +9,7 @@ import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth.store";
 import { formatPrice, timeAgo } from "@/lib/utils";
 import { TrendingUp, Package, CheckCircle, XCircle, Clock } from "lucide-react";
+import type { OfferSummary } from "@/lib/types";
 
 const STATUS_STYLES: Record<string, string> = {
   PENDING: "bg-yellow-50 text-yellow-700",
@@ -27,7 +28,7 @@ export default function OffersPage() {
     queryKey: ["offers-received"],
     queryFn: async () => {
       const { data } = await api.get("/offers?type=received");
-      return data;
+      return data as OfferSummary[];
     },
     enabled: !!user,
   });
@@ -36,7 +37,7 @@ export default function OffersPage() {
     queryKey: ["offers-sent"],
     queryFn: async () => {
       const { data } = await api.get("/offers");
-      return data;
+      return data as OfferSummary[];
     },
     enabled: !!user,
   });
@@ -97,7 +98,7 @@ export default function OffersPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {offers.map((offer: any) => {
+          {offers.map((offer) => {
             const listing = offer.listing;
             const thumb = listing?.media?.[0]?.url;
             return (
@@ -125,7 +126,7 @@ export default function OffersPage() {
                     </p>
                     {offer.message && (
                       <p className="mt-1 text-xs text-gray-500 line-clamp-2">
-                        "{offer.message}"
+                        &quot;{offer.message}&quot;
                       </p>
                     )}
                     {tab === "received" && offer.buyer && (

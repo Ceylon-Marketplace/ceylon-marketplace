@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth.store";
 import { ShoppingBag, Store, Check } from "lucide-react";
+import { getApiErrorMessage } from "@/lib/types";
 
 type Role = "USER" | "SELLER";
 
@@ -59,9 +60,9 @@ export default function RegisterPage() {
     try {
       await register({ ...form, role });
       router.push("/dashboard");
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(
-        err?.response?.data?.message || "Registration failed. Please try again.",
+        getApiErrorMessage(err, "Registration failed. Please try again."),
       );
     }
   };

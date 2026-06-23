@@ -7,6 +7,7 @@ import Link from "next/link";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth.store";
 import { formatPrice, timeAgo } from "@/lib/utils";
+import { getApiErrorMessage, type ListingSummary, type MediaSummary } from "@/lib/types";
 import {
   MapPin,
   Tag,
@@ -57,7 +58,7 @@ export default function ListingDetailPage() {
     queryKey: ["listing", id],
     queryFn: async () => {
       const { data } = await api.get(`/listings/${id}`);
-      return data;
+      return data as ListingSummary;
     },
   });
 
@@ -78,8 +79,8 @@ export default function ListingDetailPage() {
       setOfferAmount("");
       setOfferMessage("");
     },
-    onError: (err: any) => {
-      setOfferError(err?.response?.data?.message || "Failed to submit offer");
+    onError: (err: unknown) => {
+      setOfferError(getApiErrorMessage(err, "Failed to submit offer"));
     },
   });
 
@@ -94,8 +95,8 @@ export default function ListingDetailPage() {
       setReviewSuccess(true);
       setShowReviewForm(false);
     },
-    onError: (err: any) => {
-      setReviewError(err?.response?.data?.message || "Failed to submit review");
+    onError: (err: unknown) => {
+      setReviewError(getApiErrorMessage(err, "Failed to submit review"));
     },
   });
 
@@ -104,8 +105,8 @@ export default function ListingDetailPage() {
     try {
       const { data } = await api.post(`/conversations/listing/${id}`);
       router.push(`/messages?conversationId=${data.id}`);
-    } catch (err: any) {
-      alert(err?.response?.data?.message || "Could not start conversation");
+    } catch (err: unknown) {
+      alert(getApiErrorMessage(err, "Could not start conversation"));
     }
   };
 
@@ -119,6 +120,7 @@ export default function ListingDetailPage() {
   const handleSubmitReview = (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) { router.push("/login"); return; }
+    if (!listing?.seller) return;
     setReviewError("");
     submitReview.mutate({
       revieweeId: listing.seller.id,
@@ -138,7 +140,7 @@ export default function ListingDetailPage() {
     );
   }
 
-  if (!listing) {
+  if (!listing?.seller) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-gray-500">
         <Package className="mb-4 h-12 w-12 text-gray-300" />
@@ -148,11 +150,12 @@ export default function ListingDetailPage() {
     );
   }
 
-  const images = listing.media.filter((m: any) => m.type === "IMAGE");
+  const images = listing.media.filter((m): m is MediaSummary => m.type === "IMAGE");
   const isOwnListing = user?.id === listing.seller.id;
-  const typeInfo = TYPE_LABELS[listing.listingType] ?? TYPE_LABELS.FIXED_PRICE;
+  const typeInfo = TYPE_LABELS[listing.listingType ?? "FIXED_PRICE"] ?? TYPE_LABELS.FIXED_PRICE;
   const isSold = listing.status === "SOLD";
   const isActive = listing.status === "ACTIVE";
+  const attributeValues = listing.attributeValues ?? [];
 
   return (
     <div>
@@ -185,7 +188,7 @@ export default function ListingDetailPage() {
           </div>
           {images.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {images.map((img: any, i: number) => (
+              {images.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveImage(i)}
@@ -257,11 +260,11 @@ export default function ListingDetailPage() {
           </div>
 
           {/* Category attributes */}
-          {listing.attributeValues?.length > 0 && (
+          {attributeValues.length > 0 && (
             <div className="card p-4">
               <p className="mb-2 text-sm font-semibold text-gray-700">Specifications</p>
               <dl className="grid grid-cols-2 gap-1 text-sm">
-                {listing.attributeValues.map((av: any) => (
+                {attributeValues.map((av) => (
                   <div key={av.id}>
                     <dt className="text-gray-500">{av.attribute?.name}</dt>
                     <dd className="font-medium text-gray-900">{av.value}</dd>

@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import type { Prisma, ReportStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireRole, handleError } from "@/lib/auth";
 
@@ -12,8 +13,8 @@ export async function GET(req: NextRequest) {
     const page = Number(q.get("page") || 1);
     const limit = Math.min(Number(q.get("limit") || 20), 100);
 
-    const where: any = {};
-    if (status) where.status = status;
+    const where: Prisma.ReportWhereInput = {};
+    if (status) where.status = status as ReportStatus;
 
     const [reports, total] = await Promise.all([
       prisma.report.findMany({

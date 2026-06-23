@@ -1,25 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import api from "@/lib/api";
-
-interface User {
-  id: string;
-  email: string;
-  role: string;
-  verificationLevel: string;
-  profile: {
-    firstName: string;
-    lastName: string;
-    avatar?: string;
-    bio?: string;
-    phone?: string;
-    location?: string;
-  } | null;
-  storefront?: { id: string; slug: string; name: string } | null;
-}
+import type { AuthUser } from "@/lib/types";
 
 interface AuthState {
-  user: User | null;
+  user: AuthUser | null;
   accessToken: string | null;
   refreshToken: string | null;
   isLoading: boolean;

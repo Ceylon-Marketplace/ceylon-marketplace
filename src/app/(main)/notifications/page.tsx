@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth.store";
 import { timeAgo } from "@/lib/utils";
+import type { NotificationSummary } from "@/lib/types";
 import {
   Bell,
   Gavel,
@@ -39,7 +40,7 @@ export default function NotificationsPage() {
     queryKey: ["notifications-all"],
     queryFn: async () => {
       const { data } = await api.get("/notifications?limit=50");
-      return data;
+      return data as { notifications: NotificationSummary[]; unreadCount: number };
     },
     enabled: !!user,
   });
@@ -97,12 +98,12 @@ export default function NotificationsPage() {
           <Bell className="mb-4 h-12 w-12 text-gray-300" />
           <p className="text-lg font-medium">No notifications yet</p>
           <p className="mt-1 text-sm">
-            You'll see activity here when things happen.
+            You&apos;ll see activity here when things happen.
           </p>
         </div>
       ) : (
         <div className="card divide-y">
-          {notifications.map((n: any) => (
+          {notifications.map((n) => (
             <div
               key={n.id}
               onClick={() => !n.isRead && markRead.mutate(n.id)}

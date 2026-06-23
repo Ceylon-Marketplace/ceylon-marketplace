@@ -7,7 +7,8 @@ import Image from "next/image";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth.store";
 import { formatPrice, formatDateTime, timeUntil } from "@/lib/utils";
-import { Gavel, Clock, AlertTriangle, ArrowLeft } from "lucide-react";
+import { Gavel, Clock, ArrowLeft } from "lucide-react";
+import { getApiErrorMessage, type AuctionSummary, type MediaSummary } from "@/lib/types";
 
 export default function AuctionDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +25,7 @@ export default function AuctionDetailPage() {
     queryKey: ["auction", id],
     queryFn: async () => {
       const { data } = await api.get(`/auctions/${id}`);
-      return data;
+      return data as AuctionSummary;
     },
     refetchInterval: (query) => {
       const status = query.state.data?.status;
@@ -49,8 +50,8 @@ export default function AuctionDetailPage() {
       setBidAmount("");
       queryClient.invalidateQueries({ queryKey: ["auction", id] });
     },
-    onError: (err: any) => {
-      setBidError(err.response?.data?.message || "Failed to place bid");
+    onError: (err: unknown) => {
+      setBidError(getApiErrorMessage(err, "Failed to place bid"));
     },
   });
 
@@ -73,7 +74,8 @@ export default function AuctionDetailPage() {
   const isSeller = user?.id === auction.sellerId;
   const currentPrice = Number(auction.currentPrice);
   const minBid = currentPrice + Number(auction.bidIncrement);
-  const coverImage = auction.listing.media.find((m: any) => m.type === "IMAGE");
+  const coverImage = auction.listing.media.find((m): m is MediaSummary => m.type === "IMAGE");
+  const bids = auction.bids ?? [];
 
   return (
     <div>
@@ -96,13 +98,13 @@ export default function AuctionDetailPage() {
           <h1 className="text-2xl font-bold text-gray-900">{auction.listing.title}</h1>
           <p className="text-sm text-gray-500">{auction.listing.category.name}</p>
 
-          {auction.bids?.length > 0 && (
+          {bids.length > 0 && (
             <div className="card p-4">
               <h3 className="mb-3 text-sm font-semibold text-gray-700">Recent Bids</h3>
               <ul className="space-y-2">
-                {auction.bids.map((b: any, i: number) => (
+                {bids.map((b, i) => (
                   <li key={i} className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">{b.bidder.maskedName}</span>
+                    <span className="text-gray-500">{b.bidder?.maskedName ?? "Bidder"}</span>
                     <span className="font-semibold text-brand-600">{formatPrice(b.amount)}</span>
                   </li>
                 ))}
@@ -151,7 +153,9 @@ export default function AuctionDetailPage() {
 
           <div className="card p-4">
             <p className="mb-2 text-sm font-semibold text-gray-700">Seller</p>
-            <p className="text-gray-700">{auction.listing.seller.profile?.firstName} {auction.listing.seller.profile?.lastName}</p>
+            <p className="text-gray-700">
+              {auction.listing.seller?.profile?.firstName} {auction.listing.seller?.profile?.lastName}
+            </p>
             <p className="text-xs text-gray-400">Starts: {formatDateTime(auction.startTime)}</p>
             <p className="text-xs text-gray-400">Ends: {formatDateTime(new Date(auction.endTime))}</p>
           </div>

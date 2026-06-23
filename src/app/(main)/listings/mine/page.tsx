@@ -9,6 +9,7 @@ import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth.store";
 import { formatPrice, timeAgo } from "@/lib/utils";
 import { Plus, Package, Edit, Eye, Store, Info } from "lucide-react";
+import type { ListingSummary } from "@/lib/types";
 
 const STATUS_STYLES: Record<string, string> = {
   ACTIVE: "bg-green-50 text-green-700",
@@ -39,7 +40,7 @@ export default function MyListingsPage() {
     queryFn: async () => {
       const params = statusFilter !== "ALL" ? `?status=${statusFilter}` : "";
       const { data } = await api.get(`/listings/mine${params}`);
-      return data;
+      return data as ListingSummary[];
     },
     enabled: !!user,
   });
@@ -70,7 +71,7 @@ export default function MyListingsPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center text-gray-500">
         <Info className="mb-4 h-12 w-12 text-gray-300" />
-        <p className="text-lg font-medium text-gray-900">You're in buyer mode</p>
+        <p className="text-lg font-medium text-gray-900">You&apos;re in buyer mode</p>
         <p className="mt-1 mb-4 text-sm">Switch to seller mode to view and manage your listings.</p>
         <button
           onClick={() => { setMode("seller"); router.push("/listings/mine"); }}
@@ -123,7 +124,7 @@ export default function MyListingsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {listings.map((l: any) => {
+          {listings.map((l) => {
             const thumb = l.media?.[0]?.url;
             return (
               <div key={l.id} className="card p-4">

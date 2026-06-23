@@ -7,6 +7,11 @@ import Link from "next/link";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth.store";
 import {
+  getApiErrorMessage,
+  type CategoryAttributeSummary,
+  type CategorySummary,
+} from "@/lib/types";
+import {
   Plus,
   X,
   ImageIcon,
@@ -147,18 +152,18 @@ export default function CreateListingPage() {
     queryKey: ["categories"],
     queryFn: async () => {
       const { data } = await api.get("/categories");
-      return data;
+      return data as CategorySummary[];
     },
   });
 
   const selectedCategory = categories
-    ?.flatMap((c: any) => [c, ...(c.children ?? [])])
-    .find((c: any) => c.id === form.categoryId);
+    ?.flatMap((c) => [c, ...(c.children ?? [])])
+    .find((c) => c.id === form.categoryId);
 
-  const categoryAttributes: any[] = selectedCategory?.attributes ?? [];
+  const categoryAttributes: CategoryAttributeSummary[] = selectedCategory?.attributes ?? [];
 
   useEffect(() => {
-    setAttributes(categoryAttributes.map((a: any) => ({ attributeId: a.id, value: "" })));
+    setAttributes(categoryAttributes.map((a) => ({ attributeId: a.id, value: "" })));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.categoryId]);
 
@@ -178,7 +183,7 @@ export default function CreateListingPage() {
         <h2 className="mb-2 text-lg font-semibold text-gray-900">Seller account required</h2>
         <p className="mb-4 text-sm text-gray-500">
           You need a seller account to create listings. Upgrading is free — you
-          only pay for a subscription plan when you're ready to list.
+          only pay for a subscription plan when you&apos;re ready to list.
         </p>
         <Link href="/become-seller" className="btn-primary">
           Become a Seller
@@ -192,7 +197,7 @@ export default function CreateListingPage() {
     return (
       <div className="mx-auto max-w-lg py-20 text-center">
         <Info className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-        <h2 className="mb-2 text-lg font-semibold text-gray-900">You're in buyer mode</h2>
+        <h2 className="mb-2 text-lg font-semibold text-gray-900">You&apos;re in buyer mode</h2>
         <p className="mb-4 text-sm text-gray-500">
           Switch to seller mode to create and manage your listings.
         </p>
@@ -315,9 +320,9 @@ export default function CreateListingPage() {
             endTime: auctionForm.endTime,
           });
           hasAuction = true;
-        } catch (auctionErr: any) {
+        } catch (auctionErr: unknown) {
           setError(
-            `Listing created but auction setup failed: ${auctionErr?.response?.data?.message ?? "unknown error"}. You can configure the auction from the edit page.`,
+            `Listing created but auction setup failed: ${getApiErrorMessage(auctionErr, "unknown error")}. You can configure the auction from the edit page.`,
           );
           setSubmitting(false);
           router.push(`/listings/${data.id}/edit`);
@@ -326,8 +331,8 @@ export default function CreateListingPage() {
       }
 
       setSuccess({ listingId: data.id, isDraft: submitStatus === "DRAFT", hasAuction });
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Failed to create listing. Please try again.");
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Failed to create listing. Please try again."));
     } finally {
       setSubmitting(false);
     }
@@ -393,10 +398,10 @@ export default function CreateListingPage() {
                 className="input"
               >
                 <option value="">Select category…</option>
-                {categories?.map((c: any) => (
+                {categories?.map((c) => (
                   <optgroup key={c.id} label={c.name}>
                     <option value={c.id}>{c.name}</option>
-                    {c.children?.map((sub: any) => (
+                    {c.children?.map((sub) => (
                       <option key={sub.id} value={sub.id}>
                         — {sub.name}
                       </option>
@@ -581,42 +586,45 @@ export default function CreateListingPage() {
               {selectedCategory?.name} Details
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">
-              {categoryAttributes.map((attr: any, idx: number) => (
-                <div key={attr.id}>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    {attr.name}
-                    {attr.required && <span className="ml-1 text-red-500">*</span>}
-                  </label>
-                  {attr.options?.length > 0 ? (
-                    <select
-                      value={attributes[idx]?.value ?? ""}
-                      onChange={(e) =>
-                        setAttributes((prev) =>
-                          prev.map((a, i) => i === idx ? { ...a, value: e.target.value } : a),
-                        )
-                      }
-                      className="input"
-                    >
-                      <option value="">Select…</option>
-                      {attr.options.map((opt: string) => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={attributes[idx]?.value ?? ""}
-                      onChange={(e) =>
-                        setAttributes((prev) =>
-                          prev.map((a, i) => i === idx ? { ...a, value: e.target.value } : a),
-                        )
-                      }
-                      className="input"
-                      placeholder={attr.name}
-                    />
-                  )}
-                </div>
-              ))}
+              {categoryAttributes.map((attr, idx) => {
+                const options = attr.options ?? [];
+                return (
+                  <div key={attr.id}>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                      {attr.name}
+                      {attr.required && <span className="ml-1 text-red-500">*</span>}
+                    </label>
+                    {options.length > 0 ? (
+                      <select
+                        value={attributes[idx]?.value ?? ""}
+                        onChange={(e) =>
+                          setAttributes((prev) =>
+                            prev.map((a, i) => i === idx ? { ...a, value: e.target.value } : a),
+                          )
+                        }
+                        className="input"
+                      >
+                        <option value="">Select…</option>
+                        {options.map((opt) => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={attributes[idx]?.value ?? ""}
+                        onChange={(e) =>
+                          setAttributes((prev) =>
+                            prev.map((a, i) => i === idx ? { ...a, value: e.target.value } : a),
+                          )
+                        }
+                        className="input"
+                        placeholder={attr.name}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </section>
         )}
