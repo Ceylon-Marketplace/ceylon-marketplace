@@ -2,7 +2,7 @@
 
 Subscription-driven marketplace with real-time auctions.
 
-**Stack:** Next.js 15 · NestJS · PostgreSQL · Prisma · Redis · Socket.IO
+**Stack:** Next.js 15 · PostgreSQL (Supabase) · Prisma · Redis (Upstash) · Socket.IO
 
 ---
 
@@ -11,80 +11,72 @@ Subscription-driven marketplace with real-time auctions.
 ### 1. Prerequisites
 
 - Node.js ≥ 20
-- pnpm ≥ 9
-- Docker (for PostgreSQL + Redis)
 
 ### 2. Clone & Install
 
 ```bash
-cd ceylon-marketplace
 cp .env.example .env
-pnpm install
+# Fill in DATABASE_URL, DIRECT_URL, REDIS_URL, JWT_SECRET, JWT_REFRESH_SECRET
+npm install
 ```
 
-### 3. Start Infrastructure
+### 3. Database
 
 ```bash
-docker-compose up -d
+# Push schema to Supabase
+npm run db:push
+
+# Or run migrations
+npm run db:migrate
+
+# Open Prisma Studio
+npm run db:studio
 ```
 
-### 4. Database
+### 4. Run
 
 ```bash
-# Generate Prisma client
-pnpm db:generate
-
-# Run migrations
-cd packages/database
-npx prisma migrate dev --name init
-
-# Seed (plans, categories, admin user)
-npx ts-node prisma/seed.ts
+npm run dev
 ```
 
-Default admin: `admin@ceylon.lk` / `Admin@123!`
-
-### 5. Run
-
-```bash
-# From monorepo root — starts both apps
-pnpm dev
-```
-
-| Service | URL |
-|---|---|
-| Web (Next.js) | http://localhost:3000 |
-| API (NestJS) | http://localhost:3001/api |
+App available at <http://localhost:3000>
 
 ---
 
 ## Project Structure
 
-```
+```text
 ceylon-marketplace/
-├── apps/
-│   ├── api/          NestJS backend
-│   └── web/          Next.js 15 frontend
-├── packages/
-│   └── database/     Prisma schema + client
-├── docker-compose.yml
+├── prisma/
+│   └── schema.prisma
+├── src/
+│   ├── app/          Next.js App Router (routes, API handlers)
+│   ├── components/   Shared UI components
+│   ├── lib/          Prisma client, auth helpers, utilities
+│   └── store/        Zustand stores
+├── docker-compose.yml  Local Postgres + Redis (optional)
 └── .env.example
 ```
 
-## API Modules
+## API Routes
 
-| Module | Endpoints |
-|---|---|
-| Auth | `POST /api/auth/register`, `/login`, `/refresh`, `GET /me` |
-| Listings | `GET/POST /api/listings`, `GET /api/listings/:id` |
-| Auctions | `GET/POST /api/auctions`, WebSocket `/auctions` |
-| Messaging | `GET/POST /api/conversations`, WebSocket `/messaging` |
-| Subscriptions | `GET /api/subscriptions/plans`, `POST .../subscribe` |
-| Admin | `GET /api/admin/stats`, pending listings, user management |
-| Reports | `POST /api/reports`, `GET /api/reports` (admin) |
-| Notifications | `GET /api/notifications`, mark read |
+| Route | Description |
+| --- | --- |
+| `POST /api/auth/register` | Register user |
+| `POST /api/auth/login` | Login |
+| `POST /api/auth/refresh` | Refresh token |
+| `GET /api/auth/me` | Current user |
+| `GET/POST /api/listings` | Browse / create listings |
+| `GET /api/listings/:id` | Listing detail |
+| `GET/POST /api/auctions` | Browse / create auctions |
+| `GET/POST /api/conversations` | Messaging |
+| `GET /api/subscriptions/plans` | Subscription plans |
+| `POST /api/subscriptions/subscribe` | Subscribe |
+| `GET /api/admin/stats` | Admin stats |
+| `GET/POST /api/reports` | Reports |
+| `GET /api/notifications` | Notifications |
 
-## Key Business Rules Implemented
+## Key Business Rules
 
 - Listing title: 10–120 chars · max 20 images · max 3 videos · duplicate check
 - Subscription gate: expired subscription blocks new listing creation; existing listings survive grace period
