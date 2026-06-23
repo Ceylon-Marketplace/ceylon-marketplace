@@ -2,7 +2,7 @@
 
 Subscription-driven marketplace with real-time auctions.
 
-**Stack:** Next.js 15 · NestJS · PostgreSQL · Prisma · Redis · Socket.IO
+**Stack:** Next.js 15 · Prisma · PostgreSQL · Redis
 
 ---
 
@@ -11,15 +11,16 @@ Subscription-driven marketplace with real-time auctions.
 ### 1. Prerequisites
 
 - Node.js ≥ 20
-- pnpm ≥ 9
+- npm or pnpm
 - Docker (for PostgreSQL + Redis)
 
 ### 2. Clone & Install
 
 ```bash
+git clone <repo>
 cd ceylon-marketplace
 cp .env.example .env
-pnpm install
+npm install
 ```
 
 ### 3. Start Infrastructure
@@ -28,33 +29,23 @@ pnpm install
 docker-compose up -d
 ```
 
-### 4. Database
+### 4. Database Setup
 
 ```bash
 # Generate Prisma client
-pnpm db:generate
+npm run db:generate
 
 # Run migrations
-cd packages/database
-npx prisma migrate dev --name init
-
-# Seed (plans, categories, admin user)
-npx ts-node prisma/seed.ts
+npm run db:migrate
 ```
 
-Default admin: `admin@ceylon.lk` / `Admin@123!`
-
-### 5. Run
+### 5. Run Development Server
 
 ```bash
-# From monorepo root — starts both apps
-pnpm dev
+npm run dev
 ```
 
-| Service | URL |
-|---|---|
-| Web (Next.js) | http://localhost:3000 |
-| API (NestJS) | http://localhost:3001/api |
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ---
 
@@ -62,14 +53,31 @@ pnpm dev
 
 ```
 ceylon-marketplace/
-├── apps/
-│   ├── api/          NestJS backend
-│   └── web/          Next.js 15 frontend
-├── packages/
-│   └── database/     Prisma schema + client
-├── docker-compose.yml
-└── .env.example
+├── src/
+│   ├── app/              Next.js 15 App Router
+│   │   ├── (admin)/      Admin pages
+│   │   ├── (auth)/       Login & registration
+│   │   ├── (main)/       Main application pages
+│   │   └── api/          API routes (38 endpoints)
+│   ├── components/       Reusable components
+│   ├── lib/              Utilities & helpers
+│   └── store/            Zustand state management
+├── prisma/               Database schema & migrations
+├── public/               Static assets
+└── docker-compose.yml    Infrastructure definition
 ```
+
+## Features
+
+| Feature | Status |
+|---------|--------|
+| User Authentication | ✅ Implemented |
+| Listings Management | ✅ Implemented |
+| Real-time Auctions | ✅ Implemented |
+| Messaging | ✅ Implemented |
+| Subscriptions | ✅ Implemented |
+| Admin Panel | ✅ Implemented |
+| Reviews & Ratings | ✅ Implemented |
 
 ## API Modules
 
@@ -77,8 +85,8 @@ ceylon-marketplace/
 |---|---|
 | Auth | `POST /api/auth/register`, `/login`, `/refresh`, `GET /me` |
 | Listings | `GET/POST /api/listings`, `GET /api/listings/:id` |
-| Auctions | `GET/POST /api/auctions`, WebSocket `/auctions` |
-| Messaging | `GET/POST /api/conversations`, WebSocket `/messaging` |
+| Auctions | `GET/POST /api/auctions`, WebSocket support |
+| Messaging | `GET/POST /api/conversations`, WebSocket support |
 | Subscriptions | `GET /api/subscriptions/plans`, `POST .../subscribe` |
 | Admin | `GET /api/admin/stats`, pending listings, user management |
 | Reports | `POST /api/reports`, `GET /api/reports` (admin) |
@@ -87,9 +95,9 @@ ceylon-marketplace/
 ## Key Business Rules Implemented
 
 - Listing title: 10–120 chars · max 20 images · max 3 videos · duplicate check
-- Subscription gate: expired subscription blocks new listing creation; existing listings survive grace period
+- Subscription gate: expired subscription blocks new listing creation
 - Auction: seller cannot self-bid · only higher bids accepted · reserve price hidden
 - Anti-sniping: bid in last 2 min → auction extended by 2 min
-- Bidder names masked in auction feed
 - Message history immutable; block user prevents messaging
 - Admin approval workflow for listings (PENDING_REVIEW → ACTIVE/REJECTED)
+
