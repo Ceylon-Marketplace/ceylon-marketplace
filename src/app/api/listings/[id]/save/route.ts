@@ -6,12 +6,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const { id: listingId } = await params;
     const user = requireAuth(req);
-    await prisma.savedListing.upsert({
+    const existing = await prisma.savedListing.findUnique({
       where: { userId_listingId: { userId: user.sub, listingId } },
-      update: {},
-      create: { userId: user.sub, listingId },
     });
-    await prisma.listing.update({ where: { id: listingId }, data: { saveCount: { increment: 1 } } });
+    if (existing) return Response.json({ saved: true });
+    await prisma.$transaction([
+      prisma.savedListing.create({ data: { userId: user.sub, listingId } }),
+      prisma.listing.update({ where: { id: listingId }, data: { saveCount: { increment: 1 } } }),
+    ]);
     return Response.json({ saved: true });
   } catch (err) {
     return handleError(err);
@@ -22,8 +24,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   try {
     const { id: listingId } = await params;
     const user = requireAuth(req);
-    await prisma.savedListing.deleteMany({ where: { userId: user.sub, listingId } });
-    await prisma.listing.update({ where: { id: listingId }, data: { saveCount: { decrement: 1 } } });
+    const { count } = await prisma.savedListing.deleteMany({ where: { userId: user.sub, listingId } });
+    if (count > 0) {
+      await prisma.listing.update({ where: { id: listingId }, data: { saveCount: { decrement: 1 } } });
+    }
     return Response.json({ saved: false });
   } catch (err) {
     return handleError(err);

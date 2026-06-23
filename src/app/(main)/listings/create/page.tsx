@@ -146,7 +146,7 @@ export default function CreateListingPage() {
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
-      const { data } = await api.get("/listings/categories");
+      const { data } = await api.get("/categories");
       return data;
     },
   });

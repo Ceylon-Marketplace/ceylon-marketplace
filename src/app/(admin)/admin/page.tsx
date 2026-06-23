@@ -117,19 +117,20 @@ function PendingListings({ qc }: { qc: any }) {
   const { data, isLoading, error } = useQuery({
     queryKey: ["pending-listings"],
     queryFn: async () => {
-      const { data } = await api.get("/admin/listings/pending");
+      const { data } = await api.get("/admin/listings");
       return data;
     },
   });
 
   const approveMut = useMutation({
-    mutationFn: (id: string) => api.post(`/admin/listings/${id}/approve`),
+    mutationFn: (id: string) =>
+      api.post(`/admin/listings/${id}/moderate`, { action: "approve" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["pending-listings"] }),
   });
 
   const rejectMut = useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      api.post(`/admin/listings/${id}/reject`, { reason }),
+      api.post(`/admin/listings/${id}/moderate`, { action: "reject", reason }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["pending-listings"] }),
   });
 
@@ -219,13 +220,13 @@ function UsersPanel({ user: admin, qc }: { user: any; qc: any }) {
 
   const suspendMut = useMutation({
     mutationFn: (id: string) =>
-      api.patch(`/admin/users/${id}/suspend`, { reason: "Admin action" }),
+      api.patch(`/admin/users/${id}`, { action: "suspend", reason: "Admin action" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-users"] }),
   });
 
   const reinstateMut = useMutation({
     mutationFn: (id: string) =>
-      api.patch(`/admin/users/${id}/reinstate`),
+      api.patch(`/admin/users/${id}`, { action: "reinstate" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-users"] }),
   });
 

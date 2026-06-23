@@ -48,7 +48,7 @@ export default function PublicProfilePage() {
   const { data: reviews } = useQuery({
     queryKey: ["user-reviews", id],
     queryFn: async () => {
-      const { data } = await api.get(`/reviews/user/${id}`);
+      const { data } = await api.get(`/reviews/${id}`);
       return data;
     },
     enabled: !!id,

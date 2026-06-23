@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   try {
     const q = req.nextUrl.searchParams;
     const page = Number(q.get("page") || 1);
-    const limit = Number(q.get("limit") || 24);
+    const limit = Math.min(Number(q.get("limit") || 24), 100);
     const skip = (page - 1) * limit;
 
     const where: any = {

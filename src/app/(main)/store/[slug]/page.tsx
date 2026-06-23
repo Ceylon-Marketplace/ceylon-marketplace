@@ -24,7 +24,7 @@ export default function StorefrontPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["storefront", slug],
     queryFn: async () => {
-      const { data } = await api.get(`/storefronts/${slug}`);
+      const { data } = await api.get(`/storefront/${slug}`);
       return data;
     },
   });

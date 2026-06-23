@@ -45,13 +45,13 @@ export default function NotificationsPage() {
   });
 
   const markAllRead = useMutation({
-    mutationFn: () => api.patch("/notifications/read-all"),
+    mutationFn: () => api.patch("/notifications"),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["notifications-all"] }),
   });
 
   const markRead = useMutation({
-    mutationFn: (id: string) => api.patch(`/notifications/${id}/read`),
+    mutationFn: (id: string) => api.patch("/notifications", { id }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["notifications-all"] }),
   });

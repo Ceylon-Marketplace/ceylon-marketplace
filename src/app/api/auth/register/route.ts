@@ -5,7 +5,7 @@ import { signToken, signRefreshToken, handleError, ApiError } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, firstName, lastName, phone, role } = await req.json();
+    const { email, password, firstName, lastName, phone } = await req.json();
     if (!email || !password || !firstName || !lastName)
       throw new ApiError("Email, password, firstName and lastName are required");
 
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       data: {
         email,
         passwordHash,
-        role: role ?? "USER",
+        role: "USER",
         verificationLevel: "EMAIL",
         profile: { create: { firstName, lastName, phone } },
       },

@@ -26,6 +26,7 @@ function MessagesContent() {
   const [activeConvId, setActiveConvId] = useState<string | null>(initialConvId);
   const [newMessage, setNewMessage] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const prevMessageCountRef = useRef(0);
 
   const { data: conversations } = useQuery({
     queryKey: ["conversations"],
@@ -63,7 +64,10 @@ function MessagesContent() {
   }, [user, router]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > prevMessageCountRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      prevMessageCountRef.current = messages.length;
+    }
   }, [messages]);
 
   const sendMessage = () => {

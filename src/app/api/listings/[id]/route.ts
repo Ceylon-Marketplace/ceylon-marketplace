@@ -57,6 +57,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       await prisma.listingAttributeValue.deleteMany({ where: { listingId: id } });
     }
 
+    // Any edit to an approved listing requires re-approval
+    const needsReview = listing.status === "ACTIVE";
+
     const updated = await prisma.listing.update({
       where: { id },
       data: {
@@ -67,7 +70,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         ...(body.location && { location: body.location }),
         ...(body.condition && { condition: body.condition }),
         ...(body.listingType && { listingType: body.listingType }),
-        status: "PENDING_REVIEW",
+        ...(needsReview && { status: "PENDING_REVIEW" }),
         media: body.mediaToAdd?.length ? { create: body.mediaToAdd.map((m: any) => ({ url: m.url, type: m.type, order: m.order })) } : undefined,
         attributeValues: body.attributes?.length ? { create: body.attributes.map((a: any) => ({ attributeId: a.attributeId, value: a.value })) } : undefined,
       },

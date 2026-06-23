@@ -26,7 +26,7 @@ export default function OffersPage() {
   const { data: received, isLoading: receivedLoading } = useQuery({
     queryKey: ["offers-received"],
     queryFn: async () => {
-      const { data } = await api.get("/offers/received");
+      const { data } = await api.get("/offers?type=received");
       return data;
     },
     enabled: !!user,
@@ -35,7 +35,7 @@ export default function OffersPage() {
   const { data: sent, isLoading: sentLoading } = useQuery({
     queryKey: ["offers-sent"],
     queryFn: async () => {
-      const { data } = await api.get("/offers/sent");
+      const { data } = await api.get("/offers");
       return data;
     },
     enabled: !!user,
@@ -43,12 +43,12 @@ export default function OffersPage() {
 
   const respondOffer = useMutation({
     mutationFn: ({ id, action }: { id: string; action: "accept" | "reject" }) =>
-      api.patch(`/offers/${id}/${action}`),
+      api.patch(`/offers/${id}/respond`, { action }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["offers-received"] }),
   });
 
   const withdrawOffer = useMutation({
-    mutationFn: (id: string) => api.delete(`/offers/${id}`),
+    mutationFn: (id: string) => api.patch(`/offers/${id}/withdraw`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["offers-sent"] }),
   });
 

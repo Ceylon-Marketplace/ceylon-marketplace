@@ -10,23 +10,27 @@ export class ApiError extends Error {
 }
 
 export function signToken(payload: object) {
-  return jwt.sign(payload, process.env.JWT_SECRET!, {
+  if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is not set");
+  return jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: (process.env.JWT_EXPIRES_IN || "15m") as any,
   });
 }
 
 export function signRefreshToken(payload: object) {
-  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, {
+  if (!process.env.JWT_REFRESH_SECRET) throw new Error("JWT_REFRESH_SECRET is not set");
+  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
     expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN || "7d") as any,
   });
 }
 
 function verifyToken(token: string): any {
-  return jwt.verify(token, process.env.JWT_SECRET!);
+  if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is not set");
+  return jwt.verify(token, process.env.JWT_SECRET);
 }
 
 export function verifyRefreshToken(token: string): any {
-  return jwt.verify(token, process.env.JWT_REFRESH_SECRET!);
+  if (!process.env.JWT_REFRESH_SECRET) throw new Error("JWT_REFRESH_SECRET is not set");
+  return jwt.verify(token, process.env.JWT_REFRESH_SECRET);
 }
 
 export function getAuthUser(req: Request): any | null {

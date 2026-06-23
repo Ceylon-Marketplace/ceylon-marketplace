@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Remove-Item \"c:\\\\Users\\\\wanigasekara\\\\Projects\\\\ceylon-marketplace\\\\src\\\\app\\\\api\\\\setup\\\\admin\\\\route.ts\" -Force)"
+    ]
+  }
+}

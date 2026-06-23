@@ -34,7 +34,7 @@ export default function EditListingPage() {
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
-      const { data } = await api.get("/listings/categories");
+      const { data } = await api.get("/categories");
       return data;
     },
   });
@@ -197,9 +197,15 @@ export default function EditListingPage() {
         </div>
       )}
 
+      {listing.status === "ACTIVE" && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <strong>This listing is live.</strong> Saving any changes will take it offline and resubmit it for admin review. It will not be visible to buyers until approved again.
+        </div>
+      )}
+
       {listing.status === "PENDING_REVIEW" && (
         <div className="mb-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-700">
-          This listing is pending review. Changes will reset it to pending review.
+          This listing is pending review. Changes will keep it in the review queue.
         </div>
       )}
 
