@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(Remove-Item \"c:\\\\Users\\\\wanigasekara\\\\Projects\\\\ceylon-marketplace\\\\src\\\\app\\\\api\\\\setup\\\\admin\\\\route.ts\" -Force)"
+      "Bash(Remove-Item \"c:\\\\Users\\\\wanigasekara\\\\Projects\\\\ceylon-marketplace\\\\src\\\\app\\\\api\\\\setup\\\\admin\\\\route.ts\" -Force)",
+      "Bash(git -C \"c:/Users/wanigasekara/Projects/ceylon-marketplace\" ls-files .env)"
     ]
   }
 }
