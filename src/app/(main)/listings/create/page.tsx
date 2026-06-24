@@ -6,10 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth.store";
+import { ImageUploader } from "@/components/image-uploader";
 import {
-  Plus,
-  X,
-  ImageIcon,
   ChevronLeft,
   Info,
   CheckCircle,
@@ -27,6 +25,7 @@ const CONDITIONS = [
   { value: "POOR", label: "Poor" },
 ];
 
+type UploadedImage = { url: string; order: number; isUploading?: boolean; uploadProgress?: number; error?: string };
 type MediaItem = { url: string; type: "IMAGE" | "VIDEO"; order: number };
 type AttributeValue = { attributeId: string; value: string };
 
@@ -139,8 +138,7 @@ export default function CreateListingPage() {
   });
 
   const [auctionForm, setAuctionForm] = useState(EMPTY_AUCTION);
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
-  const [newImageUrl, setNewImageUrl] = useState("");
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [attributes, setAttributes] = useState<AttributeValue[]>([]);
 
   const { data: categories } = useQuery({
@@ -225,7 +223,7 @@ export default function CreateListingPage() {
             listingType: "FIXED_PRICE",
           });
           setAuctionForm(EMPTY_AUCTION);
-          setMediaItems([]);
+          setUploadedImages([]);
           setAttributes([]);
           setError("");
         }}
@@ -241,23 +239,6 @@ export default function CreateListingPage() {
   const setAuction =
     (field: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
       setAuctionForm((f) => ({ ...f, [field]: e.target.value }));
-
-  const addImage = () => {
-    const url = newImageUrl.trim();
-    if (!url) return;
-    if (mediaItems.filter((m) => m.type === "IMAGE").length >= 10) {
-      setError("Maximum 10 images allowed.");
-      return;
-    }
-    setMediaItems((prev) => [...prev, { url, type: "IMAGE", order: prev.length }]);
-    setNewImageUrl("");
-  };
-
-  const removeMedia = (index: number) => {
-    setMediaItems((prev) =>
-      prev.filter((_, i) => i !== index).map((m, i) => ({ ...m, order: i })),
-    );
-  };
 
   const validateAuction = (): string | null => {
     if (!auctionForm.startPrice || Number(auctionForm.startPrice) <= 0)
@@ -285,6 +266,20 @@ export default function CreateListingPage() {
       setError("Please select a category.");
       return;
     }
+
+    // Convert uploaded images to media items
+    const validImages = uploadedImages.filter((img) => !img.error && img.url);
+    if (validImages.length === 0) {
+      setError("Please upload at least one image.");
+      return;
+    }
+
+    const mediaItems: MediaItem[] = validImages.map((img, idx) => ({
+      url: img.url,
+      type: "IMAGE" as const,
+      order: idx,
+    }));
+
     if (submitStatus !== "DRAFT" && form.listingType === "AUCTION") {
       const auctionError = validateAuction();
       if (auctionError) { setError(auctionError); return; }
@@ -623,72 +618,14 @@ export default function CreateListingPage() {
 
         {/* Photos */}
         <section className="card space-y-4 p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-gray-900">Photos</h2>
-            <span className="text-xs text-gray-400">
-              {mediaItems.filter((m) => m.type === "IMAGE").length}/10 images
-            </span>
-          </div>
-
-          {mediaItems.length > 0 && (
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-              {mediaItems.map((m, i) => (
-                <div
-                  key={i}
-                  className="group relative aspect-square overflow-hidden rounded-lg bg-gray-100"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={m.url}
-                    alt={`Image ${i + 1}`}
-                    className="h-full w-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeMedia(i)}
-                    className="absolute right-1 top-1 hidden rounded-full bg-black/60 p-0.5 text-white group-hover:flex"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                  {i === 0 && (
-                    <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1 text-[10px] text-white">
-                      Cover
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <ImageIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                type="url"
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addImage(); } }}
-                className="input pl-9"
-                placeholder="Paste image URL and press Add…"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={addImage}
-              disabled={
-                !newImageUrl.trim() ||
-                mediaItems.filter((m) => m.type === "IMAGE").length >= 10
-              }
-              className="btn-secondary gap-1 disabled:opacity-50"
-            >
-              <Plus className="h-4 w-4" /> Add
-            </button>
-          </div>
-          <p className="text-xs text-gray-400">
-            Paste direct image URLs. The first image becomes the cover photo.
+          <h2 className="font-semibold text-gray-900">Photos</h2>
+          <ImageUploader
+            images={uploadedImages}
+            onImagesChange={setUploadedImages}
+            maxImages={10}
+          />
+          <p className="text-xs text-gray-500">
+            Upload high-quality photos of your item. The first image will be used as the cover photo.
           </p>
         </section>
 

@@ -5,7 +5,8 @@ import { useRouter, useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth.store";
-import { Plus, X, ImageIcon, ChevronLeft, Trash2 } from "lucide-react";
+import { ImageUploader } from "@/components/image-uploader";
+import { ChevronLeft, Trash2 } from "lucide-react";
 
 const CONDITIONS = [
   { value: "NEW", label: "New" },
@@ -16,6 +17,7 @@ const CONDITIONS = [
 ];
 
 type ExistingMedia = { id: string; url: string; type: string; order: number };
+type UploadedImage = { url: string; order: number; isUploading?: boolean; uploadProgress?: number; error?: string };
 type AttributeValue = { attributeId: string; value: string };
 
 export default function EditListingPage() {
@@ -52,8 +54,7 @@ export default function EditListingPage() {
 
   const [existingMedia, setExistingMedia] = useState<ExistingMedia[]>([]);
   const [removedMediaIds, setRemovedMediaIds] = useState<string[]>([]);
-  const [newImageUrl, setNewImageUrl] = useState("");
-  const [newImages, setNewImages] = useState<{ url: string; type: "IMAGE"; order: number }[]>([]);
+  const [newImages, setNewImages] = useState<UploadedImage[]>([]);
   const [attributes, setAttributes] = useState<AttributeValue[]>([]);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -114,28 +115,16 @@ export default function EditListingPage() {
     setRemovedMediaIds((prev) => [...prev, mediaId]);
   };
 
-  const addNewImage = () => {
-    const url = newImageUrl.trim();
-    if (!url) return;
-    const totalImages =
-      existingMedia.filter((m) => m.type === "IMAGE").length +
-      newImages.length;
-    if (totalImages >= 10) { setError("Maximum 10 images allowed."); return; }
-    setNewImages((prev) => [...prev, { url, type: "IMAGE", order: existingMedia.length + prev.length }]);
-    setNewImageUrl("");
-    setError("");
-  };
-
-  const removeNewImage = (idx: number) => {
-    setNewImages((prev) => prev.filter((_, i) => i !== idx));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (form.title.length < 10 || form.title.length > 120) {
       setError("Title must be 10–120 characters.");
       return;
     }
+
+    // Filter out errored and uploading images
+    const validNewImages = newImages.filter((img) => !img.error && img.url && !img.isUploading);
+
     setSaving(true);
     setError("");
     try {
@@ -143,7 +132,11 @@ export default function EditListingPage() {
         ...form,
         price: parseFloat(form.price),
         quantity: parseInt(form.quantity),
-        mediaToAdd: newImages,
+        mediaToAdd: validNewImages.map((img) => ({
+          url: img.url,
+          type: "IMAGE",
+          order: existingMedia.length + newImages.indexOf(img),
+        })),
         mediaToRemove: removedMediaIds,
         attributes: attributes.filter((a) => a.value.trim()),
       });
@@ -376,76 +369,54 @@ export default function EditListingPage() {
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-gray-900">Photos</h2>
             <span className="text-xs text-gray-400">
-              {existingMedia.filter((m) => m.type === "IMAGE").length + newImages.length}/10
+              {existingMedia.filter((m) => m.type === "IMAGE").length + newImages.filter((m) => !m.error && m.url).length}/10
             </span>
           </div>
 
           {/* Existing images */}
-          {existingMedia.length > 0 && (
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-              {existingMedia.filter((m) => m.type === "IMAGE").map((m, i) => (
-                <div key={m.id} className="group relative aspect-square overflow-hidden rounded-lg bg-gray-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={m.url} alt="" className="h-full w-full object-cover" />
-                  {canEdit && (
-                    <button
-                      type="button"
-                      onClick={() => removeExisting(m.id)}
-                      className="absolute right-1 top-1 hidden rounded-full bg-black/60 p-0.5 text-white group-hover:flex"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
-                  {i === 0 && existingMedia[0]?.id === m.id && (
-                    <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1 text-[10px] text-white">
-                      Cover
-                    </span>
-                  )}
+          {existingMedia.filter((m) => m.type === "IMAGE").length > 0 && (
+            <>
+              <div>
+                <p className="mb-2 text-xs font-medium text-gray-500">Existing Images</p>
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                  {existingMedia.filter((m) => m.type === "IMAGE").map((m, i) => (
+                    <div key={m.id} className="group relative aspect-square overflow-hidden rounded-lg bg-gray-100">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={m.url} alt="" className="h-full w-full object-cover" />
+                      {canEdit && (
+                        <button
+                          type="button"
+                          onClick={() => removeExisting(m.id)}
+                          className="absolute right-1 top-1 hidden rounded-full bg-black/60 p-0.5 text-white group-hover:flex"
+                        >
+                          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                      {i === 0 && (
+                        <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1 text-[10px] text-white">
+                          Cover
+                        </span>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
-              {newImages.map((m, i) => (
-                <div key={`new-${i}`} className="group relative aspect-square overflow-hidden rounded-lg bg-gray-100 ring-2 ring-brand-300">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={m.url} alt="" className="h-full w-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => removeNewImage(i)}
-                    className="absolute right-1 top-1 hidden rounded-full bg-black/60 p-0.5 text-white group-hover:flex"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                  <span className="absolute bottom-1 left-1 rounded bg-brand-500/80 px-1 text-[10px] text-white">
-                    New
-                  </span>
-                </div>
-              ))}
-            </div>
+              </div>
+            </>
           )}
 
           {canEdit && (
             <>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <ImageIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="url"
-                    value={newImageUrl}
-                    onChange={(e) => setNewImageUrl(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addNewImage(); } }}
-                    className="input pl-9"
-                    placeholder="Paste image URL to add…"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={addNewImage}
-                  disabled={!newImageUrl.trim()}
-                  className="btn-secondary gap-1 disabled:opacity-50"
-                >
-                  <Plus className="h-4 w-4" /> Add
-                </button>
+              <div>
+                <p className="mb-2 text-xs font-medium text-gray-500">Add New Images</p>
+                <ImageUploader
+                  images={newImages}
+                  onImagesChange={setNewImages}
+                  maxImages={10 - existingMedia.filter((m) => m.type === "IMAGE").length}
+                  listingId={id}
+                />
               </div>
-              <p className="text-xs text-gray-400">Paste direct image URLs. New images are added to the end.</p>
             </>
           )}
         </section>

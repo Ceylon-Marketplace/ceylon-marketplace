@@ -75,6 +75,15 @@ export async function POST(req: NextRequest) {
     });
     if (existing) throw new ApiError("A listing with this title already exists");
 
+    // Validate image count (max 10)
+    if (dto.media && dto.media.length > 10) {
+      throw new ApiError("Maximum 10 images per listing allowed.", 400);
+    }
+
+    if (dto.media && dto.media.length === 0) {
+      throw new ApiError("At least one image is required.", 400);
+    }
+
     const listing = await prisma.listing.create({
       data: {
         sellerId: user.sub,

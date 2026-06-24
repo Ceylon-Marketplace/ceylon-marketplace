@@ -57,6 +57,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       await prisma.listingAttributeValue.deleteMany({ where: { listingId: id } });
     }
 
+    // Validate image count
+    const existingMediaCount = await prisma.listingMedia.count({ where: { listingId: id } });
+    const newMediaCount = body.mediaToAdd?.length ?? 0;
+    const totalImages = existingMediaCount - (body.mediaToRemove?.length ?? 0) + newMediaCount;
+
+    if (totalImages > 10) {
+      throw new ApiError("Maximum 10 images per listing allowed.", 400);
+    }
+
     // Any edit to an approved listing requires re-approval
     const needsReview = listing.status === "ACTIVE";
 
