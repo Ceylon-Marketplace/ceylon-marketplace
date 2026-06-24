@@ -7,7 +7,11 @@ export async function GET() {
     const cats = await prisma.category.findMany({
       where: { parentId: null, isActive: true },
       include: {
-        children: { where: { isActive: true }, include: { attributes: true }, orderBy: { name: "asc" } },
+        children: {
+          where: { isActive: true },
+          include: { attributes: true },
+          orderBy: { name: "asc" },
+        },
         attributes: true,
       },
       orderBy: { name: "asc" },
@@ -25,7 +29,9 @@ export async function POST(req: NextRequest) {
     const { name, slug, parentId, imageUrl } = await req.json();
     const existing = await prisma.category.findUnique({ where: { slug } });
     if (existing) throw new ApiError("Slug already exists");
-    const cat = await prisma.category.create({ data: { name, slug, parentId, imageUrl } });
+    const cat = await prisma.category.create({
+      data: { name, slug, parentId, imageUrl },
+    });
     return Response.json(cat, { status: 201 });
   } catch (err) {
     return handleError(err);

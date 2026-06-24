@@ -23,7 +23,9 @@ function MessagesContent() {
   const initialConvId = searchParams.get("conversationId");
   const queryClient = useQueryClient();
 
-  const [activeConvId, setActiveConvId] = useState<string | null>(initialConvId);
+  const [activeConvId, setActiveConvId] = useState<string | null>(
+    initialConvId,
+  );
   const [newMessage, setNewMessage] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const prevMessageCountRef = useRef(0);
@@ -50,7 +52,10 @@ function MessagesContent() {
 
   const sendMutation = useMutation({
     mutationFn: async (content: string) => {
-      const { data } = await api.post(`/conversations/${activeConvId}/messages`, { content });
+      const { data } = await api.post(
+        `/conversations/${activeConvId}/messages`,
+        { content },
+      );
       return data;
     },
     onSuccess: () => {
@@ -107,8 +112,14 @@ function MessagesContent() {
                   <p className="truncate text-sm font-medium text-gray-900">
                     {other?.profile?.firstName} {other?.profile?.lastName}
                   </p>
-                  <p className="truncate text-xs text-gray-400">{conv.listing.title}</p>
-                  {lastMsg && <p className="truncate text-xs text-gray-400">{lastMsg.content}</p>}
+                  <p className="truncate text-xs text-gray-400">
+                    {conv.listing.title}
+                  </p>
+                  {lastMsg && (
+                    <p className="truncate text-xs text-gray-400">
+                      {lastMsg.content}
+                    </p>
+                  )}
                 </div>
               </button>
             );
@@ -123,10 +134,25 @@ function MessagesContent() {
             {messages.map((msg: any) => {
               const isMe = msg.senderId === user.id;
               return (
-                <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
-                  <div className={cn("max-w-xs rounded-2xl px-4 py-2 text-sm", isMe ? "bg-brand-500 text-white" : "bg-gray-100 text-gray-900")}>
+                <div
+                  key={msg.id}
+                  className={cn("flex", isMe ? "justify-end" : "justify-start")}
+                >
+                  <div
+                    className={cn(
+                      "max-w-xs rounded-2xl px-4 py-2 text-sm",
+                      isMe
+                        ? "bg-brand-500 text-white"
+                        : "bg-gray-100 text-gray-900",
+                    )}
+                  >
                     <p>{msg.content}</p>
-                    <p className={cn("mt-0.5 text-right text-xs", isMe ? "text-brand-100" : "text-gray-400")}>
+                    <p
+                      className={cn(
+                        "mt-0.5 text-right text-xs",
+                        isMe ? "text-brand-100" : "text-gray-400",
+                      )}
+                    >
                       {timeAgo(msg.createdAt)}
                     </p>
                   </div>
@@ -145,7 +171,11 @@ function MessagesContent() {
               placeholder="Type a message…"
               className="input flex-1"
             />
-            <button onClick={sendMessage} disabled={sendMutation.isPending} className="btn-primary px-3">
+            <button
+              onClick={sendMessage}
+              disabled={sendMutation.isPending}
+              className="btn-primary px-3"
+            >
               <Send className="h-4 w-4" />
             </button>
           </div>

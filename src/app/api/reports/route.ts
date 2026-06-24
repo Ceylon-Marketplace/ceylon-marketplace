@@ -5,7 +5,13 @@ import { requireAuth, requireRole, handleError } from "@/lib/auth";
 export async function GET(req: NextRequest) {
   try {
     const user = requireAuth(req);
-    requireRole(user, "SUPER_ADMIN", "OPERATIONS_MANAGER", "CONTENT_MODERATOR", "SUPPORT_AGENT");
+    requireRole(
+      user,
+      "SUPER_ADMIN",
+      "OPERATIONS_MANAGER",
+      "CONTENT_MODERATOR",
+      "SUPPORT_AGENT",
+    );
 
     const q = req.nextUrl.searchParams;
     const status = q.get("status") ?? undefined;
@@ -19,7 +25,11 @@ export async function GET(req: NextRequest) {
       prisma.report.findMany({
         where,
         include: {
-          reporter: { include: { profile: { select: { firstName: true, lastName: true } } } },
+          reporter: {
+            include: {
+              profile: { select: { firstName: true, lastName: true } },
+            },
+          },
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
@@ -37,10 +47,18 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const user = requireAuth(req);
-    const { targetType, targetId, reason, description, listingId } = await req.json();
+    const { targetType, targetId, reason, description, listingId } =
+      await req.json();
 
     const report = await prisma.report.create({
-      data: { reporterId: user.sub, targetType, targetId, reason, description, listingId },
+      data: {
+        reporterId: user.sub,
+        targetType,
+        targetId,
+        reason,
+        description,
+        listingId,
+      },
     });
 
     return Response.json(report, { status: 201 });

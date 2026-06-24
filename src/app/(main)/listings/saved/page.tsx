@@ -24,8 +24,10 @@ export default function SavedListingsPage() {
   });
 
   const unsave = useMutation({
-    mutationFn: (listingId: string) => api.delete(`/listings/${listingId}/save`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["saved-listings"] }),
+    mutationFn: (listingId: string) =>
+      api.delete(`/listings/${listingId}/save`),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["saved-listings"] }),
   });
 
   useEffect(() => {
@@ -51,14 +53,19 @@ export default function SavedListingsPage() {
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="aspect-[3/4] animate-pulse rounded-xl bg-gray-100" />
+            <div
+              key={i}
+              className="aspect-[3/4] animate-pulse rounded-xl bg-gray-100"
+            />
           ))}
         </div>
       ) : listings.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-gray-500">
           <Package className="mb-4 h-12 w-12 text-gray-300" />
           <p className="text-lg font-medium">No saved listings yet</p>
-          <p className="mt-1 text-sm">Tap the heart icon on any listing to save it here.</p>
+          <p className="mt-1 text-sm">
+            Tap the heart icon on any listing to save it here.
+          </p>
           <Link href="/listings" className="btn-primary mt-4">
             Browse Listings
           </Link>

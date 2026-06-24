@@ -69,7 +69,8 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 py-16 text-center sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold">Ready to start selling?</h2>
           <p className="mt-3 text-gray-400">
-            Create a seller account and list your first item in minutes — it&apos;s free.
+            Create a seller account and list your first item in minutes —
+            it&apos;s free.
           </p>
           <Link
             href="/register"

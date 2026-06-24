@@ -4,13 +4,37 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth.store";
-import { Store, Package, Gavel, TrendingUp, Star, ChevronRight, Check } from "lucide-react";
+import {
+  Store,
+  Package,
+  Gavel,
+  TrendingUp,
+  Star,
+  ChevronRight,
+  Check,
+} from "lucide-react";
 
 const PERKS = [
-  { icon: <Package className="h-5 w-5" />, title: "List items for sale", body: "Create detailed listings with photos, descriptions, and category attributes." },
-  { icon: <Gavel className="h-5 w-5" />, title: "Run auctions", body: "Set a start price, reserve price, and schedule your auction to maximise bids." },
-  { icon: <TrendingUp className="h-5 w-5" />, title: "Receive offers", body: "Buyers can negotiate directly with you — accept, reject, or counter." },
-  { icon: <Star className="h-5 w-5" />, title: "Build your reputation", body: "Collect reviews and earn verification badges to boost buyer trust." },
+  {
+    icon: <Package className="h-5 w-5" />,
+    title: "List items for sale",
+    body: "Create detailed listings with photos, descriptions, and category attributes.",
+  },
+  {
+    icon: <Gavel className="h-5 w-5" />,
+    title: "Run auctions",
+    body: "Set a start price, reserve price, and schedule your auction to maximise bids.",
+  },
+  {
+    icon: <TrendingUp className="h-5 w-5" />,
+    title: "Receive offers",
+    body: "Buyers can negotiate directly with you — accept, reject, or counter.",
+  },
+  {
+    icon: <Star className="h-5 w-5" />,
+    title: "Build your reputation",
+    body: "Collect reviews and earn verification badges to boost buyer trust.",
+  },
 ];
 
 export default function BecomeSellerPage() {
@@ -22,8 +46,13 @@ export default function BecomeSellerPage() {
   const isSeller = user?.role === "SELLER" || user?.role === "BUSINESS_SELLER";
 
   useEffect(() => {
-    if (!user) { router.push("/login?redirect=/become-seller"); return; }
-    if (isSeller) { router.replace("/dashboard"); }
+    if (!user) {
+      router.push("/login?redirect=/become-seller");
+      return;
+    }
+    if (isSeller) {
+      router.replace("/dashboard");
+    }
   }, [user, isSeller, router]);
 
   if (!user || isSeller) return null;
@@ -36,7 +65,10 @@ export default function BecomeSellerPage() {
       setMode("seller");
       router.push("/dashboard");
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Something went wrong. Please try again.");
+      setError(
+        err?.response?.data?.message ||
+          "Something went wrong. Please try again.",
+      );
       setLoading(false);
     }
   };
@@ -50,9 +82,12 @@ export default function BecomeSellerPage() {
             <Store className="h-8 w-8" />
           </div>
         </div>
-        <h1 className="text-3xl font-bold text-gray-900">Start selling on Ceylon</h1>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Start selling on Ceylon
+        </h1>
         <p className="mt-2 text-gray-500">
-          Upgrade your account to start listing items and selling on Ceylon Marketplace.
+          Upgrade your account to start listing items and selling on Ceylon
+          Marketplace.
         </p>
       </div>
 
@@ -76,11 +111,14 @@ export default function BecomeSellerPage() {
         <h2 className="mb-4 font-semibold text-gray-900">How it works</h2>
         <ol className="space-y-3">
           {[
-            "Click \"Upgrade to Seller\" below — your account is upgraded instantly.",
+            'Click "Upgrade to Seller" below — your account is upgraded instantly.',
             "Switch to seller mode using the toggle in the navbar.",
             "Start creating listings and selling right away.",
           ].map((step, i) => (
-            <li key={i} className="flex items-start gap-3 text-sm text-gray-600">
+            <li
+              key={i}
+              className="flex items-start gap-3 text-sm text-gray-600"
+            >
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-500 text-[11px] font-bold text-white">
                 {i + 1}
               </span>
@@ -94,13 +132,16 @@ export default function BecomeSellerPage() {
       <div className="mb-8 flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
         <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
         <span>
-          <strong>Buying remains free.</strong> Upgrading to a seller account does not affect
-          your ability to browse, bid on auctions, or make offers — those are always free.
+          <strong>Buying remains free.</strong> Upgrading to a seller account
+          does not affect your ability to browse, bid on auctions, or make
+          offers — those are always free.
         </span>
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-600">{error}</div>
+        <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-600">
+          {error}
+        </div>
       )}
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -116,7 +157,6 @@ export default function BecomeSellerPage() {
           Maybe later
         </Link>
       </div>
-
     </div>
   );
 }

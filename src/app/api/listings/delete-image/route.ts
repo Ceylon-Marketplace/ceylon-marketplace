@@ -13,7 +13,7 @@ export async function DELETE(req: NextRequest) {
     if (!listingId || !mediaId) {
       return NextResponse.json(
         { message: "Missing listingId or mediaId" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -24,10 +24,7 @@ export async function DELETE(req: NextRequest) {
     });
 
     if (!listing || listing.sellerId !== user.id) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 403 }
-      );
+      return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
     // Get media details
@@ -37,10 +34,7 @@ export async function DELETE(req: NextRequest) {
     });
 
     if (!media || media.listingId !== listingId) {
-      return NextResponse.json(
-        { message: "Media not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ message: "Media not found" }, { status: 404 });
     }
 
     // Delete from Vercel Blob using URL
@@ -61,7 +55,7 @@ export async function DELETE(req: NextRequest) {
     console.error("Image deletion error:", error);
     return NextResponse.json(
       { message: "Failed to delete image" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,4 +1,5 @@
 # Codebase Cleanup Report
+
 **Generated:** 2026-06-23  
 **Project:** Ceylon Marketplace (Next.js 15 + Prisma)
 
@@ -17,6 +18,7 @@ Comprehensive codebase cleanup completed successfully. The project had **2 criti
 ## 🔴 Critical Issues Fixed
 
 ### 1. **Broken Cloudflare/OpenNext Import (BUILD BLOCKER)**
+
 - **File:** `next.config.ts`
 - **Issue:** Attempted to import `@opennextjs/cloudflare` which was never installed
 - **Error:** `Cannot find module '@opennextjs/cloudflare'`
@@ -25,6 +27,7 @@ Comprehensive codebase cleanup completed successfully. The project had **2 criti
 - **Impact:** Build was completely broken before this fix
 
 ### 2. **Orphaned Cloudflare Configuration**
+
 - **File:** `open-next.config.ts`
 - **Issue:** Configuration file for Cloudflare Workers deployment, no longer needed
 - **Fix:** Deleted the entire file
@@ -35,6 +38,7 @@ Comprehensive codebase cleanup completed successfully. The project had **2 criti
 ## 🟡 Configuration Issues Fixed
 
 ### 3. **Incorrect Tailwind Content Paths**
+
 - **File:** `tailwind.config.ts`
 - **Issue:** Referenced non-existent `./src/pages/` directory
 - **Project Reality:** Uses Next.js 13+ App Router (`./src/app/`)
@@ -42,6 +46,7 @@ Comprehensive codebase cleanup completed successfully. The project had **2 criti
 - **Result:** Tailwind now scans only actual directories
 
 ### 4. **Missing ESLint Configuration**
+
 - **File:** `.eslintrc.json`
 - **Issue:** No ESLint configuration existed, causing linting to fail
 - **Fix:** Removed and allowed Next.js auto-configuration
@@ -52,6 +57,7 @@ Comprehensive codebase cleanup completed successfully. The project had **2 criti
 ## 🟠 Dead Code Removed
 
 ### 5. **Unused Import in Listings API Route**
+
 - **File:** `src/app/api/listings/route.ts`
 - **Issue:** Imported `bcryptjs` but never used
 - **Fix:** Removed unused import
@@ -65,25 +71,26 @@ Comprehensive codebase cleanup completed successfully. The project had **2 criti
 
 The following packages are installed but **NOT imported anywhere in the codebase**:
 
-| Package | Category | Status | Notes |
-|---------|----------|--------|-------|
-| `react-hook-form` | Forms | ⚠️ Unused | Likely installed for future form handling |
-| `@hookform/resolvers` | Forms | ⚠️ Unused | Paired with react-hook-form |
-| `class-variance-authority` | UI Utilities | ⚠️ Unused | CVA utilities for component styling |
-| `@radix-ui/react-avatar` | UI Components | ⚠️ Unused | Part of Radix UI library |
-| `@radix-ui/react-dialog` | UI Components | ⚠️ Unused | Part of Radix UI library |
-| `@radix-ui/react-dropdown-menu` | UI Components | ⚠️ Unused | Part of Radix UI library |
-| `@radix-ui/react-select` | UI Components | ⚠️ Unused | Part of Radix UI library |
-| `@radix-ui/react-separator` | UI Components | ⚠️ Unused | Part of Radix UI library |
-| `@radix-ui/react-tabs` | UI Components | ⚠️ Unused | Part of Radix UI library |
-| `@radix-ui/react-toast` | UI Components | ⚠️ Unused | Part of Radix UI library |
-| `eslint` | Dev Tools | ⚠️ Installed | Added during cleanup for linting support |
-| `eslint-config-next` | Dev Tools | ⚠️ Installed | Added during cleanup for linting support |
+| Package                         | Category      | Status       | Notes                                     |
+| ------------------------------- | ------------- | ------------ | ----------------------------------------- |
+| `react-hook-form`               | Forms         | ⚠️ Unused    | Likely installed for future form handling |
+| `@hookform/resolvers`           | Forms         | ⚠️ Unused    | Paired with react-hook-form               |
+| `class-variance-authority`      | UI Utilities  | ⚠️ Unused    | CVA utilities for component styling       |
+| `@radix-ui/react-avatar`        | UI Components | ⚠️ Unused    | Part of Radix UI library                  |
+| `@radix-ui/react-dialog`        | UI Components | ⚠️ Unused    | Part of Radix UI library                  |
+| `@radix-ui/react-dropdown-menu` | UI Components | ⚠️ Unused    | Part of Radix UI library                  |
+| `@radix-ui/react-select`        | UI Components | ⚠️ Unused    | Part of Radix UI library                  |
+| `@radix-ui/react-separator`     | UI Components | ⚠️ Unused    | Part of Radix UI library                  |
+| `@radix-ui/react-tabs`          | UI Components | ⚠️ Unused    | Part of Radix UI library                  |
+| `@radix-ui/react-toast`         | UI Components | ⚠️ Unused    | Part of Radix UI library                  |
+| `eslint`                        | Dev Tools     | ⚠️ Installed | Added during cleanup for linting support  |
+| `eslint-config-next`            | Dev Tools     | ⚠️ Installed | Added during cleanup for linting support  |
 
 ### Recommendation
 
 **Option 1 (Conservative):** Keep all packages - they may be used in future features  
 **Option 2 (Aggressive):** Remove all unused packages to reduce bundle size and dependencies:
+
 ```bash
 npm remove react-hook-form @hookform/resolvers class-variance-authority \
   @radix-ui/react-avatar @radix-ui/react-dialog @radix-ui/react-dropdown-menu \
@@ -94,24 +101,25 @@ npm remove react-hook-form @hookform/resolvers class-variance-authority \
 
 ## ✅ Active Dependencies Verified
 
-| Package | Usage | Status |
-|---------|-------|--------|
-| `axios` | HTTP client in `src/lib/api.ts` and 18 pages | ✅ Used |
-| `@tanstack/react-query` | Data fetching in multiple pages | ✅ Used |
-| `zustand` | State management (`src/store/auth.store.ts`) | ✅ Used |
-| `bcryptjs` | Password hashing in auth routes | ✅ Used |
-| `clsx` | CSS class merging in components | ✅ Used |
-| `date-fns` | Date formatting utilities | ✅ Used |
-| `lucide-react` | Icon library | ✅ Used |
-| `zod` | Schema validation | ✅ Used |
-| `next` | Framework | ✅ Used |
-| `@prisma/client` | Database ORM | ✅ Used |
+| Package                 | Usage                                        | Status  |
+| ----------------------- | -------------------------------------------- | ------- |
+| `axios`                 | HTTP client in `src/lib/api.ts` and 18 pages | ✅ Used |
+| `@tanstack/react-query` | Data fetching in multiple pages              | ✅ Used |
+| `zustand`               | State management (`src/store/auth.store.ts`) | ✅ Used |
+| `bcryptjs`              | Password hashing in auth routes              | ✅ Used |
+| `clsx`                  | CSS class merging in components              | ✅ Used |
+| `date-fns`              | Date formatting utilities                    | ✅ Used |
+| `lucide-react`          | Icon library                                 | ✅ Used |
+| `zod`                   | Schema validation                            | ✅ Used |
+| `next`                  | Framework                                    | ✅ Used |
+| `@prisma/client`        | Database ORM                                 | ✅ Used |
 
 ---
 
 ## 📁 Project Structure Assessment
 
 ### Files Analyzed
+
 - **Total Source Files:** 82 TypeScript/TSX files
 - **Components:** 3 reusable components
 - **Pages:** 25 page routes
@@ -119,12 +127,14 @@ npm remove react-hook-form @hookform/resolvers class-variance-authority \
 - **Utilities:** 4 helper files
 
 ### Files Status
+
 - ✅ All pages actively used
 - ✅ All components actively used
 - ✅ All API routes actively used
 - ✅ All utilities actively imported
 
 ### No Orphaned Files Found
+
 - No unused components
 - No abandoned test files
 - No backup/temporary files
@@ -135,13 +145,16 @@ npm remove react-hook-form @hookform/resolvers class-variance-authority \
 ## 🔍 Code Quality Checks
 
 ### Debug Statements
+
 - `console.error()` in `src/lib/auth.ts` - ✅ Legitimate (error handling)
 - No `console.log()`, `console.warn()`, or `debugger` statements found
 
 ### Commented Code
+
 - ✅ No significant commented-out code blocks found
 
 ### Unused Imports
+
 - ✅ All imports verified as actively used (except the bcryptjs in listings route, which was removed)
 
 ---
@@ -149,6 +162,7 @@ npm remove react-hook-form @hookform/resolvers class-variance-authority \
 ## 📊 Build & Verification Results
 
 ### Next.js Build
+
 ```
 ✔ Generated Prisma Client (v5.22.0)
 ✓ Compiled successfully
@@ -161,11 +175,13 @@ npm remove react-hook-form @hookform/resolvers class-variance-authority \
 **Routes:** 63 total (25 static, 38 dynamic API routes)
 
 ### TypeScript
+
 - ✅ All types valid
 - ✅ No type errors
 - ✅ Strict mode enabled
 
 ### Linting
+
 - ⚠️ ESLint infrastructure configured (ready for use)
 
 ---
@@ -189,14 +205,17 @@ npm remove react-hook-form @hookform/resolvers class-variance-authority \
 ## 🔧 Changes Made
 
 ### Modified Files (3)
+
 1. **next.config.ts** - Removed Cloudflare import
 2. **tailwind.config.ts** - Updated content paths
 3. **src/app/api/listings/route.ts** - Removed unused bcryptjs import
 
 ### Deleted Files (1)
+
 1. **open-next.config.ts** - Removed Cloudflare Workers config
 
 ### Created Files (1)
+
 1. **eslint** & **eslint-config-next** packages added to dev dependencies
 
 ---
@@ -204,15 +223,18 @@ npm remove react-hook-form @hookform/resolvers class-variance-authority \
 ## 📈 Optimization Opportunities
 
 ### Bundle Size
+
 - Current total: ~105 kB (First Load JS)
 - **Potential Reduction:** Removing 10 unused Radix UI packages could save ~15-25 kB
 
 ### Performance
+
 - All routes compile quickly
 - No performance bottlenecks identified
 - Image remotePatterns configured for CloudFlare CDN (good for future)
 
 ### Maintainability
+
 - Clear separation: Components, Pages, API Routes, Utilities
 - Consistent naming conventions
 - Well-structured Prisma schema (30 models, 6 enums)
@@ -222,16 +244,19 @@ npm remove react-hook-form @hookform/resolvers class-variance-authority \
 ## 🎯 Recommendations
 
 ### Immediate (Done ✅)
+
 1. Fix Cloudflare import - **DONE**
 2. Remove orphaned config files - **DONE**
 3. Fix configuration paths - **DONE**
 
 ### Short Term
+
 1. Consider removing unused Radix UI packages if not planned for future use
 2. Consider removing react-hook-form packages if custom form handling is preferred
 3. Set up automated linting in CI/CD pipeline
 
 ### Long Term
+
 1. Monitor package.json for unused dependencies
 2. Implement periodic code audits
 3. Consider adding pre-commit hooks to catch unused imports

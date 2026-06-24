@@ -7,7 +7,9 @@ export async function POST(req: NextRequest) {
   try {
     const { email, password, firstName, lastName, phone } = await req.json();
     if (!email || !password || !firstName || !lastName)
-      throw new ApiError("Email, password, firstName and lastName are required");
+      throw new ApiError(
+        "Email, password, firstName and lastName are required",
+      );
 
     const exists = await prisma.user.findUnique({ where: { email } });
     if (exists) throw new ApiError("Email already registered", 409);
@@ -25,17 +27,20 @@ export async function POST(req: NextRequest) {
     });
 
     const payload = { sub: user.id, email: user.email, role: user.role };
-    return Response.json({
-      accessToken: signToken(payload),
-      refreshToken: signRefreshToken(payload),
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        verificationLevel: user.verificationLevel,
-        profile: user.profile,
+    return Response.json(
+      {
+        accessToken: signToken(payload),
+        refreshToken: signRefreshToken(payload),
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          verificationLevel: user.verificationLevel,
+          profile: user.profile,
+        },
       },
-    }, { status: 201 });
+      { status: 201 },
+    );
   } catch (err) {
     return handleError(err);
   }

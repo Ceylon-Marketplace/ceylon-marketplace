@@ -7,17 +7,23 @@ export async function POST(req: NextRequest) {
     const user = requireAuth(req);
     const { revieweeId, listingId, rating, comment } = await req.json();
 
-    if (rating < 1 || rating > 5) throw new ApiError("Rating must be between 1 and 5");
-    if (user.sub === revieweeId) throw new ApiError("You cannot review yourself", 403);
+    if (rating < 1 || rating > 5)
+      throw new ApiError("Rating must be between 1 and 5");
+    if (user.sub === revieweeId)
+      throw new ApiError("You cannot review yourself", 403);
 
-    const listing = await prisma.listing.findUnique({ where: { id: listingId } });
+    const listing = await prisma.listing.findUnique({
+      where: { id: listingId },
+    });
     if (!listing) throw new ApiError("Listing not found", 404);
-    if (listing.sellerId !== revieweeId) throw new ApiError("Reviewee is not the seller of this listing");
+    if (listing.sellerId !== revieweeId)
+      throw new ApiError("Reviewee is not the seller of this listing");
 
     const existing = await prisma.review.findUnique({
       where: { reviewerId_listingId: { reviewerId: user.sub, listingId } },
     });
-    if (existing) throw new ApiError("You have already reviewed this listing", 409);
+    if (existing)
+      throw new ApiError("You have already reviewed this listing", 409);
 
     const review = await prisma.review.create({
       data: { reviewerId: user.sub, revieweeId, listingId, rating, comment },

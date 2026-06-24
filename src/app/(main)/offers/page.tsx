@@ -44,12 +44,14 @@ export default function OffersPage() {
   const respondOffer = useMutation({
     mutationFn: ({ id, action }: { id: string; action: "accept" | "reject" }) =>
       api.patch(`/offers/${id}/respond`, { action }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["offers-received"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["offers-received"] }),
   });
 
   const withdrawOffer = useMutation({
     mutationFn: (id: string) => api.patch(`/offers/${id}/withdraw`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["offers-sent"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["offers-sent"] }),
   });
 
   useEffect(() => {
@@ -87,7 +89,10 @@ export default function OffersPage() {
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-24 animate-pulse rounded-xl bg-gray-100" />
+            <div
+              key={i}
+              className="h-24 animate-pulse rounded-xl bg-gray-100"
+            />
           ))}
         </div>
       ) : !offers?.length ? (
@@ -103,12 +108,22 @@ export default function OffersPage() {
             return (
               <div key={offer.id} className="card p-4">
                 <div className="flex items-start gap-4">
-                  <Link href={`/listings/${listing.id}`} className="flex-shrink-0">
+                  <Link
+                    href={`/listings/${listing.id}`}
+                    className="flex-shrink-0"
+                  >
                     <div className="relative h-16 w-16 overflow-hidden rounded-lg bg-gray-100">
                       {thumb ? (
-                        <Image src={thumb} alt={listing.title} fill className="object-cover" />
+                        <Image
+                          src={thumb}
+                          alt={listing.title}
+                          fill
+                          className="object-cover"
+                        />
                       ) : (
-                        <div className="flex h-full items-center justify-center text-2xl">📦</div>
+                        <div className="flex h-full items-center justify-center text-2xl">
+                          📦
+                        </div>
                       )}
                     </div>
                   </Link>
@@ -158,7 +173,10 @@ export default function OffersPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={() =>
-                            respondOffer.mutate({ id: offer.id, action: "accept" })
+                            respondOffer.mutate({
+                              id: offer.id,
+                              action: "accept",
+                            })
                           }
                           disabled={respondOffer.isPending}
                           className="flex items-center gap-1 rounded-lg bg-green-50 px-3 py-1 text-xs font-medium text-green-700 hover:bg-green-100"
@@ -167,7 +185,10 @@ export default function OffersPage() {
                         </button>
                         <button
                           onClick={() =>
-                            respondOffer.mutate({ id: offer.id, action: "reject" })
+                            respondOffer.mutate({
+                              id: offer.id,
+                              action: "reject",
+                            })
                           }
                           disabled={respondOffer.isPending}
                           className="flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100"

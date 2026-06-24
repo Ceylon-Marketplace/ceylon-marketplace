@@ -17,7 +17,8 @@ export function signToken(payload: object) {
 }
 
 export function signRefreshToken(payload: object) {
-  if (!process.env.JWT_REFRESH_SECRET) throw new Error("JWT_REFRESH_SECRET is not set");
+  if (!process.env.JWT_REFRESH_SECRET)
+    throw new Error("JWT_REFRESH_SECRET is not set");
   return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
     expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN || "7d") as any,
   });
@@ -29,7 +30,8 @@ function verifyToken(token: string): any {
 }
 
 export function verifyRefreshToken(token: string): any {
-  if (!process.env.JWT_REFRESH_SECRET) throw new Error("JWT_REFRESH_SECRET is not set");
+  if (!process.env.JWT_REFRESH_SECRET)
+    throw new Error("JWT_REFRESH_SECRET is not set");
   return jwt.verify(token, process.env.JWT_REFRESH_SECRET);
 }
 

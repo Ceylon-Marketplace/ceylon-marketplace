@@ -9,6 +9,7 @@ The Ceylon Marketplace now integrates with Vercel Blob Storage for secure, scala
 ## Features Implemented
 
 ### ✅ Core Features
+
 - **File Upload:** Drag-and-drop or click to upload images
 - **Multiple Images:** Support for up to 10 images per listing
 - **Progress Tracking:** Real-time upload progress with percentage display
@@ -18,6 +19,7 @@ The Ceylon Marketplace now integrates with Vercel Blob Storage for secure, scala
 - **Security:** Server-side validation and user ownership verification
 
 ### ✅ Validation
+
 - File type: JPEG, PNG, WebP, GIF only
 - File size: Max 10MB per image
 - Image count: Max 10 per listing
@@ -28,6 +30,7 @@ The Ceylon Marketplace now integrates with Vercel Blob Storage for secure, scala
 ## Files Created/Modified
 
 ### New Files
+
 1. **`src/app/api/listings/upload-image/route.ts`**
    - Handles image uploads to Vercel Blob Storage
    - Validates file type and size
@@ -47,6 +50,7 @@ The Ceylon Marketplace now integrates with Vercel Blob Storage for secure, scala
    - Upload count display
 
 ### Modified Files
+
 1. **`src/app/(main)/listings/create/page.tsx`**
    - Replaced URL input with file upload
    - Integrated `ImageUploader` component
@@ -64,9 +68,11 @@ The Ceylon Marketplace now integrates with Vercel Blob Storage for secure, scala
 ## API Endpoints
 
 ### POST /api/listings/upload-image
+
 **Upload a new image to Vercel Blob Storage**
 
 **Request:**
+
 ```
 Content-Type: multipart/form-data
 - file (required): Image file (JPEG, PNG, WebP, GIF)
@@ -74,6 +80,7 @@ Content-Type: multipart/form-data
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "url": "https://blob.vercel-storage.com/listings/user-id/timestamp-random.ext",
@@ -82,18 +89,22 @@ Content-Type: multipart/form-data
 ```
 
 **Errors:**
+
 - `400`: No file provided, invalid type, or exceeds size limit
 - `403`: Unauthorized (requires auth)
 - `500`: Upload failed
 
 ### DELETE /api/listings/delete-image
+
 **Delete an image from Vercel Blob Storage**
 
 **Query Parameters:**
+
 - `listingId` (required): The listing ID
 - `mediaId` (required): The media record ID to delete
 
 **Response (200 OK):**
+
 ```json
 {
   "message": "Image deleted successfully"
@@ -101,6 +112,7 @@ Content-Type: multipart/form-data
 ```
 
 **Errors:**
+
 - `400`: Missing required parameters
 - `403`: Unauthorized (user doesn't own listing)
 - `404`: Media record not found
@@ -113,6 +125,7 @@ Content-Type: multipart/form-data
 ### ImageUploader Component
 
 **Props:**
+
 ```typescript
 interface ImageUploaderProps {
   images: UploadedImage[]; // Current uploaded images
@@ -124,6 +137,7 @@ interface ImageUploaderProps {
 ```
 
 **Example - Create Listing:**
+
 ```typescript
 import { ImageUploader } from "@/components/image-uploader";
 import { useState } from "react";
@@ -142,6 +156,7 @@ export function CreateListing() {
 ```
 
 **Example - Edit Listing:**
+
 ```typescript
 <ImageUploader
   images={newImages}
@@ -156,17 +171,19 @@ export function CreateListing() {
 ## Data Models
 
 ### UploadedImage (Client)
+
 ```typescript
 interface UploadedImage {
-  url: string;              // Blob URL or placeholder
-  order: number;            // Display order
-  isUploading?: boolean;    // Upload in progress
-  uploadProgress?: number;  // 0-100%
-  error?: string;          // Error message if failed
+  url: string; // Blob URL or placeholder
+  order: number; // Display order
+  isUploading?: boolean; // Upload in progress
+  uploadProgress?: number; // 0-100%
+  error?: string; // Error message if failed
 }
 ```
 
 ### ListingMedia (Database)
+
 ```prisma
 model ListingMedia {
   id        String    @id @default(cuid())
@@ -201,6 +218,7 @@ This token is automatically set by Vercel when Blob Storage is enabled.
 ## Security Features
 
 ### Server-Side Validation
+
 - ✅ File type whitelist (JPEG, PNG, WebP, GIF)
 - ✅ File size limits (10MB max)
 - ✅ Image count limits (10 per listing)
@@ -208,12 +226,14 @@ This token is automatically set by Vercel when Blob Storage is enabled.
 - ✅ Authentication required
 
 ### URL Security
+
 - ✅ Public read access for images (required for display)
 - ✅ Write access restricted via API authentication
 - ✅ File path includes user ID for organization
 - ✅ Deletion requires ownership verification
 
 ### Data Integrity
+
 - ✅ Atomic transactions (DB + Blob)
 - ✅ Orphaned file cleanup on failure
 - ✅ Listing cascade delete removes all media
@@ -265,12 +285,14 @@ This token is automatically set by Vercel when Blob Storage is enabled.
 ### Deleting Images
 
 **Via Edit Page:**
+
 1. User clicks delete button on image
 2. Image removed from ListingMedia table
 3. File deleted from Vercel Blob Storage
 4. Client UI updates
 
 **Via DELETE API:**
+
 - Called from edit page submit handler
 - Updates database and deletes blob file
 - Returns success/error
@@ -280,12 +302,14 @@ This token is automatically set by Vercel when Blob Storage is enabled.
 ## Error Handling
 
 ### Client-Side
+
 - File type validation with helpful error messages
 - Size validation before upload
 - Display error messages below upload area
 - Allow retry by re-uploading
 
 ### Server-Side
+
 - 400: Invalid file (type, size, format)
 - 400: Listing image limit exceeded
 - 403: User doesn't own listing
@@ -293,6 +317,7 @@ This token is automatically set by Vercel when Blob Storage is enabled.
 - 500: Upload/deletion failed
 
 ### User Experience
+
 - Real-time upload progress (0-100%)
 - Error messages with specific details (e.g., "iPhone.zip: Invalid file type")
 - Ability to remove errored images and retry
@@ -303,17 +328,20 @@ This token is automatically set by Vercel when Blob Storage is enabled.
 ## Performance Considerations
 
 ### Upload Optimization
+
 - Max file size: 10MB
 - Supported formats: JPEG, PNG, WebP, GIF
 - Parallel uploads: Sequential (one at a time for reliability)
 - Progress tracking: Real-time via XHR progress events
 
 ### Storage Organization
+
 - Path structure: `listings/{userId}/{timestamp}-{random}.{ext}`
 - Unique filenames prevent collisions
 - User ID enables easier organization/audit
 
 ### Bandwidth
+
 - Vercel Blob Storage: Global CDN included
 - Images served with automatic optimization
 - Public read access enables fast retrieval
@@ -358,17 +386,20 @@ This token is automatically set by Vercel when Blob Storage is enabled.
 ## Troubleshooting
 
 ### Images not uploading
+
 - Check `BLOB_READ_WRITE_TOKEN` is set in Vercel
 - Verify blob storage is enabled in Vercel project
 - Check browser console for errors
 - Verify file format is supported
 
 ### Images not persisting after save
+
 - Check database ListingMedia records created
 - Verify Blob Storage URLs in database
 - Check user authentication on API
 
 ### Image deletion fails
+
 - Verify user ownership of listing
 - Check BLOB_READ_WRITE_TOKEN has delete permission
 - Verify media record exists in database

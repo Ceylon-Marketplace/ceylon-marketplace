@@ -152,7 +152,9 @@ function PendingListings({ qc }: { qc: any }) {
     return (
       <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
         Failed to load pending listings:{" "}
-        {(error as any)?.response?.data?.message ?? (error as any)?.message ?? "Unknown error"}
+        {(error as any)?.response?.data?.message ??
+          (error as any)?.message ??
+          "Unknown error"}
       </div>
     );
 
@@ -180,7 +182,8 @@ function PendingListings({ qc }: { qc: any }) {
             </p>
             <p className="mt-1 text-xs text-gray-400">
               by {listing.seller?.profile?.firstName ?? "Unknown"}{" "}
-              {listing.seller?.profile?.lastName ?? ""} · {timeAgo(listing.createdAt)}
+              {listing.seller?.profile?.lastName ?? ""} ·{" "}
+              {timeAgo(listing.createdAt)}
             </p>
           </div>
           <div className="flex flex-col gap-2 items-end shrink-0">
@@ -211,16 +214,17 @@ function UsersPanel({ user: admin, qc }: { user: any; qc: any }) {
   const { data } = useQuery({
     queryKey: ["admin-users", search],
     queryFn: async () => {
-      const { data } = await api.get(
-        `/admin/users?search=${search}&limit=30`,
-      );
+      const { data } = await api.get(`/admin/users?search=${search}&limit=30`);
       return data;
     },
   });
 
   const suspendMut = useMutation({
     mutationFn: (id: string) =>
-      api.patch(`/admin/users/${id}`, { action: "suspend", reason: "Admin action" }),
+      api.patch(`/admin/users/${id}`, {
+        action: "suspend",
+        reason: "Admin action",
+      }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-users"] }),
   });
 
@@ -316,16 +320,24 @@ function CategoriesPanel() {
     },
   });
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-categories"] });
+  const invalidate = () =>
+    qc.invalidateQueries({ queryKey: ["admin-categories"] });
 
   const createMut = useMutation({
     mutationFn: (body: any) => api.post("/categories", body),
-    onSuccess: () => { invalidate(); setAddingParent(false); setAddingSubOf(null); },
+    onSuccess: () => {
+      invalidate();
+      setAddingParent(false);
+      setAddingSubOf(null);
+    },
   });
 
   const updateMut = useMutation({
     mutationFn: ({ id, ...body }: any) => api.patch(`/categories/${id}`, body),
-    onSuccess: () => { invalidate(); setEditingId(null); },
+    onSuccess: () => {
+      invalidate();
+      setEditingId(null);
+    },
   });
 
   const deleteMut = useMutation({
@@ -334,8 +346,12 @@ function CategoriesPanel() {
   });
 
   const addAttrMut = useMutation({
-    mutationFn: ({ id, ...body }: any) => api.post(`/categories/${id}/attributes`, body),
-    onSuccess: () => { invalidate(); setAddingAttrOf(null); },
+    mutationFn: ({ id, ...body }: any) =>
+      api.post(`/categories/${id}/attributes`, body),
+    onSuccess: () => {
+      invalidate();
+      setAddingAttrOf(null);
+    },
   });
 
   const delAttrMut = useMutation({
@@ -352,7 +368,10 @@ function CategoriesPanel() {
     });
 
   const slugify = (s: string) =>
-    s.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    s
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
 
   if (isLoading)
     return (
@@ -370,7 +389,10 @@ function CategoriesPanel() {
           {categories?.length ?? 0} top-level categories
         </p>
         <button
-          onClick={() => { setAddingParent(true); setAddingSubOf(null); }}
+          onClick={() => {
+            setAddingParent(true);
+            setAddingSubOf(null);
+          }}
           className="btn-primary gap-1 text-sm"
         >
           <Plus className="h-4 w-4" /> Add Category
@@ -396,7 +418,11 @@ function CategoriesPanel() {
               {isEditing ? (
                 <div className="p-4">
                   <CategoryForm
-                    initial={{ name: cat.name, slug: cat.slug, imageUrl: cat.imageUrl ?? "" }}
+                    initial={{
+                      name: cat.name,
+                      slug: cat.slug,
+                      imageUrl: cat.imageUrl ?? "",
+                    }}
                     onSave={(vals) => updateMut.mutate({ id: cat.id, ...vals })}
                     onCancel={() => setEditingId(null)}
                     pending={updateMut.isPending}
@@ -416,13 +442,22 @@ function CategoriesPanel() {
                     )}
                   </button>
                   <div className="flex-1 min-w-0">
-                    <span className="font-medium text-gray-900">{cat.name}</span>
-                    <span className="ml-2 text-xs text-gray-400">/{cat.slug}</span>
-                    {(cat.children?.length > 0 || cat.attributes?.length > 0) && (
+                    <span className="font-medium text-gray-900">
+                      {cat.name}
+                    </span>
+                    <span className="ml-2 text-xs text-gray-400">
+                      /{cat.slug}
+                    </span>
+                    {(cat.children?.length > 0 ||
+                      cat.attributes?.length > 0) && (
                       <span className="ml-2 text-xs text-gray-400">
-                        {cat.children?.length > 0 && `${cat.children.length} sub`}
-                        {cat.children?.length > 0 && cat.attributes?.length > 0 && " · "}
-                        {cat.attributes?.length > 0 && `${cat.attributes.length} attrs`}
+                        {cat.children?.length > 0 &&
+                          `${cat.children.length} sub`}
+                        {cat.children?.length > 0 &&
+                          cat.attributes?.length > 0 &&
+                          " · "}
+                        {cat.attributes?.length > 0 &&
+                          `${cat.attributes.length} attrs`}
                       </span>
                     )}
                   </div>
@@ -447,7 +482,11 @@ function CategoriesPanel() {
                     </button>
                     <button
                       onClick={() => {
-                        if (confirm(`Delete "${cat.name}"? This hides it from listings.`))
+                        if (
+                          confirm(
+                            `Delete "${cat.name}"? This hides it from listings.`,
+                          )
+                        )
                           deleteMut.mutate(cat.id);
                       }}
                       className="rounded p-1.5 text-red-400 hover:bg-red-50 hover:text-red-600"
@@ -489,11 +528,20 @@ function CategoriesPanel() {
                         {cat.children.map((sub: any) => {
                           const isEditingSub = editingId === sub.id;
                           return (
-                            <div key={sub.id} className="rounded-lg border border-gray-100 bg-white px-3 py-2">
+                            <div
+                              key={sub.id}
+                              className="rounded-lg border border-gray-100 bg-white px-3 py-2"
+                            >
                               {isEditingSub ? (
                                 <CategoryForm
-                                  initial={{ name: sub.name, slug: sub.slug, imageUrl: sub.imageUrl ?? "" }}
-                                  onSave={(vals) => updateMut.mutate({ id: sub.id, ...vals })}
+                                  initial={{
+                                    name: sub.name,
+                                    slug: sub.slug,
+                                    imageUrl: sub.imageUrl ?? "",
+                                  }}
+                                  onSave={(vals) =>
+                                    updateMut.mutate({ id: sub.id, ...vals })
+                                  }
                                   onCancel={() => setEditingId(null)}
                                   pending={updateMut.isPending}
                                   slugify={slugify}
@@ -503,7 +551,9 @@ function CategoriesPanel() {
                                   <span className="ml-2 text-sm font-medium text-gray-800">
                                     {sub.name}
                                   </span>
-                                  <span className="text-xs text-gray-400">/{sub.slug}</span>
+                                  <span className="text-xs text-gray-400">
+                                    /{sub.slug}
+                                  </span>
                                   {sub.attributes?.length > 0 && (
                                     <span className="text-xs text-gray-400">
                                       · {sub.attributes.length} attrs
@@ -543,7 +593,9 @@ function CategoriesPanel() {
                       </p>
                       <button
                         onClick={() =>
-                          setAddingAttrOf(addingAttrOf === cat.id ? null : cat.id)
+                          setAddingAttrOf(
+                            addingAttrOf === cat.id ? null : cat.id,
+                          )
                         }
                         className="flex items-center gap-1 text-xs text-brand-600 hover:underline"
                       >
@@ -553,7 +605,9 @@ function CategoriesPanel() {
 
                     {addingAttrOf === cat.id && (
                       <AttributeForm
-                        onSave={(vals) => addAttrMut.mutate({ id: cat.id, ...vals })}
+                        onSave={(vals) =>
+                          addAttrMut.mutate({ id: cat.id, ...vals })
+                        }
                         onCancel={() => setAddingAttrOf(null)}
                         pending={addAttrMut.isPending}
                       />
@@ -579,7 +633,10 @@ function CategoriesPanel() {
                             )}
                             <button
                               onClick={() =>
-                                delAttrMut.mutate({ catId: cat.id, attrId: attr.id })
+                                delAttrMut.mutate({
+                                  catId: cat.id,
+                                  attrId: attr.id,
+                                })
                               }
                               className="ml-0.5 text-gray-300 hover:text-red-500"
                             >
@@ -590,7 +647,9 @@ function CategoriesPanel() {
                       </div>
                     ) : (
                       !addingAttrOf && (
-                        <p className="text-xs text-gray-400">No attributes defined.</p>
+                        <p className="text-xs text-gray-400">
+                          No attributes defined.
+                        </p>
                       )
                     )}
                   </div>
@@ -629,14 +688,20 @@ function CategoryForm({
 
   const handleSubmit = () => {
     if (!name.trim() || !slug.trim()) return;
-    onSave({ name: name.trim(), slug: slug.trim(), imageUrl: imageUrl.trim() || undefined });
+    onSave({
+      name: name.trim(),
+      slug: slug.trim(),
+      imageUrl: imageUrl.trim() || undefined,
+    });
   };
 
   return (
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Name *</label>
+          <label className="mb-1 block text-xs font-medium text-gray-600">
+            Name *
+          </label>
           <input
             type="text"
             value={name}
@@ -646,18 +711,25 @@ function CategoryForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Slug *</label>
+          <label className="mb-1 block text-xs font-medium text-gray-600">
+            Slug *
+          </label>
           <input
             type="text"
             value={slug}
-            onChange={(e) => { setSlug(e.target.value); setSlugEdited(true); }}
+            onChange={(e) => {
+              setSlug(e.target.value);
+              setSlugEdited(true);
+            }}
             className="input text-sm font-mono"
             placeholder="e.g. electronics"
           />
         </div>
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-600">Image URL (optional)</label>
+        <label className="mb-1 block text-xs font-medium text-gray-600">
+          Image URL (optional)
+        </label>
         <input
           type="url"
           value={imageUrl}
@@ -688,7 +760,12 @@ function AttributeForm({
   onCancel,
   pending,
 }: {
-  onSave: (vals: { name: string; type: string; required: boolean; options: string[] }) => void;
+  onSave: (vals: {
+    name: string;
+    type: string;
+    required: boolean;
+    options: string[];
+  }) => void;
   onCancel: () => void;
   pending: boolean;
 }) {
@@ -699,9 +776,13 @@ function AttributeForm({
 
   const handleSubmit = () => {
     if (!name.trim()) return;
-    const options = type === "SELECT"
-      ? optionsStr.split(",").map((o) => o.trim()).filter(Boolean)
-      : [];
+    const options =
+      type === "SELECT"
+        ? optionsStr
+            .split(",")
+            .map((o) => o.trim())
+            .filter(Boolean)
+        : [];
     onSave({ name: name.trim(), type, required, options });
   };
 
@@ -709,7 +790,9 @@ function AttributeForm({
     <div className="mb-3 rounded-lg border border-brand-100 bg-brand-50 p-3 space-y-3">
       <div className="grid gap-3 sm:grid-cols-3">
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Name *</label>
+          <label className="mb-1 block text-xs font-medium text-gray-600">
+            Name *
+          </label>
           <input
             type="text"
             value={name}
@@ -719,8 +802,14 @@ function AttributeForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Type</label>
-          <select value={type} onChange={(e) => setType(e.target.value)} className="input text-sm">
+          <label className="mb-1 block text-xs font-medium text-gray-600">
+            Type
+          </label>
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            className="input text-sm"
+          >
             <option value="TEXT">Text</option>
             <option value="NUMBER">Number</option>
             <option value="SELECT">Select (options)</option>
@@ -810,7 +899,9 @@ function ReportsPanel({ user: admin, qc }: { user: any; qc: any }) {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => resolveMut.mutate({ id: r.id, action: "resolve" })}
+                onClick={() =>
+                  resolveMut.mutate({ id: r.id, action: "resolve" })
+                }
                 className="btn-primary text-xs"
               >
                 Resolve

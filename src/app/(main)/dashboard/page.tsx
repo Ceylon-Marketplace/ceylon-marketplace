@@ -38,9 +38,7 @@ function SellerDashboard({ user }: { user: any }) {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Seller Dashboard
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900">Seller Dashboard</h1>
           <p className="text-sm text-gray-500">
             Manage your listings and offers
           </p>
@@ -112,7 +110,10 @@ function SellerDashboard({ user }: { user: any }) {
       <div>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">My Listings</h2>
-          <Link href="/listings/mine" className="text-sm text-brand-600 hover:underline">
+          <Link
+            href="/listings/mine"
+            className="text-sm text-brand-600 hover:underline"
+          >
             View all
           </Link>
         </div>
@@ -234,8 +235,13 @@ function BuyerDashboard({ user }: { user: any }) {
       {savedListings.length > 0 && (
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Saved Listings</h2>
-            <Link href="/listings/saved" className="text-sm text-brand-600 hover:underline">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Saved Listings
+            </h2>
+            <Link
+              href="/listings/saved"
+              className="text-sm text-brand-600 hover:underline"
+            >
               View all
             </Link>
           </div>
@@ -288,7 +294,9 @@ export default function DashboardPage() {
   const isSeller = user.role === "SELLER" || user.role === "BUSINESS_SELLER";
   const showSellerDashboard = isSeller && mode === "seller";
 
-  return showSellerDashboard
-    ? <SellerDashboard user={user} />
-    : <BuyerDashboard user={user} />;
+  return showSellerDashboard ? (
+    <SellerDashboard user={user} />
+  ) : (
+    <BuyerDashboard user={user} />
+  );
 }

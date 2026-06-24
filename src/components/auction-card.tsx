@@ -36,8 +36,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
 
   const isLive = auction.status === "LIVE";
   const isEnding =
-    isLive &&
-    new Date(auction.endTime).getTime() - Date.now() < 5 * 60 * 1000;
+    isLive && new Date(auction.endTime).getTime() - Date.now() < 5 * 60 * 1000;
 
   return (
     <Link

@@ -25,7 +25,13 @@ const CONDITIONS = [
   { value: "POOR", label: "Poor" },
 ];
 
-type UploadedImage = { url: string; order: number; isUploading?: boolean; uploadProgress?: number; error?: string };
+type UploadedImage = {
+  url: string;
+  order: number;
+  isUploading?: boolean;
+  uploadProgress?: number;
+  error?: string;
+};
 type MediaItem = { url: string; type: "IMAGE" | "VIDEO"; order: number };
 type AttributeValue = { attributeId: string; value: string };
 
@@ -83,8 +89,9 @@ function SuccessScreen({
               <div className="mb-1 flex items-center gap-2 font-semibold">
                 <Gavel className="h-4 w-4" /> Auction configured
               </div>
-              Your auction will go live automatically once the listing is approved.
-              You&apos;ll receive a notification when it&apos;s active.
+              Your auction will go live automatically once the listing is
+              approved. You&apos;ll receive a notification when it&apos;s
+              active.
             </div>
           )}
           <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-left text-sm text-amber-800">
@@ -92,19 +99,33 @@ function SuccessScreen({
               <Clock className="h-4 w-4" /> What happens next?
             </div>
             <ul className="ml-4 list-disc space-y-1">
-              <li>Our moderators will review your listing for quality and compliance.</li>
-              <li>You&apos;ll be notified once it&apos;s approved or if changes are needed.</li>
-              <li>Approved listings become visible to all buyers immediately.</li>
+              <li>
+                Our moderators will review your listing for quality and
+                compliance.
+              </li>
+              <li>
+                You&apos;ll be notified once it&apos;s approved or if changes
+                are needed.
+              </li>
+              <li>
+                Approved listings become visible to all buyers immediately.
+              </li>
             </ul>
           </div>
         </>
       )}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-        <button onClick={() => router.push(`/listings/${listingId}`)} className="btn-primary">
+        <button
+          onClick={() => router.push(`/listings/${listingId}`)}
+          className="btn-primary"
+        >
           View listing
         </button>
-        <button onClick={() => router.push("/listings/mine")} className="btn-secondary">
+        <button
+          onClick={() => router.push("/listings/mine")}
+          className="btn-secondary"
+        >
           My listings
         </button>
         <button onClick={onCreateAnother} className="btn-secondary">
@@ -156,8 +177,10 @@ export default function CreateListingPage() {
   const categoryAttributes: any[] = selectedCategory?.attributes ?? [];
 
   useEffect(() => {
-    setAttributes(categoryAttributes.map((a: any) => ({ attributeId: a.id, value: "" })));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setAttributes(
+      categoryAttributes.map((a: any) => ({ attributeId: a.id, value: "" })),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.categoryId]);
 
   useEffect(() => {
@@ -173,7 +196,9 @@ export default function CreateListingPage() {
     return (
       <div className="mx-auto max-w-lg py-20 text-center">
         <Store className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-        <h2 className="mb-2 text-lg font-semibold text-gray-900">Seller account required</h2>
+        <h2 className="mb-2 text-lg font-semibold text-gray-900">
+          Seller account required
+        </h2>
         <p className="mb-4 text-sm text-gray-500">
           You need a seller account to create listings. Upgrading is free — you
           only pay for a subscription plan when you're ready to list.
@@ -190,12 +215,17 @@ export default function CreateListingPage() {
     return (
       <div className="mx-auto max-w-lg py-20 text-center">
         <Info className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-        <h2 className="mb-2 text-lg font-semibold text-gray-900">You're in buyer mode</h2>
+        <h2 className="mb-2 text-lg font-semibold text-gray-900">
+          You're in buyer mode
+        </h2>
         <p className="mb-4 text-sm text-gray-500">
           Switch to seller mode to create and manage your listings.
         </p>
         <button
-          onClick={() => { setMode("seller"); router.push("/listings/create"); }}
+          onClick={() => {
+            setMode("seller");
+            router.push("/listings/create");
+          }}
           className="btn-primary"
         >
           Switch to Seller Mode
@@ -233,7 +263,11 @@ export default function CreateListingPage() {
 
   const set =
     (field: string) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    (
+      e: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >,
+    ) =>
       setForm((f) => ({ ...f, [field]: e.target.value }));
 
   const setAuction =
@@ -282,7 +316,10 @@ export default function CreateListingPage() {
 
     if (submitStatus !== "DRAFT" && form.listingType === "AUCTION") {
       const auctionError = validateAuction();
-      if (auctionError) { setError(auctionError); return; }
+      if (auctionError) {
+        setError(auctionError);
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -304,8 +341,12 @@ export default function CreateListingPage() {
           await api.post("/auctions", {
             listingId: data.id,
             startPrice: Number(auctionForm.startPrice),
-            reservePrice: auctionForm.reservePrice ? Number(auctionForm.reservePrice) : undefined,
-            bidIncrement: auctionForm.bidIncrement ? Number(auctionForm.bidIncrement) : 100,
+            reservePrice: auctionForm.reservePrice
+              ? Number(auctionForm.reservePrice)
+              : undefined,
+            bidIncrement: auctionForm.bidIncrement
+              ? Number(auctionForm.bidIncrement)
+              : 100,
             startTime: auctionForm.startTime,
             endTime: auctionForm.endTime,
           });
@@ -320,9 +361,16 @@ export default function CreateListingPage() {
         }
       }
 
-      setSuccess({ listingId: data.id, isDraft: submitStatus === "DRAFT", hasAuction });
+      setSuccess({
+        listingId: data.id,
+        isDraft: submitStatus === "DRAFT",
+        hasAuction,
+      });
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Failed to create listing. Please try again.");
+      setError(
+        err?.response?.data?.message ||
+          "Failed to create listing. Please try again.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -342,7 +390,9 @@ export default function CreateListingPage() {
 
       <div className="space-y-6">
         {error && (
-          <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">{error}</div>
+          <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
+            {error}
+          </div>
         )}
 
         {/* Basic details */}
@@ -352,7 +402,9 @@ export default function CreateListingPage() {
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
               Title <span className="text-red-500">*</span>
-              <span className="ml-1 text-xs text-gray-400">(10–120 characters)</span>
+              <span className="ml-1 text-xs text-gray-400">
+                (10–120 characters)
+              </span>
             </label>
             <input
               type="text"
@@ -362,7 +414,9 @@ export default function CreateListingPage() {
               placeholder="e.g. iPhone 14 Pro Max 256GB Space Black"
               maxLength={120}
             />
-            <p className="mt-1 text-right text-xs text-gray-400">{form.title.length}/120</p>
+            <p className="mt-1 text-right text-xs text-gray-400">
+              {form.title.length}/120
+            </p>
           </div>
 
           <div>
@@ -405,9 +459,15 @@ export default function CreateListingPage() {
               <label className="mb-1 block text-sm font-medium text-gray-700">
                 Condition <span className="text-red-500">*</span>
               </label>
-              <select value={form.condition} onChange={set("condition")} className="input">
+              <select
+                value={form.condition}
+                onChange={set("condition")}
+                className="input"
+              >
                 {CONDITIONS.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -430,7 +490,9 @@ export default function CreateListingPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Quantity</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Quantity
+              </label>
               <input
                 type="number"
                 value={form.quantity}
@@ -443,7 +505,11 @@ export default function CreateListingPage() {
               <label className="mb-1 block text-sm font-medium text-gray-700">
                 Listing Type
               </label>
-              <select value={form.listingType} onChange={set("listingType")} className="input">
+              <select
+                value={form.listingType}
+                onChange={set("listingType")}
+                className="input"
+              >
                 <option value="FIXED_PRICE">Fixed Price</option>
                 <option value="OFFER">Accept Offers</option>
                 <option value="AUCTION">Auction</option>
@@ -473,7 +539,8 @@ export default function CreateListingPage() {
               <h2 className="font-semibold text-gray-900">Auction Settings</h2>
             </div>
             <p className="text-sm text-gray-500">
-              Configure your auction. It will go live automatically once your listing is approved.
+              Configure your auction. It will go live automatically once your
+              listing is approved.
             </p>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -490,7 +557,9 @@ export default function CreateListingPage() {
                   min={1}
                   step={0.01}
                 />
-                <p className="mt-1 text-xs text-gray-400">Minimum opening bid</p>
+                <p className="mt-1 text-xs text-gray-400">
+                  Minimum opening bid
+                </p>
               </div>
 
               <div>
@@ -563,8 +632,8 @@ export default function CreateListingPage() {
             </div>
 
             <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-700">
-              <strong>Anti-sniping:</strong> Bids placed in the last 2 minutes automatically
-              extend the auction by 2 minutes.
+              <strong>Anti-sniping:</strong> Bids placed in the last 2 minutes
+              automatically extend the auction by 2 minutes.
             </div>
           </section>
         )}
@@ -580,21 +649,27 @@ export default function CreateListingPage() {
                 <div key={attr.id}>
                   <label className="mb-1 block text-sm font-medium text-gray-700">
                     {attr.name}
-                    {attr.required && <span className="ml-1 text-red-500">*</span>}
+                    {attr.required && (
+                      <span className="ml-1 text-red-500">*</span>
+                    )}
                   </label>
                   {attr.options?.length > 0 ? (
                     <select
                       value={attributes[idx]?.value ?? ""}
                       onChange={(e) =>
                         setAttributes((prev) =>
-                          prev.map((a, i) => i === idx ? { ...a, value: e.target.value } : a),
+                          prev.map((a, i) =>
+                            i === idx ? { ...a, value: e.target.value } : a,
+                          ),
                         )
                       }
                       className="input"
                     >
                       <option value="">Select…</option>
                       {attr.options.map((opt: string) => (
-                        <option key={opt} value={opt}>{opt}</option>
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
                       ))}
                     </select>
                   ) : (
@@ -603,7 +678,9 @@ export default function CreateListingPage() {
                       value={attributes[idx]?.value ?? ""}
                       onChange={(e) =>
                         setAttributes((prev) =>
-                          prev.map((a, i) => i === idx ? { ...a, value: e.target.value } : a),
+                          prev.map((a, i) =>
+                            i === idx ? { ...a, value: e.target.value } : a,
+                          ),
                         )
                       }
                       className="input"
@@ -625,7 +702,8 @@ export default function CreateListingPage() {
             maxImages={10}
           />
           <p className="text-xs text-gray-500">
-            Upload high-quality photos of your item. The first image will be used as the cover photo.
+            Upload high-quality photos of your item. The first image will be
+            used as the cover photo.
           </p>
         </section>
 

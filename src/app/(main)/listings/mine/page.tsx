@@ -50,15 +50,18 @@ export default function MyListingsPage() {
 
   if (!user) return null;
 
-  const isSeller =
-    user.role === "SELLER" || user.role === "BUSINESS_SELLER";
+  const isSeller = user.role === "SELLER" || user.role === "BUSINESS_SELLER";
 
   if (!isSeller) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center text-gray-500">
         <Store className="mb-4 h-12 w-12 text-gray-300" />
-        <p className="text-lg font-medium text-gray-900">Seller account required</p>
-        <p className="mt-1 mb-4 text-sm">Upgrade your account to list and manage items for sale.</p>
+        <p className="text-lg font-medium text-gray-900">
+          Seller account required
+        </p>
+        <p className="mt-1 mb-4 text-sm">
+          Upgrade your account to list and manage items for sale.
+        </p>
         <Link href="/become-seller" className="btn-primary">
           Become a Seller
         </Link>
@@ -70,10 +73,17 @@ export default function MyListingsPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center text-gray-500">
         <Info className="mb-4 h-12 w-12 text-gray-300" />
-        <p className="text-lg font-medium text-gray-900">You're in buyer mode</p>
-        <p className="mt-1 mb-4 text-sm">Switch to seller mode to view and manage your listings.</p>
+        <p className="text-lg font-medium text-gray-900">
+          You're in buyer mode
+        </p>
+        <p className="mt-1 mb-4 text-sm">
+          Switch to seller mode to view and manage your listings.
+        </p>
         <button
-          onClick={() => { setMode("seller"); router.push("/listings/mine"); }}
+          onClick={() => {
+            setMode("seller");
+            router.push("/listings/mine");
+          }}
           className="btn-primary"
         >
           Switch to Seller Mode
@@ -110,13 +120,19 @@ export default function MyListingsPage() {
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-20 animate-pulse rounded-xl bg-gray-100" />
+            <div
+              key={i}
+              className="h-20 animate-pulse rounded-xl bg-gray-100"
+            />
           ))}
         </div>
       ) : !listings?.length ? (
         <div className="flex flex-col items-center justify-center py-16 text-gray-500">
           <Package className="mb-3 h-10 w-10 text-gray-300" />
-          <p>No listings{statusFilter !== "ALL" ? ` with status ${statusFilter}` : ""} yet.</p>
+          <p>
+            No listings
+            {statusFilter !== "ALL" ? ` with status ${statusFilter}` : ""} yet.
+          </p>
           <Link href="/listings/create" className="btn-primary mt-4">
             Create your first listing
           </Link>

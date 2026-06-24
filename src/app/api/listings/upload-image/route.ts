@@ -16,14 +16,20 @@ export async function POST(req: NextRequest) {
     const listingId = formData.get("listingId") as string | null;
 
     if (!file) {
-      return NextResponse.json({ message: "No file provided" }, { status: 400 });
+      return NextResponse.json(
+        { message: "No file provided" },
+        { status: 400 },
+      );
     }
 
     // Validate file type
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { message: "Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed." },
-        { status: 400 }
+        {
+          message:
+            "Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.",
+        },
+        { status: 400 },
       );
     }
 
@@ -31,7 +37,7 @@ export async function POST(req: NextRequest) {
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
         { message: "File size exceeds 10MB limit." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -43,8 +49,10 @@ export async function POST(req: NextRequest) {
 
       if (mediaCount >= MAX_IMAGES_PER_LISTING) {
         return NextResponse.json(
-          { message: `Maximum ${MAX_IMAGES_PER_LISTING} images per listing allowed.` },
-          { status: 400 }
+          {
+            message: `Maximum ${MAX_IMAGES_PER_LISTING} images per listing allowed.`,
+          },
+          { status: 400 },
         );
       }
     }
@@ -72,7 +80,7 @@ export async function POST(req: NextRequest) {
     console.error("Image upload error:", error);
     return NextResponse.json(
       { message: "Failed to upload image. Please try again." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

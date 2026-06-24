@@ -7,7 +7,8 @@ export async function PATCH(req: NextRequest) {
     const jwt = requireAuth(req);
     const user = await prisma.user.findUnique({ where: { id: jwt.sub } });
     if (!user) throw new ApiError("User not found", 404);
-    if (user.role !== "USER") throw new ApiError("Only buyer accounts can upgrade to seller");
+    if (user.role !== "USER")
+      throw new ApiError("Only buyer accounts can upgrade to seller");
     const updated = await prisma.user.update({
       where: { id: jwt.sub },
       data: { role: "SELLER" },

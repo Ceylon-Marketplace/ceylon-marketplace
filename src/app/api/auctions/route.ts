@@ -12,14 +12,21 @@ export async function GET(req: NextRequest) {
       prisma.auction.findMany({
         where: { status: { in: ["LIVE", "SCHEDULED"] } },
         include: {
-          listing: { include: { media: { orderBy: { order: "asc" }, take: 1 }, category: true } },
+          listing: {
+            include: {
+              media: { orderBy: { order: "asc" }, take: 1 },
+              category: true,
+            },
+          },
           _count: { select: { bids: true } },
         },
         orderBy: { endTime: "asc" },
         skip: (page - 1) * limit,
         take: limit,
       }),
-      prisma.auction.count({ where: { status: { in: ["LIVE", "SCHEDULED"] } } }),
+      prisma.auction.count({
+        where: { status: { in: ["LIVE", "SCHEDULED"] } },
+      }),
     ]);
     return Response.json({ auctions, total, page, limit });
   } catch (err) {
@@ -32,10 +39,14 @@ export async function POST(req: NextRequest) {
     const user = requireAuth(req);
     const data = await req.json();
 
-    const listing = await prisma.listing.findUnique({ where: { id: data.listingId }, include: { auction: true } });
+    const listing = await prisma.listing.findUnique({
+      where: { id: data.listingId },
+      include: { auction: true },
+    });
     if (!listing) throw new ApiError("Listing not found", 404);
     if (listing.sellerId !== user.sub) throw new ApiError("Forbidden", 403);
-    if (listing.auction) throw new ApiError("Auction already exists for this listing");
+    if (listing.auction)
+      throw new ApiError("Auction already exists for this listing");
 
     const auction = await prisma.auction.create({
       data: {

@@ -69,28 +69,28 @@ ceylon-marketplace/
 
 ## Features
 
-| Feature | Status |
-|---------|--------|
+| Feature             | Status         |
+| ------------------- | -------------- |
 | User Authentication | ✅ Implemented |
 | Listings Management | ✅ Implemented |
-| Real-time Auctions | ✅ Implemented |
-| Messaging | ✅ Implemented |
-| Subscriptions | ✅ Implemented |
-| Admin Panel | ✅ Implemented |
-| Reviews & Ratings | ✅ Implemented |
+| Real-time Auctions  | ✅ Implemented |
+| Messaging           | ✅ Implemented |
+| Subscriptions       | ✅ Implemented |
+| Admin Panel         | ✅ Implemented |
+| Reviews & Ratings   | ✅ Implemented |
 
 ## API Modules
 
-| Module | Endpoints |
-|---|---|
-| Auth | `POST /api/auth/register`, `/login`, `/refresh`, `GET /me` |
-| Listings | `GET/POST /api/listings`, `GET /api/listings/:id` |
-| Auctions | `GET/POST /api/auctions`, WebSocket support |
-| Messaging | `GET/POST /api/conversations`, WebSocket support |
-| Subscriptions | `GET /api/subscriptions/plans`, `POST .../subscribe` |
-| Admin | `GET /api/admin/stats`, pending listings, user management |
-| Reports | `POST /api/reports`, `GET /api/reports` (admin) |
-| Notifications | `GET /api/notifications`, mark read |
+| Module        | Endpoints                                                  |
+| ------------- | ---------------------------------------------------------- |
+| Auth          | `POST /api/auth/register`, `/login`, `/refresh`, `GET /me` |
+| Listings      | `GET/POST /api/listings`, `GET /api/listings/:id`          |
+| Auctions      | `GET/POST /api/auctions`, WebSocket support                |
+| Messaging     | `GET/POST /api/conversations`, WebSocket support           |
+| Subscriptions | `GET /api/subscriptions/plans`, `POST .../subscribe`       |
+| Admin         | `GET /api/admin/stats`, pending listings, user management  |
+| Reports       | `POST /api/reports`, `GET /api/reports` (admin)            |
+| Notifications | `GET /api/notifications`, mark read                        |
 
 ## Key Business Rules Implemented
 
@@ -100,4 +100,3 @@ ceylon-marketplace/
 - Anti-sniping: bid in last 2 min → auction extended by 2 min
 - Message history immutable; block user prevents messaging
 - Admin approval workflow for listings (PENDING_REVIEW → ACTIVE/REJECTED)
-

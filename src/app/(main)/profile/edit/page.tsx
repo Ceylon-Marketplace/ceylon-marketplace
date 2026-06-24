@@ -120,9 +120,7 @@ export default function EditProfilePage() {
             <FileText className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <textarea
               value={form.bio}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, bio: e.target.value }))
-              }
+              onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
               className="input min-h-[100px] pl-9 pt-2"
               placeholder="Tell buyers about yourself..."
               maxLength={500}
@@ -176,9 +174,7 @@ export default function EditProfilePage() {
           <input
             type="url"
             value={form.avatar}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, avatar: e.target.value }))
-            }
+            onChange={(e) => setForm((f) => ({ ...f, avatar: e.target.value }))}
             className="input"
             placeholder="https://..."
           />

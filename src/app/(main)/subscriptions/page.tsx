@@ -13,7 +13,8 @@ export default function SubscriptionsPage() {
       </div>
       <h1 className="mb-2 text-2xl font-bold text-gray-900">Coming soon</h1>
       <p className="mb-6 text-gray-500">
-        Subscription plans are being set up. Listing is free while we get everything ready.
+        Subscription plans are being set up. Listing is free while we get
+        everything ready.
       </p>
       <Link href="/dashboard" className="btn-primary">
         Back to dashboard

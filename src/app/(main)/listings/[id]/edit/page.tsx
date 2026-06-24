@@ -17,7 +17,13 @@ const CONDITIONS = [
 ];
 
 type ExistingMedia = { id: string; url: string; type: string; order: number };
-type UploadedImage = { url: string; order: number; isUploading?: boolean; uploadProgress?: number; error?: string };
+type UploadedImage = {
+  url: string;
+  order: number;
+  isUploading?: boolean;
+  uploadProgress?: number;
+  error?: string;
+};
 type AttributeValue = { attributeId: string; value: string };
 
 export default function EditListingPage() {
@@ -73,10 +79,11 @@ export default function EditListingPage() {
       listingType: listing.listingType ?? "FIXED_PRICE",
     });
     setExistingMedia(listing.media ?? []);
-    const existingAttrs = listing.attributeValues?.map((av: any) => ({
-      attributeId: av.attributeId,
-      value: av.value,
-    })) ?? [];
+    const existingAttrs =
+      listing.attributeValues?.map((av: any) => ({
+        attributeId: av.attributeId,
+        value: av.value,
+      })) ?? [];
     setAttributes(existingAttrs);
   }, [listing]);
 
@@ -106,9 +113,14 @@ export default function EditListingPage() {
 
   const canEdit = listing.status !== "SOLD" && listing.status !== "ARCHIVED";
 
-  const set = (field: string) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
-  ) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const set =
+    (field: string) =>
+    (
+      e: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >,
+    ) =>
+      setForm((f) => ({ ...f, [field]: e.target.value }));
 
   const removeExisting = (mediaId: string) => {
     setExistingMedia((prev) => prev.filter((m) => m.id !== mediaId));
@@ -123,7 +135,9 @@ export default function EditListingPage() {
     }
 
     // Filter out errored and uploading images
-    const validNewImages = newImages.filter((img) => !img.error && img.url && !img.isUploading);
+    const validNewImages = newImages.filter(
+      (img) => !img.error && img.url && !img.isUploading,
+    );
 
     setSaving(true);
     setError("");
@@ -149,7 +163,12 @@ export default function EditListingPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm("Archive this listing? It will no longer appear in search results.")) return;
+    if (
+      !confirm(
+        "Archive this listing? It will no longer appear in search results.",
+      )
+    )
+      return;
     setDeleting(true);
     try {
       await api.delete(`/listings/${id}`);
@@ -185,26 +204,31 @@ export default function EditListingPage() {
 
       {!canEdit && (
         <div className="mb-4 rounded-lg bg-amber-50 p-4 text-sm text-amber-700">
-          This listing is <strong>{listing.status.replace("_", " ")}</strong> and cannot be
-          edited. Archive it to remove from search.
+          This listing is <strong>{listing.status.replace("_", " ")}</strong>{" "}
+          and cannot be edited. Archive it to remove from search.
         </div>
       )}
 
       {listing.status === "ACTIVE" && (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          <strong>This listing is live.</strong> Saving any changes will take it offline and resubmit it for admin review. It will not be visible to buyers until approved again.
+          <strong>This listing is live.</strong> Saving any changes will take it
+          offline and resubmit it for admin review. It will not be visible to
+          buyers until approved again.
         </div>
       )}
 
       {listing.status === "PENDING_REVIEW" && (
         <div className="mb-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-700">
-          This listing is pending review. Changes will keep it in the review queue.
+          This listing is pending review. Changes will keep it in the review
+          queue.
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
-          <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">{error}</div>
+          <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
+            {error}
+          </div>
         )}
 
         {/* Basic details */}
@@ -214,7 +238,9 @@ export default function EditListingPage() {
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
               Title <span className="text-red-500">*</span>
-              <span className="ml-1 text-xs text-gray-400">(10–120 characters)</span>
+              <span className="ml-1 text-xs text-gray-400">
+                (10–120 characters)
+              </span>
             </label>
             <input
               type="text"
@@ -226,7 +252,9 @@ export default function EditListingPage() {
               required
               disabled={!canEdit}
             />
-            <p className="mt-1 text-right text-xs text-gray-400">{form.title.length}/120</p>
+            <p className="mt-1 text-right text-xs text-gray-400">
+              {form.title.length}/120
+            </p>
           </div>
 
           <div>
@@ -244,7 +272,9 @@ export default function EditListingPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Condition</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Condition
+              </label>
               <select
                 value={form.condition}
                 onChange={set("condition")}
@@ -252,12 +282,16 @@ export default function EditListingPage() {
                 disabled={!canEdit}
               >
                 {CONDITIONS.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Listing Type</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Listing Type
+              </label>
               <select
                 value={form.listingType}
                 onChange={set("listingType")}
@@ -273,7 +307,9 @@ export default function EditListingPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Price (LKR)</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Price (LKR)
+              </label>
               <input
                 type="number"
                 value={form.price}
@@ -286,7 +322,9 @@ export default function EditListingPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Quantity</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Quantity
+              </label>
               <input
                 type="number"
                 value={form.quantity}
@@ -299,7 +337,9 @@ export default function EditListingPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Location</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Location
+            </label>
             <input
               type="text"
               value={form.location}
@@ -314,24 +354,40 @@ export default function EditListingPage() {
         {/* Category attributes */}
         {categoryAttributes.length > 0 && (
           <section className="card space-y-4 p-6">
-            <h2 className="font-semibold text-gray-900">{selectedCategory?.name} Details</h2>
+            <h2 className="font-semibold text-gray-900">
+              {selectedCategory?.name} Details
+            </h2>
             <div className="grid gap-4 sm:grid-cols-2">
               {categoryAttributes.map((attr: any) => {
-                const current = attributes.find((a) => a.attributeId === attr.id);
+                const current = attributes.find(
+                  (a) => a.attributeId === attr.id,
+                );
                 return (
                   <div key={attr.id}>
                     <label className="mb-1 block text-sm font-medium text-gray-700">
                       {attr.name}
-                      {attr.required && <span className="ml-1 text-red-500">*</span>}
+                      {attr.required && (
+                        <span className="ml-1 text-red-500">*</span>
+                      )}
                     </label>
                     {attr.options?.length > 0 ? (
                       <select
                         value={current?.value ?? ""}
                         onChange={(e) =>
                           setAttributes((prev) => {
-                            const exists = prev.find((a) => a.attributeId === attr.id);
-                            if (exists) return prev.map((a) => a.attributeId === attr.id ? { ...a, value: e.target.value } : a);
-                            return [...prev, { attributeId: attr.id, value: e.target.value }];
+                            const exists = prev.find(
+                              (a) => a.attributeId === attr.id,
+                            );
+                            if (exists)
+                              return prev.map((a) =>
+                                a.attributeId === attr.id
+                                  ? { ...a, value: e.target.value }
+                                  : a,
+                              );
+                            return [
+                              ...prev,
+                              { attributeId: attr.id, value: e.target.value },
+                            ];
                           })
                         }
                         className="input"
@@ -339,7 +395,9 @@ export default function EditListingPage() {
                       >
                         <option value="">Select…</option>
                         {attr.options.map((opt: string) => (
-                          <option key={opt} value={opt}>{opt}</option>
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
                         ))}
                       </select>
                     ) : (
@@ -348,9 +406,19 @@ export default function EditListingPage() {
                         value={current?.value ?? ""}
                         onChange={(e) =>
                           setAttributes((prev) => {
-                            const exists = prev.find((a) => a.attributeId === attr.id);
-                            if (exists) return prev.map((a) => a.attributeId === attr.id ? { ...a, value: e.target.value } : a);
-                            return [...prev, { attributeId: attr.id, value: e.target.value }];
+                            const exists = prev.find(
+                              (a) => a.attributeId === attr.id,
+                            );
+                            if (exists)
+                              return prev.map((a) =>
+                                a.attributeId === attr.id
+                                  ? { ...a, value: e.target.value }
+                                  : a,
+                              );
+                            return [
+                              ...prev,
+                              { attributeId: attr.id, value: e.target.value },
+                            ];
                           })
                         }
                         className="input"
@@ -369,7 +437,9 @@ export default function EditListingPage() {
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-gray-900">Photos</h2>
             <span className="text-xs text-gray-400">
-              {existingMedia.filter((m) => m.type === "IMAGE").length + newImages.filter((m) => !m.error && m.url).length}/10
+              {existingMedia.filter((m) => m.type === "IMAGE").length +
+                newImages.filter((m) => !m.error && m.url).length}
+              /10
             </span>
           </div>
 
@@ -377,30 +447,51 @@ export default function EditListingPage() {
           {existingMedia.filter((m) => m.type === "IMAGE").length > 0 && (
             <>
               <div>
-                <p className="mb-2 text-xs font-medium text-gray-500">Existing Images</p>
+                <p className="mb-2 text-xs font-medium text-gray-500">
+                  Existing Images
+                </p>
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-                  {existingMedia.filter((m) => m.type === "IMAGE").map((m, i) => (
-                    <div key={m.id} className="group relative aspect-square overflow-hidden rounded-lg bg-gray-100">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={m.url} alt="" className="h-full w-full object-cover" />
-                      {canEdit && (
-                        <button
-                          type="button"
-                          onClick={() => removeExisting(m.id)}
-                          className="absolute right-1 top-1 hidden rounded-full bg-black/60 p-0.5 text-white group-hover:flex"
-                        >
-                          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      )}
-                      {i === 0 && (
-                        <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1 text-[10px] text-white">
-                          Cover
-                        </span>
-                      )}
-                    </div>
-                  ))}
+                  {existingMedia
+                    .filter((m) => m.type === "IMAGE")
+                    .map((m, i) => (
+                      <div
+                        key={m.id}
+                        className="group relative aspect-square overflow-hidden rounded-lg bg-gray-100"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={m.url}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                        {canEdit && (
+                          <button
+                            type="button"
+                            onClick={() => removeExisting(m.id)}
+                            className="absolute right-1 top-1 hidden rounded-full bg-black/60 p-0.5 text-white group-hover:flex"
+                          >
+                            <svg
+                              className="h-3 w-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        )}
+                        {i === 0 && (
+                          <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1 text-[10px] text-white">
+                            Cover
+                          </span>
+                        )}
+                      </div>
+                    ))}
                 </div>
               </div>
             </>
@@ -409,11 +500,15 @@ export default function EditListingPage() {
           {canEdit && (
             <>
               <div>
-                <p className="mb-2 text-xs font-medium text-gray-500">Add New Images</p>
+                <p className="mb-2 text-xs font-medium text-gray-500">
+                  Add New Images
+                </p>
                 <ImageUploader
                   images={newImages}
                   onImagesChange={setNewImages}
-                  maxImages={10 - existingMedia.filter((m) => m.type === "IMAGE").length}
+                  maxImages={
+                    10 - existingMedia.filter((m) => m.type === "IMAGE").length
+                  }
                   listingId={id}
                 />
               </div>
@@ -422,10 +517,18 @@ export default function EditListingPage() {
         </section>
 
         <div className="flex justify-end gap-3">
-          <button type="button" onClick={() => router.push(`/listings/${id}`)} className="btn-secondary">
+          <button
+            type="button"
+            onClick={() => router.push(`/listings/${id}`)}
+            className="btn-secondary"
+          >
             Cancel
           </button>
-          <button type="submit" disabled={saving || !canEdit} className="btn-primary">
+          <button
+            type="submit"
+            disabled={saving || !canEdit}
+            className="btn-primary"
+          >
             {saving ? "Saving…" : "Save Changes"}
           </button>
         </div>

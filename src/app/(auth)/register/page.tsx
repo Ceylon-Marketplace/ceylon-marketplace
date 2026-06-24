@@ -61,7 +61,8 @@ export default function RegisterPage() {
       router.push("/dashboard");
     } catch (err: any) {
       setError(
-        err?.response?.data?.message || "Registration failed. Please try again.",
+        err?.response?.data?.message ||
+          "Registration failed. Please try again.",
       );
     }
   };
@@ -77,7 +78,9 @@ export default function RegisterPage() {
           <Link href="/" className="text-2xl font-bold text-brand-600">
             Ceylon
           </Link>
-          <h1 className="mt-2 text-2xl font-bold text-gray-900">Create an account</h1>
+          <h1 className="mt-2 text-2xl font-bold text-gray-900">
+            Create an account
+          </h1>
           <p className="mt-1 text-sm text-gray-500">
             Join Sri Lanka&apos;s premier marketplace
           </p>
@@ -131,7 +134,10 @@ export default function RegisterPage() {
                     </span>
                     <ul className="mt-3 space-y-1">
                       {r.perks.map((perk) => (
-                        <li key={perk} className="flex items-start gap-1.5 text-xs text-gray-500">
+                        <li
+                          key={perk}
+                          className="flex items-start gap-1.5 text-xs text-gray-500"
+                        >
                           <Check
                             className={`mt-0.5 h-3 w-3 shrink-0 ${
                               selected ? "text-brand-500" : "text-gray-300"

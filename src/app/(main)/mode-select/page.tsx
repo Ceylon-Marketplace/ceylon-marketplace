@@ -9,15 +9,23 @@ export default function ModeSelectPage() {
   const { user, mode, setMode } = useAuthStore();
   const router = useRouter();
 
-  const isSeller =
-    user?.role === "SELLER" || user?.role === "BUSINESS_SELLER";
+  const isSeller = user?.role === "SELLER" || user?.role === "BUSINESS_SELLER";
 
   // Non-sellers have no choice — redirect straight away
   useEffect(() => {
-    if (!user) { router.replace("/login"); return; }
-    if (!isSeller) { router.replace("/dashboard"); return; }
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+    if (!isSeller) {
+      router.replace("/dashboard");
+      return;
+    }
     // Already chosen — go to dashboard
-    if (mode !== null) { router.replace("/dashboard"); return; }
+    if (mode !== null) {
+      router.replace("/dashboard");
+      return;
+    }
   }, [user, isSeller, mode, router]);
 
   if (!user || !isSeller || mode !== null) return null;
@@ -48,9 +56,12 @@ export default function ModeSelectPage() {
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-500 transition-colors group-hover:bg-brand-50 group-hover:text-brand-600">
               <ShoppingBag className="h-7 w-7" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">Browse &amp; Buy</h2>
+            <h2 className="text-xl font-bold text-gray-900">
+              Browse &amp; Buy
+            </h2>
             <p className="mt-1 text-sm text-gray-500">
-              Discover listings, make offers, bid on auctions, and message sellers.
+              Discover listings, make offers, bid on auctions, and message
+              sellers.
             </p>
             <ul className="mt-4 space-y-1.5 text-sm text-gray-500">
               {[
@@ -80,7 +91,8 @@ export default function ModeSelectPage() {
             </div>
             <h2 className="text-xl font-bold text-gray-900">List &amp; Sell</h2>
             <p className="mt-1 text-sm text-gray-500">
-              Manage your listings, run auctions, handle offers and grow your storefront.
+              Manage your listings, run auctions, handle offers and grow your
+              storefront.
             </p>
             <ul className="mt-4 space-y-1.5 text-sm text-gray-500">
               {[

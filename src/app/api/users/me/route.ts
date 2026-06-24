@@ -6,7 +6,10 @@ export async function PATCH(req: NextRequest) {
   try {
     const user = requireAuth(req);
     const data = await req.json();
-    const profile = await prisma.profile.update({ where: { userId: user.sub }, data });
+    const profile = await prisma.profile.update({
+      where: { userId: user.sub },
+      data,
+    });
     return Response.json(profile);
   } catch (err) {
     return handleError(err);

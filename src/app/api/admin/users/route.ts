@@ -17,7 +17,14 @@ export async function GET(req: NextRequest) {
       ...(search && {
         OR: [
           { email: { contains: search, mode: "insensitive" } },
-          { profile: { OR: [{ firstName: { contains: search, mode: "insensitive" } }, { lastName: { contains: search, mode: "insensitive" } }] } },
+          {
+            profile: {
+              OR: [
+                { firstName: { contains: search, mode: "insensitive" } },
+                { lastName: { contains: search, mode: "insensitive" } },
+              ],
+            },
+          },
         ],
       }),
       ...(role && { role }),
@@ -26,7 +33,11 @@ export async function GET(req: NextRequest) {
     const [users, total] = await Promise.all([
       prisma.user.findMany({
         where,
-        include: { profile: true, subscription: { include: { plan: true } }, _count: { select: { listings: true, bids: true } } },
+        include: {
+          profile: true,
+          subscription: { include: { plan: true } },
+          _count: { select: { listings: true, bids: true } },
+        },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
         take: limit,

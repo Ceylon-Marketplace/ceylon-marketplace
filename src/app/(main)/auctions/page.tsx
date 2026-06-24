@@ -23,7 +23,8 @@ export default function AuctionsPage() {
         <h1 className="text-2xl font-bold text-gray-900">Live Auctions</h1>
         <span className="flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 text-sm font-medium text-green-700">
           <span className="h-2 w-2 rounded-full bg-green-500" />
-          {data?.auctions?.filter((a: any) => a.status === "LIVE").length ?? 0}{" "}
+          {data?.auctions?.filter((a: any) => a.status === "LIVE").length ??
+            0}{" "}
           Live
         </span>
       </div>

@@ -9,8 +9,20 @@ export async function GET(req: NextRequest) {
       where: { OR: [{ buyerId: user.sub }, { sellerId: user.sub }] },
       include: {
         listing: { include: { media: { take: 1 } } },
-        buyer: { include: { profile: { select: { firstName: true, lastName: true, avatar: true } } } },
-        seller: { include: { profile: { select: { firstName: true, lastName: true, avatar: true } } } },
+        buyer: {
+          include: {
+            profile: {
+              select: { firstName: true, lastName: true, avatar: true },
+            },
+          },
+        },
+        seller: {
+          include: {
+            profile: {
+              select: { firstName: true, lastName: true, avatar: true },
+            },
+          },
+        },
         messages: { orderBy: { createdAt: "desc" }, take: 1 },
       },
       orderBy: { updatedAt: "desc" },
@@ -26,9 +38,12 @@ export async function POST(req: NextRequest) {
     const user = requireAuth(req);
     const { listingId } = await req.json();
 
-    const listing = await prisma.listing.findUnique({ where: { id: listingId } });
+    const listing = await prisma.listing.findUnique({
+      where: { id: listingId },
+    });
     if (!listing) throw new ApiError("Listing not found", 404);
-    if (listing.sellerId === user.sub) throw new ApiError("Cannot message yourself", 403);
+    if (listing.sellerId === user.sub)
+      throw new ApiError("Cannot message yourself", 403);
 
     const conv = await prisma.conversation.upsert({
       where: { listingId_buyerId: { listingId, buyerId: user.sub } },

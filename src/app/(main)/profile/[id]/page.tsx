@@ -100,12 +100,14 @@ export default function PublicProfilePage() {
                   className="object-cover"
                 />
               ) : (
-                fullName[0]?.toUpperCase() ?? "?"
+                (fullName[0]?.toUpperCase() ?? "?")
               )}
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{fullName}</h1>
-              <div className={`flex items-center gap-1 text-sm ${verificationColor}`}>
+              <div
+                className={`flex items-center gap-1 text-sm ${verificationColor}`}
+              >
                 <Shield className="h-4 w-4" />
                 {verificationLabel}
               </div>

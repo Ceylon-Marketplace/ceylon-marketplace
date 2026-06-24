@@ -14,7 +14,9 @@ interface UploadedImage {
 
 interface ImageUploaderProps {
   images: UploadedImage[];
-  onImagesChange: (images: UploadedImage[] | ((prev: UploadedImage[]) => UploadedImage[])) => void;
+  onImagesChange: (
+    images: UploadedImage[] | ((prev: UploadedImage[]) => UploadedImage[]),
+  ) => void;
   maxImages?: number;
   maxFileSize?: number;
   listingId?: string;
@@ -33,7 +35,8 @@ export function ImageUploader({
 
   const handleFiles = useCallback(
     async (files: FileList) => {
-      const remainingSlots = maxImages - images.filter((img) => !img.error).length;
+      const remainingSlots =
+        maxImages - images.filter((img) => !img.error).length;
 
       if (remainingSlots === 0) {
         alert(`Maximum ${maxImages} images allowed.`);
@@ -101,8 +104,8 @@ export function ImageUploader({
                 prevImages.map((img) =>
                   img.url === placeholderId
                     ? { ...img, uploadProgress: progress }
-                    : img
-                )
+                    : img,
+                ),
               );
             }
           });
@@ -115,11 +118,13 @@ export function ImageUploader({
                   img.url === placeholderId
                     ? {
                         url: result.url,
-                        order: prevImages.filter((i) => !i.error && i.url !== placeholderId).length,
+                        order: prevImages.filter(
+                          (i) => !i.error && i.url !== placeholderId,
+                        ).length,
                         isUploading: false,
                       }
-                    : img
-                )
+                    : img,
+                ),
               );
             } else {
               const error = JSON.parse(xhr.responseText);
@@ -131,8 +136,8 @@ export function ImageUploader({
                         order: prevImages.length - 1,
                         error: error.message || "Upload failed",
                       }
-                    : img
-                )
+                    : img,
+                ),
               );
             }
             setUploadingCount((c) => c - 1);
@@ -147,13 +152,17 @@ export function ImageUploader({
                       order: prevImages.length - 1,
                       error: "Upload failed",
                     }
-                  : img
-              )
+                  : img,
+              ),
             );
             setUploadingCount((c) => c - 1);
           });
 
           xhr.open("POST", "/api/listings/upload-image");
+          const token = localStorage.getItem("accessToken");
+          if (token) {
+            xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+          }
           xhr.send(formData);
         } catch (error) {
           console.error("Upload error:", error);
@@ -161,7 +170,7 @@ export function ImageUploader({
         }
       }
     },
-    [images, maxImages, maxFileSize, onImagesChange]
+    [images, maxImages, maxFileSize, onImagesChange],
   );
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -195,7 +204,7 @@ export function ImageUploader({
     onImagesChange(
       images
         .filter((_, i) => i !== index)
-        .map((img, idx) => ({ ...img, order: idx }))
+        .map((img, idx) => ({ ...img, order: idx })),
     );
   };
 

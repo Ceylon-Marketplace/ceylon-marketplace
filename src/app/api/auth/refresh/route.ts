@@ -1,6 +1,12 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { signToken, signRefreshToken, verifyRefreshToken, handleError, ApiError } from "@/lib/auth";
+import {
+  signToken,
+  signRefreshToken,
+  verifyRefreshToken,
+  handleError,
+  ApiError,
+} from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {

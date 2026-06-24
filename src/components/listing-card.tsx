@@ -68,7 +68,9 @@ export function ListingCard({ listing }: ListingCardProps) {
           </span>
         )}
         {listing.listingType && TYPE_BADGES[listing.listingType] && (
-          <span className={`absolute left-2 bottom-2 badge ${TYPE_BADGES[listing.listingType].cls}`}>
+          <span
+            className={`absolute left-2 bottom-2 badge ${TYPE_BADGES[listing.listingType].cls}`}
+          >
             {TYPE_BADGES[listing.listingType].label}
           </span>
         )}

@@ -2,7 +2,10 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { handleError, ApiError } from "@/lib/auth";
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     const user = await prisma.user.findUnique({
@@ -15,7 +18,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
           orderBy: { createdAt: "desc" },
           take: 10,
         },
-        _count: { select: { listings: { where: { status: "ACTIVE" } }, reviewsReceived: true } },
+        _count: {
+          select: {
+            listings: { where: { status: "ACTIVE" } },
+            reviewsReceived: true,
+          },
+        },
       },
     });
     if (!user) throw new ApiError("User not found", 404);

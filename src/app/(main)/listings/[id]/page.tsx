@@ -66,12 +66,16 @@ export default function ListingDetailPage() {
       listing?.isSaved
         ? api.delete(`/listings/${id}/save`)
         : api.post(`/listings/${id}/save`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["listing", id] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["listing", id] }),
   });
 
   const submitOffer = useMutation({
-    mutationFn: (data: { listingId: string; amount: number; message?: string }) =>
-      api.post("/offers", data),
+    mutationFn: (data: {
+      listingId: string;
+      amount: number;
+      message?: string;
+    }) => api.post("/offers", data),
     onSuccess: () => {
       setOfferSuccess(true);
       setShowOfferForm(false);
@@ -100,7 +104,10 @@ export default function ListingDetailPage() {
   });
 
   const handleContact = async () => {
-    if (!user) { router.push("/login"); return; }
+    if (!user) {
+      router.push("/login");
+      return;
+    }
     try {
       const { data } = await api.post(`/conversations/listing/${id}`);
       router.push(`/messages?conversationId=${data.id}`);
@@ -111,14 +118,24 @@ export default function ListingDetailPage() {
 
   const handleSubmitOffer = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) { router.push("/login"); return; }
+    if (!user) {
+      router.push("/login");
+      return;
+    }
     setOfferError("");
-    submitOffer.mutate({ listingId: id, amount: parseFloat(offerAmount), message: offerMessage || undefined });
+    submitOffer.mutate({
+      listingId: id,
+      amount: parseFloat(offerAmount),
+      message: offerMessage || undefined,
+    });
   };
 
   const handleSubmitReview = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) { router.push("/login"); return; }
+    if (!user) {
+      router.push("/login");
+      return;
+    }
     setReviewError("");
     submitReview.mutate({
       revieweeId: listing.seller.id,
@@ -143,7 +160,9 @@ export default function ListingDetailPage() {
       <div className="flex flex-col items-center justify-center py-20 text-gray-500">
         <Package className="mb-4 h-12 w-12 text-gray-300" />
         <p>Listing not found.</p>
-        <Link href="/listings" className="btn-primary mt-4">Browse Listings</Link>
+        <Link href="/listings" className="btn-primary mt-4">
+          Browse Listings
+        </Link>
       </div>
     );
   }
@@ -169,7 +188,9 @@ export default function ListingDetailPage() {
           <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-gray-100">
             {isSold && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30">
-                <span className="rounded-lg bg-black/70 px-4 py-2 text-lg font-bold text-white">SOLD</span>
+                <span className="rounded-lg bg-black/70 px-4 py-2 text-lg font-bold text-white">
+                  SOLD
+                </span>
               </div>
             )}
             {images[activeImage] ? (
@@ -180,7 +201,9 @@ export default function ListingDetailPage() {
                 className="object-contain"
               />
             ) : (
-              <div className="flex h-full items-center justify-center text-6xl">📦</div>
+              <div className="flex h-full items-center justify-center text-6xl">
+                📦
+              </div>
             )}
           </div>
           {images.length > 1 && (
@@ -190,7 +213,9 @@ export default function ListingDetailPage() {
                   key={i}
                   onClick={() => setActiveImage(i)}
                   className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border-2 ${
-                    i === activeImage ? "border-brand-500" : "border-transparent"
+                    i === activeImage
+                      ? "border-brand-500"
+                      : "border-transparent"
                   }`}
                 >
                   <Image src={img.url} alt="" fill className="object-cover" />
@@ -204,12 +229,18 @@ export default function ListingDetailPage() {
         <div className="space-y-4">
           <div>
             <div className="flex items-start justify-between gap-2">
-              <h1 className="text-2xl font-bold text-gray-900">{listing.title}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {listing.title}
+              </h1>
               <div className="flex gap-1.5">
                 {listing.isFeatured && (
-                  <span className="badge bg-brand-500 text-white">Featured</span>
+                  <span className="badge bg-brand-500 text-white">
+                    Featured
+                  </span>
                 )}
-                <span className={`badge ${typeInfo.cls}`}>{typeInfo.label}</span>
+                <span className={`badge ${typeInfo.cls}`}>
+                  {typeInfo.label}
+                </span>
               </div>
             </div>
             <p className="mt-2 text-3xl font-bold text-brand-600">
@@ -222,7 +253,8 @@ export default function ListingDetailPage() {
               <MapPin className="h-4 w-4" /> {listing.location}
             </span>
             <span className="flex items-center gap-1">
-              <Tag className="h-4 w-4" /> {CONDITION_LABELS[listing.condition] ?? listing.condition}
+              <Tag className="h-4 w-4" />{" "}
+              {CONDITION_LABELS[listing.condition] ?? listing.condition}
             </span>
             <span className="flex items-center gap-1">
               <Eye className="h-4 w-4" /> {listing.viewCount} views
@@ -246,12 +278,16 @@ export default function ListingDetailPage() {
               {listing.quantity > 1 && (
                 <div>
                   <span className="text-gray-500">Quantity</span>
-                  <p className="font-medium text-gray-900">{listing.quantity}</p>
+                  <p className="font-medium text-gray-900">
+                    {listing.quantity}
+                  </p>
                 </div>
               )}
               <div>
                 <span className="text-gray-500">Listed</span>
-                <p className="font-medium text-gray-900">{timeAgo(listing.createdAt)}</p>
+                <p className="font-medium text-gray-900">
+                  {timeAgo(listing.createdAt)}
+                </p>
               </div>
             </div>
           </div>
@@ -259,7 +295,9 @@ export default function ListingDetailPage() {
           {/* Category attributes */}
           {listing.attributeValues?.length > 0 && (
             <div className="card p-4">
-              <p className="mb-2 text-sm font-semibold text-gray-700">Specifications</p>
+              <p className="mb-2 text-sm font-semibold text-gray-700">
+                Specifications
+              </p>
               <dl className="grid grid-cols-2 gap-1 text-sm">
                 {listing.attributeValues.map((av: any) => (
                   <div key={av.id}>
@@ -274,17 +312,22 @@ export default function ListingDetailPage() {
           {/* Seller */}
           <div className="card p-4">
             <p className="mb-2 text-sm font-semibold text-gray-700">Seller</p>
-            <Link href={`/profile/${listing.seller.id}`} className="flex items-center gap-3 hover:opacity-80">
+            <Link
+              href={`/profile/${listing.seller.id}`}
+              className="flex items-center gap-3 hover:opacity-80"
+            >
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-lg font-bold text-gray-600">
                 {listing.seller.profile?.firstName?.[0] ?? "?"}
               </div>
               <div>
                 <p className="font-medium text-gray-900">
-                  {listing.seller.profile?.firstName} {listing.seller.profile?.lastName}
+                  {listing.seller.profile?.firstName}{" "}
+                  {listing.seller.profile?.lastName}
                 </p>
                 {listing.seller.storefront && (
                   <p className="flex items-center gap-1 text-xs text-brand-600">
-                    <ExternalLink className="h-3 w-3" /> {listing.seller.storefront.name}
+                    <ExternalLink className="h-3 w-3" />{" "}
+                    {listing.seller.storefront.name}
                   </p>
                 )}
               </div>
@@ -314,7 +357,10 @@ export default function ListingDetailPage() {
           {/* Action buttons */}
           {!isOwnListing && !isSold && isActive && (
             <div className="space-y-2">
-              <button onClick={handleContact} className="btn-primary w-full gap-2">
+              <button
+                onClick={handleContact}
+                className="btn-primary w-full gap-2"
+              >
                 <MessageSquare className="h-4 w-4" /> Contact Seller
               </button>
 
@@ -340,15 +386,26 @@ export default function ListingDetailPage() {
               {listing.listingType === "OFFER" && !offerSuccess && (
                 <>
                   <button
-                    onClick={() => { if (!user) { router.push("/login"); return; } setShowOfferForm((v) => !v); }}
+                    onClick={() => {
+                      if (!user) {
+                        router.push("/login");
+                        return;
+                      }
+                      setShowOfferForm((v) => !v);
+                    }}
                     className="btn-secondary w-full gap-2"
                   >
                     <TrendingUp className="h-4 w-4" />
                     {showOfferForm ? "Cancel Offer" : "Make an Offer"}
                   </button>
                   {showOfferForm && (
-                    <form onSubmit={handleSubmitOffer} className="card space-y-3 p-4">
-                      {offerError && <p className="text-xs text-red-600">{offerError}</p>}
+                    <form
+                      onSubmit={handleSubmitOffer}
+                      className="card space-y-3 p-4"
+                    >
+                      {offerError && (
+                        <p className="text-xs text-red-600">{offerError}</p>
+                      )}
                       <div>
                         <label className="mb-1 block text-xs font-medium text-gray-600">
                           Your offer (LKR)
@@ -375,7 +432,11 @@ export default function ListingDetailPage() {
                           maxLength={300}
                         />
                       </div>
-                      <button type="submit" disabled={submitOffer.isPending} className="btn-primary w-full text-sm">
+                      <button
+                        type="submit"
+                        disabled={submitOffer.isPending}
+                        className="btn-primary w-full text-sm"
+                      >
                         {submitOffer.isPending ? "Submitting…" : "Submit Offer"}
                       </button>
                     </form>
@@ -385,7 +446,10 @@ export default function ListingDetailPage() {
 
               {/* Auction link */}
               {listing.listingType === "AUCTION" && listing.auction && (
-                <Link href={`/auctions/${listing.auction.id}`} className="btn-secondary w-full text-center">
+                <Link
+                  href={`/auctions/${listing.auction.id}`}
+                  className="btn-secondary w-full text-center"
+                >
                   View Auction
                 </Link>
               )}
@@ -394,17 +458,30 @@ export default function ListingDetailPage() {
               {!reviewSuccess && listing.status !== "ACTIVE" && (
                 <>
                   <button
-                    onClick={() => { if (!user) { router.push("/login"); return; } setShowReviewForm((v) => !v); }}
+                    onClick={() => {
+                      if (!user) {
+                        router.push("/login");
+                        return;
+                      }
+                      setShowReviewForm((v) => !v);
+                    }}
                     className="btn-secondary w-full gap-2 text-sm"
                   >
                     <Star className="h-4 w-4" />
                     {showReviewForm ? "Cancel" : "Leave a Review"}
                   </button>
                   {showReviewForm && (
-                    <form onSubmit={handleSubmitReview} className="card space-y-3 p-4">
-                      {reviewError && <p className="text-xs text-red-600">{reviewError}</p>}
+                    <form
+                      onSubmit={handleSubmitReview}
+                      className="card space-y-3 p-4"
+                    >
+                      {reviewError && (
+                        <p className="text-xs text-red-600">{reviewError}</p>
+                      )}
                       <div>
-                        <label className="mb-1 block text-xs font-medium text-gray-600">Rating</label>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">
+                          Rating
+                        </label>
                         <div className="flex gap-1">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <button
@@ -421,7 +498,9 @@ export default function ListingDetailPage() {
                         </div>
                       </div>
                       <div>
-                        <label className="mb-1 block text-xs font-medium text-gray-600">Comment (optional)</label>
+                        <label className="mb-1 block text-xs font-medium text-gray-600">
+                          Comment (optional)
+                        </label>
                         <textarea
                           value={reviewComment}
                           onChange={(e) => setReviewComment(e.target.value)}
@@ -430,8 +509,14 @@ export default function ListingDetailPage() {
                           maxLength={500}
                         />
                       </div>
-                      <button type="submit" disabled={submitReview.isPending} className="btn-primary w-full text-sm">
-                        {submitReview.isPending ? "Submitting…" : "Submit Review"}
+                      <button
+                        type="submit"
+                        disabled={submitReview.isPending}
+                        className="btn-primary w-full text-sm"
+                      >
+                        {submitReview.isPending
+                          ? "Submitting…"
+                          : "Submit Review"}
                       </button>
                     </form>
                   )}
@@ -443,7 +528,10 @@ export default function ListingDetailPage() {
           {/* Own listing actions */}
           {isOwnListing && (
             <div className="space-y-2">
-              <Link href={`/listings/${id}/edit`} className="btn-secondary w-full gap-2 text-center">
+              <Link
+                href={`/listings/${id}/edit`}
+                className="btn-secondary w-full gap-2 text-center"
+              >
                 <Edit className="inline h-4 w-4" /> Edit Listing
               </Link>
             </div>
@@ -451,7 +539,10 @@ export default function ListingDetailPage() {
 
           {/* Saved but not logged in nudge */}
           {!user && !isOwnListing && (
-            <Link href="/login" className="btn-secondary w-full gap-2 text-center text-sm">
+            <Link
+              href="/login"
+              className="btn-secondary w-full gap-2 text-center text-sm"
+            >
               <Heart className="inline h-4 w-4" /> Login to save
             </Link>
           )}
@@ -460,7 +551,9 @@ export default function ListingDetailPage() {
 
       {/* Description */}
       <div className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold text-gray-900">Description</h2>
+        <h2 className="mb-3 text-lg font-semibold text-gray-900">
+          Description
+        </h2>
         <div className="card p-6">
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">
             {listing.description}

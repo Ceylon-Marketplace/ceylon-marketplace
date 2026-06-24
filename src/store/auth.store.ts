@@ -108,6 +108,9 @@ export const useAuthStore = create<AuthState>()(
         }
       },
     }),
-    { name: "ceylon-auth", partialize: (s) => ({ user: s.user, mode: s.mode }) },
+    {
+      name: "ceylon-auth",
+      partialize: (s) => ({ user: s.user, mode: s.mode }),
+    },
   ),
 );

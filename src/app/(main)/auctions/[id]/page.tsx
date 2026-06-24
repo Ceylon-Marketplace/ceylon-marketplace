@@ -45,7 +45,9 @@ export default function AuctionDetailPage() {
       return data;
     },
     onSuccess: (data) => {
-      setBidSuccess(`Bid placed!${data.extended ? " Auction extended by 2 minutes." : ""}`);
+      setBidSuccess(
+        `Bid placed!${data.extended ? " Auction extended by 2 minutes." : ""}`,
+      );
       setBidAmount("");
       queryClient.invalidateQueries({ queryKey: ["auction", id] });
     },
@@ -55,16 +57,26 @@ export default function AuctionDetailPage() {
   });
 
   const handleBid = () => {
-    if (!user) { router.push("/login"); return; }
+    if (!user) {
+      router.push("/login");
+      return;
+    }
     setBidError("");
     setBidSuccess("");
     const amount = Number(bidAmount);
-    if (!amount || amount <= 0) { setBidError("Enter a valid bid amount"); return; }
+    if (!amount || amount <= 0) {
+      setBidError("Enter a valid bid amount");
+      return;
+    }
     bidMutation.mutate(amount);
   };
 
   if (isLoading) {
-    return <div className="animate-pulse space-y-4"><div className="h-80 rounded-xl bg-gray-100" /></div>;
+    return (
+      <div className="animate-pulse space-y-4">
+        <div className="h-80 rounded-xl bg-gray-100" />
+      </div>
+    );
   }
 
   if (!auction) return <div>Auction not found</div>;
@@ -77,7 +89,10 @@ export default function AuctionDetailPage() {
 
   return (
     <div>
-      <button onClick={() => router.back()} className="mb-4 flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700">
+      <button
+        onClick={() => router.back()}
+        className="mb-4 flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
+      >
         <ArrowLeft className="h-4 w-4" /> Back
       </button>
 
@@ -85,25 +100,45 @@ export default function AuctionDetailPage() {
         <div className="space-y-4">
           <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-gray-100">
             {coverImage ? (
-              <Image src={coverImage.url} alt={auction.listing.title} fill className="object-contain" />
+              <Image
+                src={coverImage.url}
+                alt={auction.listing.title}
+                fill
+                className="object-contain"
+              />
             ) : (
-              <div className="flex h-full items-center justify-center text-6xl">🔨</div>
+              <div className="flex h-full items-center justify-center text-6xl">
+                🔨
+              </div>
             )}
-            <span className={`absolute left-3 top-3 badge text-white ${isLive ? "bg-green-500" : "bg-gray-400"}`}>
+            <span
+              className={`absolute left-3 top-3 badge text-white ${isLive ? "bg-green-500" : "bg-gray-400"}`}
+            >
               {isLive ? "● Live" : auction.status}
             </span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">{auction.listing.title}</h1>
-          <p className="text-sm text-gray-500">{auction.listing.category.name}</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {auction.listing.title}
+          </h1>
+          <p className="text-sm text-gray-500">
+            {auction.listing.category.name}
+          </p>
 
           {auction.bids?.length > 0 && (
             <div className="card p-4">
-              <h3 className="mb-3 text-sm font-semibold text-gray-700">Recent Bids</h3>
+              <h3 className="mb-3 text-sm font-semibold text-gray-700">
+                Recent Bids
+              </h3>
               <ul className="space-y-2">
                 {auction.bids.map((b: any, i: number) => (
-                  <li key={i} className="flex items-center justify-between text-sm">
+                  <li
+                    key={i}
+                    className="flex items-center justify-between text-sm"
+                  >
                     <span className="text-gray-500">{b.bidder.maskedName}</span>
-                    <span className="font-semibold text-brand-600">{formatPrice(b.amount)}</span>
+                    <span className="font-semibold text-brand-600">
+                      {formatPrice(b.amount)}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -115,17 +150,31 @@ export default function AuctionDetailPage() {
           <div className="card p-6 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-500">Current Price</span>
-              <span className="text-3xl font-bold text-brand-600">{formatPrice(currentPrice)}</span>
+              <span className="text-3xl font-bold text-brand-600">
+                {formatPrice(currentPrice)}
+              </span>
             </div>
             <div className="flex items-center justify-between text-sm text-gray-500">
-              <span className="flex items-center gap-1"><Gavel className="h-4 w-4" /> {auction.bidCount} bid{auction.bidCount !== 1 ? "s" : ""}</span>
-              <span className="flex items-center gap-1"><Clock className="h-4 w-4" />{isLive ? timeLeft : formatDateTime(auction.endTime)}</span>
+              <span className="flex items-center gap-1">
+                <Gavel className="h-4 w-4" /> {auction.bidCount} bid
+                {auction.bidCount !== 1 ? "s" : ""}
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="h-4 w-4" />
+                {isLive ? timeLeft : formatDateTime(auction.endTime)}
+              </span>
             </div>
 
             <div className="border-t pt-4">
-              <p className="mb-1 text-xs text-gray-400">Minimum bid: {formatPrice(minBid)}</p>
-              {bidError && <p className="mb-2 text-sm text-red-600">{bidError}</p>}
-              {bidSuccess && <p className="mb-2 text-sm text-green-600">{bidSuccess}</p>}
+              <p className="mb-1 text-xs text-gray-400">
+                Minimum bid: {formatPrice(minBid)}
+              </p>
+              {bidError && (
+                <p className="mb-2 text-sm text-red-600">{bidError}</p>
+              )}
+              {bidSuccess && (
+                <p className="mb-2 text-sm text-green-600">{bidSuccess}</p>
+              )}
 
               {isLive && !isSeller ? (
                 <div className="flex gap-2">
@@ -137,27 +186,44 @@ export default function AuctionDetailPage() {
                     min={minBid}
                     className="input flex-1"
                   />
-                  <button onClick={handleBid} disabled={bidMutation.isPending} className="btn-primary">
+                  <button
+                    onClick={handleBid}
+                    disabled={bidMutation.isPending}
+                    className="btn-primary"
+                  >
                     Bid
                   </button>
                 </div>
               ) : isLive && isSeller ? (
-                <p className="text-sm text-gray-400">You cannot bid on your own auction.</p>
+                <p className="text-sm text-gray-400">
+                  You cannot bid on your own auction.
+                </p>
               ) : (
-                <p className="text-sm text-gray-400">This auction is {auction.status.toLowerCase()}.</p>
+                <p className="text-sm text-gray-400">
+                  This auction is {auction.status.toLowerCase()}.
+                </p>
               )}
             </div>
           </div>
 
           <div className="card p-4">
             <p className="mb-2 text-sm font-semibold text-gray-700">Seller</p>
-            <p className="text-gray-700">{auction.listing.seller.profile?.firstName} {auction.listing.seller.profile?.lastName}</p>
-            <p className="text-xs text-gray-400">Starts: {formatDateTime(auction.startTime)}</p>
-            <p className="text-xs text-gray-400">Ends: {formatDateTime(new Date(auction.endTime))}</p>
+            <p className="text-gray-700">
+              {auction.listing.seller.profile?.firstName}{" "}
+              {auction.listing.seller.profile?.lastName}
+            </p>
+            <p className="text-xs text-gray-400">
+              Starts: {formatDateTime(auction.startTime)}
+            </p>
+            <p className="text-xs text-gray-400">
+              Ends: {formatDateTime(new Date(auction.endTime))}
+            </p>
           </div>
 
           <div className="card p-4">
-            <h3 className="mb-2 text-sm font-semibold text-gray-700">Auction Rules</h3>
+            <h3 className="mb-2 text-sm font-semibold text-gray-700">
+              Auction Rules
+            </h3>
             <ul className="space-y-1 text-xs text-gray-500">
               <li>• All bids are binding</li>
               <li>• Reserve price may apply (hidden)</li>

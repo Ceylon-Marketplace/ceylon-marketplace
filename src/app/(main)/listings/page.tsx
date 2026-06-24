@@ -54,13 +54,10 @@ export default function ListingsPage() {
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
 
-  const setFilter = useCallback(
-    (key: keyof Filters, value: string) => {
-      setFilters((f) => ({ ...f, [key]: value }));
-      setPage(1);
-    },
-    [],
-  );
+  const setFilter = useCallback((key: keyof Filters, value: string) => {
+    setFilters((f) => ({ ...f, [key]: value }));
+    setPage(1);
+  }, []);
 
   const clearFilters = () => {
     setFilters(DEFAULT_FILTERS);
@@ -68,9 +65,11 @@ export default function ListingsPage() {
     setPage(1);
   };
 
-  const activeFilterCount = Object.entries(filters).filter(
-    ([k, v]) => v && k !== "sortBy" && v !== DEFAULT_FILTERS[k as keyof Filters],
-  ).length + (keyword ? 1 : 0);
+  const activeFilterCount =
+    Object.entries(filters).filter(
+      ([k, v]) =>
+        v && k !== "sortBy" && v !== DEFAULT_FILTERS[k as keyof Filters],
+    ).length + (keyword ? 1 : 0);
 
   const { data, isLoading } = useQuery({
     queryKey: ["listings", keyword, filters, page],
@@ -128,7 +127,10 @@ export default function ListingsPage() {
             type="text"
             placeholder="Search listings…"
             value={keyword}
-            onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setKeyword(e.target.value);
+              setPage(1);
+            }}
             className="input pl-9"
           />
         </div>
@@ -145,7 +147,10 @@ export default function ListingsPage() {
           )}
         </button>
         {activeFilterCount > 0 && (
-          <button onClick={clearFilters} className="btn-secondary gap-1 text-sm">
+          <button
+            onClick={clearFilters}
+            className="btn-secondary gap-1 text-sm"
+          >
             <X className="h-4 w-4" /> Clear
           </button>
         )}
@@ -262,7 +267,12 @@ export default function ListingsPage() {
           {keyword && (
             <span className="flex items-center gap-1 rounded-full bg-brand-50 px-3 py-1 text-xs text-brand-700">
               "{keyword}"
-              <button onClick={() => { setKeyword(""); setPage(1); }}>
+              <button
+                onClick={() => {
+                  setKeyword("");
+                  setPage(1);
+                }}
+              >
                 <X className="h-3 w-3" />
               </button>
             </span>
@@ -275,24 +285,36 @@ export default function ListingsPage() {
           )}
           {filters.condition && (
             <FilterChip
-              label={CONDITIONS.find((c) => c.value === filters.condition)?.label ?? filters.condition}
+              label={
+                CONDITIONS.find((c) => c.value === filters.condition)?.label ??
+                filters.condition
+              }
               onRemove={() => setFilter("condition", "")}
             />
           )}
           {filters.listingType && (
             <FilterChip
-              label={LISTING_TYPES.find((t) => t.value === filters.listingType)?.label ?? filters.listingType}
+              label={
+                LISTING_TYPES.find((t) => t.value === filters.listingType)
+                  ?.label ?? filters.listingType
+              }
               onRemove={() => setFilter("listingType", "")}
             />
           )}
           {(filters.minPrice || filters.maxPrice) && (
             <FilterChip
               label={`LKR ${filters.minPrice || "0"} – ${filters.maxPrice || "∞"}`}
-              onRemove={() => { setFilter("minPrice", ""); setFilter("maxPrice", ""); }}
+              onRemove={() => {
+                setFilter("minPrice", "");
+                setFilter("maxPrice", "");
+              }}
             />
           )}
           {filters.location && (
-            <FilterChip label={filters.location} onRemove={() => setFilter("location", "")} />
+            <FilterChip
+              label={filters.location}
+              onRemove={() => setFilter("location", "")}
+            />
           )}
         </div>
       )}
@@ -300,7 +322,8 @@ export default function ListingsPage() {
       {/* Results count */}
       {!isLoading && data && (
         <p className="mb-4 text-sm text-gray-500">
-          {data.total.toLocaleString()} listing{data.total !== 1 ? "s" : ""} found
+          {data.total.toLocaleString()} listing{data.total !== 1 ? "s" : ""}{" "}
+          found
         </p>
       )}
 
@@ -308,7 +331,10 @@ export default function ListingsPage() {
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="aspect-[3/4] animate-pulse rounded-xl bg-gray-100" />
+            <div
+              key={i}
+              className="aspect-[3/4] animate-pulse rounded-xl bg-gray-100"
+            />
           ))}
         </div>
       ) : data?.listings?.length === 0 ? (
@@ -372,7 +398,13 @@ export default function ListingsPage() {
   );
 }
 
-function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+function FilterChip({
+  label,
+  onRemove,
+}: {
+  label: string;
+  onRemove: () => void;
+}) {
   return (
     <span className="flex items-center gap-1 rounded-full bg-brand-50 px-3 py-1 text-xs text-brand-700">
       {label}

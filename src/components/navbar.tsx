@@ -6,7 +6,19 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import api from "@/lib/api";
-import { Bell, MessageSquare, User, LogOut, Plus, Gavel, TrendingUp, ChevronDown, ShoppingBag, Store, ArrowLeftRight } from "lucide-react";
+import {
+  Bell,
+  MessageSquare,
+  User,
+  LogOut,
+  Plus,
+  Gavel,
+  TrendingUp,
+  ChevronDown,
+  ShoppingBag,
+  Store,
+  ArrowLeftRight,
+} from "lucide-react";
 
 export function Navbar() {
   const { user, logout, mode, setMode } = useAuthStore();
@@ -147,7 +159,9 @@ export function Navbar() {
                         <p className="text-sm font-semibold text-gray-900">
                           {user.profile?.firstName} {user.profile?.lastName}
                         </p>
-                        <p className="truncate text-xs text-gray-400">{user.email}</p>
+                        <p className="truncate text-xs text-gray-400">
+                          {user.email}
+                        </p>
                         <div className="mt-1.5 flex flex-wrap gap-1">
                           {isAdmin && (
                             <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-medium text-brand-700">
@@ -155,11 +169,13 @@ export function Navbar() {
                             </span>
                           )}
                           {isSeller && (
-                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                              inSellerMode
-                                ? "bg-green-50 text-green-700"
-                                : "bg-blue-50 text-blue-700"
-                            }`}>
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                inSellerMode
+                                  ? "bg-green-50 text-green-700"
+                                  : "bg-blue-50 text-blue-700"
+                              }`}
+                            >
                               {inSellerMode ? "Seller mode" : "Buyer mode"}
                             </span>
                           )}
@@ -223,7 +239,10 @@ export function Navbar() {
                             </p>
                             <div className="flex rounded-lg border border-gray-200 p-0.5">
                               <button
-                                onClick={() => { setMode("buyer"); setMenuOpen(false); }}
+                                onClick={() => {
+                                  setMode("buyer");
+                                  setMenuOpen(false);
+                                }}
                                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium transition-colors ${
                                   mode === "buyer"
                                     ? "bg-blue-500 text-white"
@@ -234,7 +253,10 @@ export function Navbar() {
                                 Buyer
                               </button>
                               <button
-                                onClick={() => { setMode("seller"); setMenuOpen(false); }}
+                                onClick={() => {
+                                  setMode("seller");
+                                  setMenuOpen(false);
+                                }}
                                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium transition-colors ${
                                   mode === "seller"
                                     ? "bg-green-500 text-white"

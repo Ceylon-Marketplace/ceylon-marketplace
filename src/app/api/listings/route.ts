@@ -19,25 +19,39 @@ export async function GET(req: NextRequest) {
       }),
       ...(q.get("categoryId") && { categoryId: q.get("categoryId") }),
       ...(q.get("sellerId") && { sellerId: q.get("sellerId") }),
-      ...(q.get("location") && { location: { contains: q.get("location"), mode: "insensitive" } }),
+      ...(q.get("location") && {
+        location: { contains: q.get("location"), mode: "insensitive" },
+      }),
       ...(q.get("condition") && { condition: q.get("condition") }),
       ...(q.get("listingType") && { listingType: q.get("listingType") }),
       ...(q.get("minPrice") && q.get("maxPrice")
-        ? { price: { gte: Number(q.get("minPrice")), lte: Number(q.get("maxPrice")) } }
+        ? {
+            price: {
+              gte: Number(q.get("minPrice")),
+              lte: Number(q.get("maxPrice")),
+            },
+          }
         : q.get("minPrice")
-        ? { price: { gte: Number(q.get("minPrice")) } }
-        : q.get("maxPrice")
-        ? { price: { lte: Number(q.get("maxPrice")) } }
-        : {}),
+          ? { price: { gte: Number(q.get("minPrice")) } }
+          : q.get("maxPrice")
+            ? { price: { lte: Number(q.get("maxPrice")) } }
+            : {}),
     };
 
     const sortBy = q.get("sortBy");
     const orderBy =
-      sortBy === "price_asc" ? [{ price: "asc" as const }]
-      : sortBy === "price_desc" ? [{ price: "desc" as const }]
-      : sortBy === "oldest" ? [{ createdAt: "asc" as const }]
-      : sortBy === "most_viewed" ? [{ viewCount: "desc" as const }]
-      : [{ isFeatured: "desc" as const }, { createdAt: "desc" as const }];
+      sortBy === "price_asc"
+        ? [{ price: "asc" as const }]
+        : sortBy === "price_desc"
+          ? [{ price: "desc" as const }]
+          : sortBy === "oldest"
+            ? [{ createdAt: "asc" as const }]
+            : sortBy === "most_viewed"
+              ? [{ viewCount: "desc" as const }]
+              : [
+                  { isFeatured: "desc" as const },
+                  { createdAt: "desc" as const },
+                ];
 
     const [listings, total] = await Promise.all([
       prisma.listing.findMany({
@@ -54,7 +68,13 @@ export async function GET(req: NextRequest) {
       prisma.listing.count({ where }),
     ]);
 
-    return Response.json({ listings, total, page, limit, pages: Math.ceil(total / limit) });
+    return Response.json({
+      listings,
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit),
+    });
   } catch (err) {
     return handleError(err);
   }
@@ -71,9 +91,14 @@ export async function POST(req: NextRequest) {
       throw new ApiError("Only sellers can create listings", 403);
 
     const existing = await prisma.listing.findFirst({
-      where: { sellerId: user.sub, title: { equals: dto.title, mode: "insensitive" }, status: { notIn: ["ARCHIVED", "SOLD"] } },
+      where: {
+        sellerId: user.sub,
+        title: { equals: dto.title, mode: "insensitive" },
+        status: { notIn: ["ARCHIVED", "SOLD"] },
+      },
     });
-    if (existing) throw new ApiError("A listing with this title already exists");
+    if (existing)
+      throw new ApiError("A listing with this title already exists");
 
     // Validate image count (max 10)
     if (dto.media && dto.media.length > 10) {
@@ -96,8 +121,23 @@ export async function POST(req: NextRequest) {
         location: dto.location,
         listingType: dto.listingType ?? "FIXED_PRICE",
         status: dto.status ?? "PENDING_REVIEW",
-        media: dto.media ? { create: dto.media.map((m: any) => ({ url: m.url, type: m.type, order: m.order })) } : undefined,
-        attributeValues: dto.attributes ? { create: dto.attributes.map((a: any) => ({ attributeId: a.attributeId, value: a.value })) } : undefined,
+        media: dto.media
+          ? {
+              create: dto.media.map((m: any) => ({
+                url: m.url,
+                type: m.type,
+                order: m.order,
+              })),
+            }
+          : undefined,
+        attributeValues: dto.attributes
+          ? {
+              create: dto.attributes.map((a: any) => ({
+                attributeId: a.attributeId,
+                value: a.value,
+              })),
+            }
+          : undefined,
       },
       include: {
         media: { orderBy: { order: "asc" } },

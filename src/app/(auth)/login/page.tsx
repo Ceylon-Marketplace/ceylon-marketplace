@@ -41,7 +41,9 @@ function LoginForm() {
           <Link href="/" className="text-2xl font-bold text-brand-600">
             Ceylon
           </Link>
-          <h1 className="mt-2 text-2xl font-bold text-gray-900">Welcome back</h1>
+          <h1 className="mt-2 text-2xl font-bold text-gray-900">
+            Welcome back
+          </h1>
           <p className="mt-1 text-sm text-gray-500">Sign in to your account</p>
         </div>
 
@@ -54,7 +56,9 @@ function LoginForm() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Email
+              </label>
               <input
                 type="email"
                 value={email}
@@ -65,7 +69,9 @@ function LoginForm() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Password</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Password
+              </label>
               <input
                 type="password"
                 value={password}
@@ -75,7 +81,11 @@ function LoginForm() {
                 required
               />
             </div>
-            <button type="submit" disabled={isLoading} className="btn-primary w-full">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="btn-primary w-full"
+            >
               {isLoading ? "Signing in…" : "Sign in"}
             </button>
           </form>

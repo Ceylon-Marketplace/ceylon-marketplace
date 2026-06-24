@@ -30,9 +30,15 @@ export async function PATCH(req: NextRequest) {
     const user = requireAuth(req);
     const { id } = await req.json().catch(() => ({}));
     if (id) {
-      await prisma.notification.updateMany({ where: { id, userId: user.sub }, data: { isRead: true } });
+      await prisma.notification.updateMany({
+        where: { id, userId: user.sub },
+        data: { isRead: true },
+      });
     } else {
-      await prisma.notification.updateMany({ where: { userId: user.sub, isRead: false }, data: { isRead: true } });
+      await prisma.notification.updateMany({
+        where: { userId: user.sub, isRead: false },
+        data: { isRead: true },
+      });
     }
     return Response.json({ ok: true });
   } catch (err) {
