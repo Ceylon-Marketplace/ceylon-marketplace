@@ -103,3 +103,5 @@ ceylon-marketplace/
 - **Anti-sniping** — bid in last 2 min extends auction by 2 min
 - **Messaging** — message history is immutable · blocking a user prevents messaging
 - **Admin workflow** — listings go through `PENDING_REVIEW → ACTIVE / REJECTED`
+
+## change by manoj
