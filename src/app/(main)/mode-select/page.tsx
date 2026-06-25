@@ -6,13 +6,14 @@ import { useAuthStore } from "@/store/auth.store";
 import { ShoppingBag, Store, ArrowRight } from "lucide-react";
 
 export default function ModeSelectPage() {
-  const { user, mode, setMode } = useAuthStore();
+  const { user, mode, setMode, hasHydrated } = useAuthStore();
   const router = useRouter();
 
   const isSeller = user?.role === "SELLER" || user?.role === "BUSINESS_SELLER";
 
   // Non-sellers have no choice — redirect straight away
   useEffect(() => {
+    if (!hasHydrated) return;
     if (!user) {
       router.replace("/login");
       return;
@@ -26,9 +27,9 @@ export default function ModeSelectPage() {
       router.replace("/dashboard");
       return;
     }
-  }, [user, isSeller, mode, router]);
+  }, [hasHydrated, user, isSeller, mode, router]);
 
-  if (!user || !isSeller || mode !== null) return null;
+  if (!hasHydrated || !user || !isSeller || mode !== null) return null;
 
   const choose = (chosen: "buyer" | "seller") => {
     setMode(chosen);

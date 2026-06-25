@@ -137,7 +137,7 @@ function SuccessScreen({
 }
 
 export default function CreateListingPage() {
-  const { user, mode, setMode } = useAuthStore();
+  const { user, mode, setMode, hasHydrated } = useAuthStore();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -184,10 +184,10 @@ export default function CreateListingPage() {
   }, [form.categoryId]);
 
   useEffect(() => {
-    if (!user) router.push("/login");
-  }, [user, router]);
+    if (hasHydrated && !user) router.push("/login");
+  }, [hasHydrated, user, router]);
 
-  if (!user) return null;
+  if (!hasHydrated || !user) return null;
 
   const isSeller = user.role === "SELLER" || user.role === "BUSINESS_SELLER";
 

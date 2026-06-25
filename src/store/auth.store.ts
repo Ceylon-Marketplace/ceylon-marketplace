@@ -23,7 +23,9 @@ interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   isLoading: boolean;
+  hasHydrated: boolean;
   mode: "buyer" | "seller" | null;
+  setHasHydrated: () => void;
   setMode: (mode: "buyer" | "seller") => void;
   becomeSeller: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
@@ -45,7 +47,10 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
       isLoading: false,
+      hasHydrated: false,
       mode: null,
+
+      setHasHydrated: () => set({ hasHydrated: true }),
 
       setMode: (mode) => set({ mode }),
 
@@ -111,6 +116,9 @@ export const useAuthStore = create<AuthState>()(
     {
       name: "ceylon-auth",
       partialize: (s) => ({ user: s.user, mode: s.mode }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated?.();
+      },
     },
   ),
 );

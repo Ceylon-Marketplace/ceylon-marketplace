@@ -17,7 +17,7 @@ export default function MessagesPage() {
 }
 
 function MessagesContent() {
-  const { user } = useAuthStore();
+  const { user, hasHydrated } = useAuthStore();
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialConvId = searchParams.get("conversationId");
@@ -65,8 +65,8 @@ function MessagesContent() {
   });
 
   useEffect(() => {
-    if (!user) router.push("/login");
-  }, [user, router]);
+    if (hasHydrated && !user) router.push("/login");
+  }, [hasHydrated, user, router]);
 
   useEffect(() => {
     if (messages.length > prevMessageCountRef.current) {
@@ -81,7 +81,7 @@ function MessagesContent() {
     setNewMessage("");
   };
 
-  if (!user) return null;
+  if (!hasHydrated || !user) return null;
 
   return (
     <div className="flex h-[calc(100vh-10rem)] overflow-hidden rounded-xl border border-gray-200 bg-white">

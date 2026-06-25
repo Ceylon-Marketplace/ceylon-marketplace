@@ -24,7 +24,7 @@ import {
 type Tab = "overview" | "pending" | "users" | "reports" | "categories";
 
 export default function AdminPage() {
-  const { user } = useAuthStore();
+  const { user, hasHydrated } = useAuthStore();
   const router = useRouter();
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("overview");
@@ -38,10 +38,10 @@ export default function AdminPage() {
   ].includes(user?.role ?? "");
 
   useEffect(() => {
-    if (!user || !isAdmin) router.push("/");
-  }, [user, isAdmin, router]);
+    if (hasHydrated && (!user || !isAdmin)) router.push("/");
+  }, [hasHydrated, user, isAdmin, router]);
 
-  if (!user || !isAdmin) return null;
+  if (!hasHydrated || !user || !isAdmin) return null;
 
   return (
     <div>
