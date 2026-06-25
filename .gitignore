@@ -15,3 +15,6 @@ dist
 !.dev.vars.example
 
 !.env.example
+
+.vercel
+.env*
