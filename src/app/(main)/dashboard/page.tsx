@@ -282,14 +282,14 @@ function BuyerDashboard({ user }: { user: any }) {
 }
 
 export default function DashboardPage() {
-  const { user, mode } = useAuthStore();
+  const { user, mode, hasHydrated } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    if (!user) router.push("/login");
-  }, [user, router]);
+    if (hasHydrated && !user) router.push("/login");
+  }, [hasHydrated, user, router]);
 
-  if (!user) return null;
+  if (!hasHydrated || !user) return null;
 
   const isSeller = user.role === "SELLER" || user.role === "BUSINESS_SELLER";
   const showSellerDashboard = isSeller && mode === "seller";

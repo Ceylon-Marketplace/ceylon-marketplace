@@ -18,7 +18,7 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function OffersPage() {
-  const { user } = useAuthStore();
+  const { user, hasHydrated } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<"received" | "sent">("received");
@@ -55,10 +55,10 @@ export default function OffersPage() {
   });
 
   useEffect(() => {
-    if (!user) router.push("/login");
-  }, [user, router]);
+    if (hasHydrated && !user) router.push("/login");
+  }, [hasHydrated, user, router]);
 
-  if (!user) return null;
+  if (!hasHydrated || !user) return null;
 
   const offers = tab === "received" ? received : sent;
   const isLoading = tab === "received" ? receivedLoading : sentLoading;

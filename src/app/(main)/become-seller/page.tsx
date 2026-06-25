@@ -38,7 +38,7 @@ const PERKS = [
 ];
 
 export default function BecomeSellerPage() {
-  const { user, becomeSeller, setMode } = useAuthStore();
+  const { user, becomeSeller, setMode, hasHydrated } = useAuthStore();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -46,6 +46,7 @@ export default function BecomeSellerPage() {
   const isSeller = user?.role === "SELLER" || user?.role === "BUSINESS_SELLER";
 
   useEffect(() => {
+    if (!hasHydrated) return;
     if (!user) {
       router.push("/login?redirect=/become-seller");
       return;
@@ -53,9 +54,9 @@ export default function BecomeSellerPage() {
     if (isSeller) {
       router.replace("/dashboard");
     }
-  }, [user, isSeller, router]);
+  }, [hasHydrated, user, isSeller, router]);
 
-  if (!user || isSeller) return null;
+  if (!hasHydrated || !user || isSeller) return null;
 
   const handleUpgrade = async () => {
     setLoading(true);

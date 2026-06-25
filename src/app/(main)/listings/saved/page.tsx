@@ -10,7 +10,7 @@ import { ListingCard } from "@/components/listing-card";
 import { Heart, Package } from "lucide-react";
 
 export default function SavedListingsPage() {
-  const { user } = useAuthStore();
+  const { user, hasHydrated } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -31,10 +31,10 @@ export default function SavedListingsPage() {
   });
 
   useEffect(() => {
-    if (!user) router.push("/login");
-  }, [user, router]);
+    if (hasHydrated && !user) router.push("/login");
+  }, [hasHydrated, user, router]);
 
-  if (!user) return null;
+  if (!hasHydrated || !user) return null;
 
   const listings = saved?.map((s: any) => s.listing).filter(Boolean) ?? [];
 

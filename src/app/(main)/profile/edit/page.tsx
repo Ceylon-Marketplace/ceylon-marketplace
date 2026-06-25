@@ -8,7 +8,7 @@ import { User, MapPin, Phone, FileText, ChevronLeft } from "lucide-react";
 
 export default function EditProfilePage() {
   const router = useRouter();
-  const { user, fetchMe } = useAuthStore();
+  const { user, fetchMe, hasHydrated } = useAuthStore();
 
   const [form, setForm] = useState({
     firstName: "",
@@ -23,6 +23,7 @@ export default function EditProfilePage() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
+    if (!hasHydrated) return;
     if (!user) {
       router.push("/login");
       return;
@@ -35,7 +36,7 @@ export default function EditProfilePage() {
       location: user.profile?.location ?? "",
       avatar: user.profile?.avatar ?? "",
     });
-  }, [user, router]);
+  }, [hasHydrated, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +54,7 @@ export default function EditProfilePage() {
     }
   };
 
-  if (!user) return null;
+  if (!hasHydrated || !user) return null;
 
   return (
     <div className="mx-auto max-w-2xl">

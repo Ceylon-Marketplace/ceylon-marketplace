@@ -31,7 +31,7 @@ const NOTIF_ICONS: Record<string, React.ReactNode> = {
 };
 
 export default function NotificationsPage() {
-  const { user } = useAuthStore();
+  const { user, hasHydrated } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -57,10 +57,10 @@ export default function NotificationsPage() {
   });
 
   useEffect(() => {
-    if (!user) router.push("/login");
-  }, [user, router]);
+    if (hasHydrated && !user) router.push("/login");
+  }, [hasHydrated, user, router]);
 
-  if (!user) return null;
+  if (!hasHydrated || !user) return null;
 
   const notifications = data?.notifications ?? [];
   const unreadCount = data?.unreadCount ?? 0;

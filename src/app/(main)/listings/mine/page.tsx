@@ -30,7 +30,7 @@ const STATUS_OPTIONS = [
 ];
 
 export default function MyListingsPage() {
-  const { user, mode, setMode } = useAuthStore();
+  const { user, mode, setMode, hasHydrated } = useAuthStore();
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState("ALL");
 
@@ -45,10 +45,10 @@ export default function MyListingsPage() {
   });
 
   useEffect(() => {
-    if (!user) router.push("/login");
-  }, [user, router]);
+    if (hasHydrated && !user) router.push("/login");
+  }, [hasHydrated, user, router]);
 
-  if (!user) return null;
+  if (!hasHydrated || !user) return null;
 
   const isSeller = user.role === "SELLER" || user.role === "BUSINESS_SELLER";
 
