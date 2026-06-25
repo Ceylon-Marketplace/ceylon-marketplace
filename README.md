@@ -1,20 +1,34 @@
 # Ceylon Marketplace
 
-Subscription-driven marketplace with real-time auctions.
+A subscription-driven marketplace with real-time auctions, built for buying and selling items online.
 
-**Stack:** Next.js 15 · Prisma · PostgreSQL · Redis
+**Stack:** Next.js 15 · Prisma · PostgreSQL · Redis · Vercel Blob
 
 ---
 
-## Quick Start
+## Features
 
-### 1. Prerequisites
+| Feature | Status |
+| --- | --- |
+| User Authentication | ✅ Done |
+| Listings Management | ✅ Done |
+| Real-time Auctions | ✅ Done |
+| Messaging | ✅ Done |
+| Subscriptions | ✅ Done |
+| Admin Panel | ✅ Done |
+| Reviews & Ratings | ✅ Done |
+
+---
+
+## Getting Started
+
+### Prerequisites
 
 - Node.js ≥ 20
 - npm or pnpm
 - Docker (for PostgreSQL + Redis)
 
-### 2. Clone & Install
+### Installation
 
 ```bash
 git clone <repo>
@@ -23,29 +37,26 @@ cp .env.example .env
 npm install
 ```
 
-### 3. Start Infrastructure
+### Start Infrastructure
 
 ```bash
 docker-compose up -d
 ```
 
-### 4. Database Setup
+### Database Setup
 
 ```bash
-# Generate Prisma client
-npm run db:generate
-
-# Run migrations
-npm run db:migrate
+npm run db:generate   # Generate Prisma client
+npm run db:migrate    # Run migrations
 ```
 
-### 5. Run Development Server
+### Run Dev Server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the application.
+Open [http://localhost:3000](http://localhost:3000)
 
 ---
 
@@ -59,7 +70,7 @@ ceylon-marketplace/
 │   │   ├── (auth)/       Login & registration
 │   │   ├── (main)/       Main application pages
 │   │   └── api/          API routes (38 endpoints)
-│   ├── components/       Reusable components
+│   ├── components/       Reusable UI components
 │   ├── lib/              Utilities & helpers
 │   └── store/            Zustand state management
 ├── prisma/               Database schema & migrations
@@ -67,36 +78,28 @@ ceylon-marketplace/
 └── docker-compose.yml    Infrastructure definition
 ```
 
-## Features
+---
 
-| Feature             | Status         |
-| ------------------- | -------------- |
-| User Authentication | ✅ Implemented |
-| Listings Management | ✅ Implemented |
-| Real-time Auctions  | ✅ Implemented |
-| Messaging           | ✅ Implemented |
-| Subscriptions       | ✅ Implemented |
-| Admin Panel         | ✅ Implemented |
-| Reviews & Ratings   | ✅ Implemented |
+## API Reference
 
-## API Modules
+| Module | Endpoints |
+| --- | --- |
+| Auth | `POST /api/auth/register`, `/login`, `/refresh`, `GET /me` |
+| Listings | `GET/POST /api/listings`, `GET /api/listings/:id` |
+| Auctions | `GET/POST /api/auctions`, WebSocket support |
+| Messaging | `GET/POST /api/conversations`, WebSocket support |
+| Subscriptions | `GET /api/subscriptions/plans`, `POST .../subscribe` |
+| Admin | `GET /api/admin/stats`, pending listings, user management |
+| Reports | `POST /api/reports`, `GET /api/reports` (admin) |
+| Notifications | `GET /api/notifications`, mark read |
 
-| Module        | Endpoints                                                  |
-| ------------- | ---------------------------------------------------------- |
-| Auth          | `POST /api/auth/register`, `/login`, `/refresh`, `GET /me` |
-| Listings      | `GET/POST /api/listings`, `GET /api/listings/:id`          |
-| Auctions      | `GET/POST /api/auctions`, WebSocket support                |
-| Messaging     | `GET/POST /api/conversations`, WebSocket support           |
-| Subscriptions | `GET /api/subscriptions/plans`, `POST .../subscribe`       |
-| Admin         | `GET /api/admin/stats`, pending listings, user management  |
-| Reports       | `POST /api/reports`, `GET /api/reports` (admin)            |
-| Notifications | `GET /api/notifications`, mark read                        |
+---
 
-## Key Business Rules Implemented
+## Business Rules
 
-- Listing title: 10–120 chars · max 20 images · max 3 videos · duplicate check
-- Subscription gate: expired subscription blocks new listing creation
-- Auction: seller cannot self-bid · only higher bids accepted · reserve price hidden
-- Anti-sniping: bid in last 2 min → auction extended by 2 min
-- Message history immutable; block user prevents messaging
-- Admin approval workflow for listings (PENDING_REVIEW → ACTIVE/REJECTED)
+- **Listings** — title: 10–120 chars · max 10 images · max 3 videos · duplicate check
+- **Subscriptions** — expired subscription blocks new listing creation
+- **Auctions** — seller cannot self-bid · only higher bids accepted · reserve price hidden
+- **Anti-sniping** — bid in last 2 min extends auction by 2 min
+- **Messaging** — message history is immutable · blocking a user prevents messaging
+- **Admin workflow** — listings go through `PENDING_REVIEW → ACTIVE / REJECTED`
