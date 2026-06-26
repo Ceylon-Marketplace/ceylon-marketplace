@@ -1,7 +1,7 @@
-import { del } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { supabaseAdmin, STORAGE_BUCKET } from "@/lib/supabase";
 
 export async function DELETE(req: NextRequest) {
   try {
@@ -17,7 +17,6 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    // Verify user owns the listing
     const listing = await prisma.listing.findUnique({
       where: { id: listingId },
       select: { sellerId: true },
@@ -27,7 +26,6 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
-    // Get media details
     const media = await prisma.listingMedia.findUnique({
       where: { id: mediaId },
       select: { url: true, listingId: true },
@@ -37,15 +35,20 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ message: "Media not found" }, { status: 404 });
     }
 
-    // Delete from Vercel Blob using URL
+    // Extract file path from Supabase public URL
+    // URL format: https://{project}.supabase.co/storage/v1/object/public/{bucket}/{filepath}
     try {
-      await del(media.url);
-    } catch (blobError) {
-      console.error("Error deleting from blob storage:", blobError);
+      const url = new URL(media.url);
+      const marker = `/object/public/${STORAGE_BUCKET}/`;
+      const filepath = url.pathname.split(marker)[1];
+      if (filepath) {
+        await supabaseAdmin.storage.from(STORAGE_BUCKET).remove([filepath]);
+      }
+    } catch (storageError) {
+      console.error("Error deleting from storage:", storageError);
       // Continue anyway - the record will be deleted from DB
     }
 
-    // Delete from database
     await prisma.listingMedia.delete({
       where: { id: mediaId },
     });
