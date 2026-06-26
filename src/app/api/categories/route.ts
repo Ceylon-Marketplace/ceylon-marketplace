@@ -16,7 +16,9 @@ export async function GET() {
       },
       orderBy: { name: "asc" },
     });
-    return Response.json(cats);
+    return Response.json(cats, {
+      headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" },
+    });
   } catch (err) {
     return handleError(err);
   }

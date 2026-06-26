@@ -11,11 +11,25 @@ export async function GET(req: NextRequest) {
     const [auctions, total] = await Promise.all([
       prisma.auction.findMany({
         where: { status: { in: ["LIVE", "SCHEDULED"] } },
-        include: {
+        select: {
+          id: true,
+          startPrice: true,
+          currentPrice: true,
+          reservePrice: true,
+          endTime: true,
+          startTime: true,
+          status: true,
           listing: {
-            include: {
-              media: { orderBy: { order: "asc" }, take: 1 },
-              category: true,
+            select: {
+              id: true,
+              title: true,
+              location: true,
+              media: {
+                select: { url: true },
+                orderBy: { order: "asc" },
+                take: 1,
+              },
+              category: { select: { id: true, name: true } },
             },
           },
           _count: { select: { bids: true } },
@@ -28,7 +42,10 @@ export async function GET(req: NextRequest) {
         where: { status: { in: ["LIVE", "SCHEDULED"] } },
       }),
     ]);
-    return Response.json({ auctions, total, page, limit });
+    return Response.json(
+      { auctions, total, page, limit },
+      { headers: { "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30" } },
+    );
   } catch (err) {
     return handleError(err);
   }

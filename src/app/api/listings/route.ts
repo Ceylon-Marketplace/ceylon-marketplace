@@ -56,10 +56,27 @@ export async function GET(req: NextRequest) {
     const [listings, total] = await Promise.all([
       prisma.listing.findMany({
         where,
-        include: {
-          media: { orderBy: { order: "asc" }, take: 1 },
-          category: true,
-          seller: { include: { profile: true } },
+        select: {
+          id: true,
+          title: true,
+          price: true,
+          location: true,
+          condition: true,
+          listingType: true,
+          viewCount: true,
+          createdAt: true,
+          media: {
+            select: { url: true, type: true },
+            orderBy: { order: "asc" },
+            take: 1,
+          },
+          category: { select: { id: true, name: true } },
+          seller: {
+            select: {
+              id: true,
+              profile: { select: { firstName: true, lastName: true, avatar: true } },
+            },
+          },
         },
         orderBy,
         skip,
@@ -68,13 +85,10 @@ export async function GET(req: NextRequest) {
       prisma.listing.count({ where }),
     ]);
 
-    return Response.json({
-      listings,
-      total,
-      page,
-      limit,
-      pages: Math.ceil(total / limit),
-    });
+    return Response.json(
+      { listings, total, page, limit, pages: Math.ceil(total / limit) },
+      { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" } },
+    );
   } catch (err) {
     return handleError(err);
   }

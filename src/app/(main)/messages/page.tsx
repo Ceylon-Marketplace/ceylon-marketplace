@@ -37,7 +37,7 @@ function MessagesContent() {
       return data;
     },
     enabled: !!user,
-    refetchInterval: 10_000,
+    refetchInterval: 15_000,
   });
 
   const { data: messages = [] } = useQuery({
@@ -47,7 +47,7 @@ function MessagesContent() {
       return [...data].reverse();
     },
     enabled: !!activeConvId,
-    refetchInterval: 3_000,
+    refetchInterval: 15_000,
   });
 
   const sendMutation = useMutation({

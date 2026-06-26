@@ -1,54 +1,53 @@
-"use client";
+import { prisma } from "@/lib/prisma";
+import { AuctionsClient } from "./AuctionsClient";
 
-import { useQuery } from "@tanstack/react-query";
-import api from "@/lib/api";
-import { AuctionCard } from "@/components/auction-card";
-import { useState } from "react";
+async function getInitialAuctions() {
+  const [auctions, total] = await Promise.all([
+    prisma.auction.findMany({
+      where: { status: { in: ["LIVE", "SCHEDULED"] } },
+      select: {
+        id: true,
+        startPrice: true,
+        currentPrice: true,
+        reservePrice: true,
+        endTime: true,
+        startTime: true,
+        status: true,
+        listing: {
+          select: {
+            id: true,
+            title: true,
+            location: true,
+            media: {
+              select: { url: true },
+              orderBy: { order: "asc" },
+              take: 1,
+            },
+            category: { select: { id: true, name: true } },
+          },
+        },
+        _count: { select: { bids: true } },
+      },
+      orderBy: { endTime: "asc" },
+      take: 20,
+    }),
+    prisma.auction.count({ where: { status: { in: ["LIVE", "SCHEDULED"] } } }),
+  ]);
 
-export default function AuctionsPage() {
-  const [page, setPage] = useState(1);
+  // Serialize dates for client transfer
+  return {
+    auctions: auctions.map((a) => ({
+      ...a,
+      endTime: a.endTime.toISOString(),
+      startTime: a.startTime.toISOString(),
+    })),
+    total,
+    page: 1,
+    limit: 20,
+  };
+}
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["auctions", page],
-    queryFn: async () => {
-      const { data } = await api.get(`/auctions?page=${page}&limit=20`);
-      return data;
-    },
-    refetchInterval: 10_000, // refresh every 10s
-  });
-
-  return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Live Auctions</h1>
-        <span className="flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 text-sm font-medium text-green-700">
-          <span className="h-2 w-2 rounded-full bg-green-500" />
-          {data?.auctions?.filter((a: any) => a.status === "LIVE").length ??
-            0}{" "}
-          Live
-        </span>
-      </div>
-
-      {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={i}
-              className="card aspect-[3/4] animate-pulse bg-gray-100"
-            />
-          ))}
-        </div>
-      ) : data?.auctions?.length === 0 ? (
-        <div className="py-20 text-center text-gray-500">
-          No auctions currently running.
-        </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {data?.auctions?.map((auction: any) => (
-            <AuctionCard key={auction.id} auction={auction} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
+export default async function AuctionsPage() {
+  const initialData = await getInitialAuctions();
+  return <AuctionsClient initialData={initialData} />;
 }
