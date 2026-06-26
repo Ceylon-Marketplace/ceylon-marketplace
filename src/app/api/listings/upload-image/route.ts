@@ -1,7 +1,7 @@
-import { put } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { supabaseAdmin, STORAGE_BUCKET } from "@/lib/supabase";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -22,7 +22,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate file type
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
         {
@@ -33,7 +32,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
         { message: "File size exceeds 10MB limit." },
@@ -41,7 +39,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // If listingId provided, check image count limit
     if (listingId) {
       const mediaCount = await prisma.listingMedia.count({
         where: { listingId },
@@ -57,24 +54,29 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Generate unique filename
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(2, 9);
     const ext = file.name.split(".").pop();
-    const filename = `listings/${user.id}/${timestamp}-${randomStr}.${ext}`;
+    const filepath = `${user.id}/${timestamp}-${randomStr}.${ext}`;
 
-    // Convert file to buffer
     const buffer = await file.arrayBuffer();
 
-    // Upload to Vercel Blob
-    const blob = await put(filename, buffer, {
-      access: "public",
-      addRandomSuffix: false,
-    });
+    const { error } = await supabaseAdmin.storage
+      .from(STORAGE_BUCKET)
+      .upload(filepath, buffer, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (error) throw error;
+
+    const {
+      data: { publicUrl },
+    } = supabaseAdmin.storage.from(STORAGE_BUCKET).getPublicUrl(filepath);
 
     return NextResponse.json({
-      url: blob.url,
-      filename: blob.pathname,
+      url: publicUrl,
+      filename: filepath,
     });
   } catch (error) {
     console.error("Image upload error:", error);
