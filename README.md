@@ -104,4 +104,4 @@ ceylon-marketplace/
 - **Messaging** — message history is immutable · blocking a user prevents messaging
 - **Admin workflow** — listings go through `PENDING_REVIEW → ACTIVE / REJECTED`
 
-## change by manoj
+## change by Naveen
