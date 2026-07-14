@@ -2,7 +2,7 @@
 
 A subscription-driven marketplace with real-time auctions, built for buying and selling items online.
 
-**Stack:** Next.js 15 · Prisma · PostgreSQL · Redis · Vercel Blob
+**Stack:** Next.js 15 · Prisma · PostgreSQL · Redis · Supabase Storage
 
 ---
 
