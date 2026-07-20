@@ -1,0 +1,53 @@
+# DESIGN_SYSTEM.md
+
+There's no formal design system doc or Figma reference in the repo — this describes the conventions actually followed in `src/components/` and `globals.css`. It's a small, lightly-componentized codebase (4 shared components); most UI is built inline per-page rather than through a shared library.
+
+## Styling approach
+
+Tailwind CSS utility classes, composed via the `cn()` helper (`src/lib/utils.ts`, `clsx` + `tailwind-merge`) so conditional/overriding classes merge correctly instead of colliding. Use `cn(...)` for any component that takes conditional class logic — don't string-concatenate class names.
+
+## Color
+
+One custom color scale, defined in `tailwind.config.ts`:
+
+```text
+brand: { 50, 100, 500, 600, 700 }   // #e84c3d family — red/coral
+```
+
+Everything else uses Tailwind's default gray scale (`gray-50`…`gray-900`) for text/borders/backgrounds. There is no dark mode implementation — no `dark:` variants found anywhere in the codebase. If dark mode is ever requested, it needs to be designed from scratch, not just switched on.
+
+## Component classes (`globals.css`, `@layer components`)
+
+Four reusable utility classes are defined and should be reached for before writing new one-off styles:
+
+- `.btn-primary` — brand-colored filled button
+- `.btn-secondary` — outlined/white button
+- `.card` — `rounded-xl border border-gray-200 bg-white shadow-sm`
+- `.input` — standard form input styling
+- `.badge` — small pill label (combine with a color utility, e.g. `badge bg-brand-500 text-white`, as seen in `listing-card.tsx`)
+
+## Shared components (`src/components/`)
+
+Only four exist — everything else is built inline in page files:
+
+- `listing-card.tsx` — the canonical example of composing `.card`, `.badge`, `cn()`, and the `brand` color scale together; use it as the reference pattern for new cards
+- `auction-card.tsx`
+- `image-uploader.tsx`
+- `navbar.tsx` — client component (`"use client"`), reads auth state from `useAuthStore`, uses `lucide-react` icons
+
+**Most pages do not extract components** — forms and page-specific UI (e.g. `listings/create/page.tsx`, `listings/[id]/edit/page.tsx`) are written directly in the page file rather than broken into subcomponents. This is the existing pattern; don't unilaterally start extracting shared components out of pages as a "cleanup" unless the task specifically calls for it — that's the kind of pattern change that belongs in `docs/DECISIONS.md` if it's actually being adopted going forward.
+
+## Icons
+
+`lucide-react` throughout — no other icon set is used. Reach for an existing Lucide icon before adding a new icon dependency.
+
+## Formatting helpers
+
+`src/lib/utils.ts` centralizes locale-aware formatting — use these rather than reimplementing:
+
+- `formatPrice()` — `Intl.NumberFormat("en-LK", { currency: "LKR" })` (see `docs/PROJECT.md` re: Sri Lanka/LKR)
+- `timeAgo()`, `formatDate()`, `formatDateTime()`, `timeUntil()` — all via `date-fns`
+
+## UI component libraries installed but unused
+
+`@radix-ui/*` (avatar, dialog, dropdown-menu, select, separator, tabs, toast), `class-variance-authority`, `react-hook-form`, `@hookform/resolvers` are all in `package.json` but nothing in `src/` imports them (confirmed in `CLEANUP_REPORT.md` and by grep). Forms in this codebase are hand-rolled with `useState`, not `react-hook-form`. **Don't assume any Radix component or CVA-based variant system is wired up** — if you want to use one, you're introducing it fresh, which is worth a quick check with the team (are these leftover from an abandoned direction, or genuinely reserved for upcoming work?) before you build on top of them.
