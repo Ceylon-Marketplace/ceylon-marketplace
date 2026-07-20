@@ -1,8 +1,10 @@
 # DEPLOYMENT.md
 
-## Current state: ambiguous — resolve before treating this as production-ready
+## Current state: Netlify is the live target — but dead config from prior targets is still tracked
 
-This is the clearest example in the repo of exactly the problem `AGENTS.md` exists to prevent: the deployment target has changed multiple times, and the repo currently contains tracked configuration for more than one target with no doc recording which one is actually live. Read this section fully before deploying anything, and don't assume any single target is "the" target without confirming with Manoj/Naveen first.
+**Confirmed 2026-07-20:** a real Netlify build log (secrets-scanner failure, unrelated to deployment choice — see below) shows Netlify actively building this repo, so **Netlify is the live deployment target.** That resolves what was previously an open question here. What's still unresolved is cleanup: `wrangler.jsonc` (Cloudflare/OpenNext) is tracked config left over from an abandoned migration and should probably be deleted now that Netlify is confirmed, but that hasn't been done yet — don't delete it unilaterally without a `docs/DECISIONS.md` entry, since removing tracked deploy config is the kind of change worth a quick sanity check with Manoj/Naveen first.
+
+This is still a good example of the problem `AGENTS.md` exists to prevent: the deployment target changed multiple times over the project's history with no doc recording the current state, and it took an actual failed build to establish ground truth rather than the repo answering the question on its own.
 
 ### What's tracked in git right now (as of this writing, `master` @ `06514eb`)
 
@@ -24,7 +26,13 @@ From git log, in order:
 5. A GitHub Actions workflow for Vercel deployment was added, then fixed (a hanging-in-CI bug), then deleted entirely as part of the Supabase Storage migration PR (#12).
 6. Netlify config (`netlify.toml`) was added separately.
 
-**Net result:** nobody reading the repo today can tell, from the repo alone, whether this app is currently deployed via Netlify, Vercel, Cloudflare, or manually. If you need to deploy, ask Manoj or Naveen which target is actually live before assuming `netlify.toml` (the most recently added config) is authoritative — and once you get an answer, **delete the dead config and record the decision in `docs/DECISIONS.md`** so the next session doesn't hit this same ambiguity.
+**Net result:** Netlify is confirmed live (see above), but `wrangler.jsonc` remains as dead config from the abandoned Cloudflare attempt. Whoever cleans this up should delete it and record the decision in `docs/DECISIONS.md` so the next session doesn't have to rediscover this history.
+
+### Netlify secrets scanning — a recurring false-positive trap
+
+Netlify's build-time secrets scanner does a literal string match: it takes the value of every configured build environment variable and flags any file in the repo/build output containing that exact string, with no regard for whether the value is actually sensitive. `API_PORT` (value `3001` in this project) has already tripped this once by appearing in prose in `docs/ARCHITECTURE.md` and `docs/SCOPE.md` describing the env var — fixed by not quoting the literal value in docs. `S3_BUCKET` and `CORS_ORIGIN` are already excluded via `SECRETS_SCAN_OMIT_KEYS` (visible in Netlify build logs) for the same reason — they're config, not secrets, but their values are common/short enough to collide with unrelated text.
+
+**If a build fails with a "secrets scanning found secrets" error:** check whether the flagged value is an actual secret (rotate it and never let it land in git) or a non-sensitive config value that happens to match incidental text (fix the incidental text, or add the key to `SECRETS_SCAN_OMIT_KEYS`). Don't add something to the omit list just to unblock a build without checking which case you're in.
 
 ## Environment variables
 
@@ -62,6 +70,5 @@ Present in `.env.local` but not read anywhere in `src/` (confirmed by grep) — 
 
 ## TBD — needs input from Manoj/Naveen
 
-- Which deployment target is actually live today, if any
-- Whether `wrangler.jsonc` should be removed (leftover) or the Cloudflare migration is still intended
+- Whether `wrangler.jsonc` should be removed now that Netlify is confirmed live, or the Cloudflare migration is still intended
 - Whether the unused env vars listed above represent near-term plans or should be cleaned out of `.env.example`

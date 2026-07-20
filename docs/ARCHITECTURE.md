@@ -76,7 +76,7 @@ prisma/
 ## Known architectural inconsistencies (flagged, not yet resolved)
 
 - Deployment target ambiguity — see `docs/DEPLOYMENT.md`.
-- `.env.example` implies a separate API server (port 3001, CORS origin) that doesn't exist in the current architecture.
+- `.env.example` implies a separate API server (a dedicated port + CORS origin) that doesn't exist in the current architecture.
 - README claims WebSocket support that doesn't exist in code (see above).
 
 If you resolve any of these, update this file and add a `docs/DECISIONS.md` entry rather than just fixing the symptom.

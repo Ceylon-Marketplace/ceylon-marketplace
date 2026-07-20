@@ -18,7 +18,7 @@ No formal scope document exists yet — this is inferred from what's built vs. w
 ## Provisioned but not currently in use — don't assume these work
 
 - **Redis.** Present in `docker-compose.yml` and `.env.example` (`REDIS_URL`), but nothing in `src/` imports a Redis client. "Caching" in the codebase (e.g. `perf: improve load time` commit) means HTTP `Cache-Control` headers, not a Redis-backed cache. If you're about to build a feature that assumes a shared cache or session store, it doesn't exist yet.
-- **A separate API server.** `.env.example` defines `API_PORT`, `API_URL`, `CORS_ORIGIN` implying a standalone backend on port 3001, but all API logic lives in Next.js Route Handlers under `src/app/api/`, served from the same Next.js process as the frontend. Treat those env vars as legacy/aspirational unless someone confirms otherwise.
+- **A separate API server.** `.env.example` defines `API_PORT`, `API_URL`, `CORS_ORIGIN` implying a standalone backend on its own port, but all API logic lives in Next.js Route Handlers under `src/app/api/`, served from the same Next.js process as the frontend. Treat those env vars as legacy/aspirational unless someone confirms otherwise.
 - **WebSockets.** See `docs/PRODUCT.md` — README claims it, code doesn't have it.
 
 ## Explicitly out of scope (nothing in code suggests otherwise)
