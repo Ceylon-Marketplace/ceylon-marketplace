@@ -21,7 +21,7 @@ Auth convention throughout: `Authorization: Bearer <accessToken>`, checked per-r
 | POST | `/api/listings` | Requires `SELLER`/`BUSINESS_SELLER` role. Enforces: no duplicate title (case-insensitive) among the seller's non-archived/sold listings, max 10 media items, at least 1 media item required |
 | GET / PATCH / DELETE | `/api/listings/[id]` | |
 | GET | `/api/listings/mine` | Own listings |
-| GET | `/api/listings/saved` | Own saved listings |
+| GET | `/api/listings/saved` | Own saved listings, newest first, with listing media and category; excludes unused seller profile data |
 | POST / DELETE | `/api/listings/[id]/save` | Save/unsave |
 | POST | `/api/listings/upload-image` | Uploads to Supabase Storage |
 | DELETE | `/api/listings/delete-image` | |
@@ -71,7 +71,7 @@ If you touch listing creation, this is a good opportunity to either implement th
 
 | Method | Path | Notes |
 | --- | --- | --- |
-| GET | `/api/users/[id]` | Public profile |
+| GET | `/api/users/[id]` | Public profile with name, avatar, bio, and location; private phone and email fields are excluded |
 | PATCH | `/api/users/me` | Update own profile |
 | PATCH | `/api/users/me/become-seller` | `USER` → `SELLER` role upgrade |
 | GET | `/api/storefront/[slug]` | Public storefront page |

@@ -151,3 +151,19 @@ Active ownership and task status live in `docs/tasks/`, not in this log. Handoff
 **Important findings:** The old profile Message action linked to `/messages?userId=...`, but messaging is listing-scoped and the workspace does not support that parameter. The dead action was removed and visitors are directed through active listings. `GET /api/reviews/[userId]` also calculated `avgRating` from only the current page; it now uses a database aggregate across all matching reviews without changing the response shape. Type checking, production build, target-profile desktop QA, and 390px mobile QA passed.
 
 **Unfinished:** None.
+
+### 2026-07-21 — Codex (GPT-5) — CM-016
+
+**Outcome:** Aligned `/profile/edit` with the revamped public profile through grouped identity and privacy fields, a live public preview, dirty and invalid-avatar states, explicit profile return paths, and save-to-profile navigation. The completed record is [`docs/tasks/completed/CM-016-profile-edit-flow.md`](tasks/completed/CM-016-profile-edit-flow.md).
+
+**Important findings:** The public user API included the full `Profile` relation, which returned the stored phone field even though the public page did not display it. `GET /api/users/[id]` now selects only first name, last name, avatar, bio, and location. The old edit flow also relied on browser history and stayed on the form after saving; Back, Cancel, and successful Save now return to the current user's public profile, with the auth store refreshed first. Type checking and the production build passed.
+
+**Unfinished:** The isolated browser session was signed out, so authenticated form mutation was not submitted during automated QA. The active signed-in local application loaded the redesigned edit route successfully, and protected destination preservation was verified. No implementation work remains.
+
+### 2026-07-21 — Codex (GPT-5) — CM-017
+
+**Outcome:** Revamped `/listings/saved` into a responsive personal marketplace collection with a clear item count, canonical listing cards, persistent accessible removal controls, optimistic updates, rollback feedback, and complete protected, loading, empty, query-error, and mutation-error states. The completed record is [`docs/tasks/completed/CM-017-saved-listings-revamp.md`](tasks/completed/CM-017-saved-listings-revamp.md).
+
+**Important findings:** The prior removal affordance depended on desktop hover, which made it undiscoverable on touch devices. Removal now sits below every card and updates the collection immediately, restoring the item if the request fails. The saved-listings API also no longer loads unused seller profile data. Type checking, the production build, and signed-out destination-preserving browser QA passed.
+
+**Unfinished:** Authenticated removal was not submitted in the isolated browser session. No implementation work remains.

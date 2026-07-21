@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -113,7 +112,7 @@ export default function PublicProfilePage() {
         <div className="grid items-start gap-7 md:grid-cols-[128px_minmax(0,1fr)_auto]">
           <div className="relative h-28 w-28 overflow-hidden rounded-2xl bg-gray-100 sm:h-32 sm:w-32">
             {profile.profile?.avatar ? (
-              <Image src={profile.profile.avatar} alt={fullName} fill sizes="128px" className="object-cover" priority />
+              <img src={profile.profile.avatar} alt={fullName} className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full items-center justify-center bg-gray-950 text-3xl font-semibold uppercase tracking-[-0.04em] text-white">{initials}</div>
             )}

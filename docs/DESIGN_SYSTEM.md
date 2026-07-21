@@ -79,6 +79,10 @@ The `/listings/[id]` route shares the auction detail composition: a restrained p
 
 Missing media uses a Lucide fallback. Loading states mirror the final two-column shape, and unavailable states include retry and browse actions. Contact seller must call `POST /api/conversations` with `{ listingId }`; there is no `/api/conversations/listing/[id]` route. Offer, save, and contact mutations use inline status feedback rather than browser alerts. Only active listings are public, so completed-transaction review UI does not belong on this route under the current API contract.
 
+The authenticated `/listings/saved` route is a personal buyer collection. It leads with the collection purpose and item count, then reuses the canonical `ListingCard` in a responsive one-, two-, or three-column scanning grid. The remove action belongs below every card so it remains visible to touch, keyboard, and desktop users; do not hide it in a hover-only image overlay.
+
+Removal is optimistic. The item leaves the collection immediately, then returns with inline feedback if the request fails. Loading, empty, query error, mutation error, signed-out, and populated states must remain useful, and signed-out redirects preserve `/listings/saved`. `GET /api/listings/saved` should return the listing media and category needed by the card without loading unused seller profile data.
+
 ## Create listing workspace
 
 The authenticated seller `/listings/create` route is a publishing workspace rather than a single generic form card. Desktop pairs a linear form with a sticky 320px readiness and action panel; mobile collapses to one column. The form is grouped by seller decisions: item identity, selling format and price, photos, category-specific details, then auction configuration when applicable. Sections use spacing and single dividers instead of stacking equal elevated cards.
@@ -94,6 +98,12 @@ The `/profile/[id]` route is a public marketplace identity surface. It leads wit
 Below the identity header, active listings and transaction-linked reviews share a main column while a compact sticky profile-facts panel provides context on desktop. Both content sections remain visible when empty so visitors can distinguish zero activity from missing UI. Listings use the canonical `ListingCard`; reviews use two-column 16px cards with factual reviewer, time, rating, comment, and linked-listing data.
 
 Direct messaging is listing-scoped in the current API, so public profiles must not link to `/messages?userId=...`. Visitors contact a member through an active listing, while storefront owners receive a storefront action and profile owners receive Edit profile. Loading, unavailable, partial-query error, empty, own-profile, storefront, desktop, and mobile states must remain useful. `GET /api/reviews/[userId]` supplies `avgRating` across all received reviews rather than only the current page.
+
+The authenticated `/profile/edit` route is the private continuation of that identity surface. It uses the same page heading, 16px section rhythm, identity language, and coral accent, with form groups for public identity, public about details, and private contact information. Desktop pairs the form with a sticky 320px live preview; mobile stacks the preview and actions after the fields.
+
+The preview reflects avatar URL, initials fallback, name, role, verification, location, and bio as the user types. Invalid avatar URLs produce inline feedback and block saving. Save is disabled until a field changes, refreshes the auth store after the existing profile PATCH, and returns to `/profile/[currentUserId]`; Back and Cancel use that same explicit route rather than browser history. Signed-out redirects preserve `/profile/edit`.
+
+Phone is a private profile field. It may be edited through `PATCH /api/users/me/profile`, but `GET /api/users/[id]` must select only first name, last name, avatar, bio, and location from `Profile`. Do not expose phone or email through public-profile responses or copy.
 
 ## Messages workspace
 
