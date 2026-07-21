@@ -17,7 +17,6 @@ export default function Icon() {
           borderRadius: 6,
           color: "white",
           fontSize: 22,
-          fontWeight: 700,
           fontFamily: "sans-serif",
         }}
       >
