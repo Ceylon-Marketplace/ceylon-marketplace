@@ -79,3 +79,11 @@ Active ownership and task status live in `docs/tasks/`, not in this log. Handoff
 **Important findings:** The existing homepage promoted unsupported inventory and fee claims; the redesign uses only capabilities and content verified by current repository data. The local seed data includes a screenshot-style listing image, so the homepage correctly displays it as the newest available product image. Type checking, production build, and populated desktop browser QA passed.
 
 **Unfinished:** No implementation work remains. Future content seeding should prefer clean product photographs so the data-driven hero presents the marketplace at its best.
+
+### 2026-07-21 — Codex (GPT-5) — CM-007
+
+**Outcome:** Redesigned `/auctions/[id]` into a responsive bidding workspace with a product gallery, sticky state-aware bidding panel, item description, masked bid activity, seller and schedule context, verified API-backed bidding guidance, and complete loading and unavailable states. The completed record is [`docs/tasks/completed/CM-007-auction-detail-redesign.md`](tasks/completed/CM-007-auction-detail-redesign.md).
+
+**Important findings:** The target seed auction remains `SCHEDULED` even though its start time has passed. The detail page now follows the auction index convention and displays "Awaiting start" until lifecycle automation updates the record. Unsupported reserve and winner-contact claims were removed; the page only explains constraints enforced by the bid API. Type checking, production build, and populated desktop browser QA passed.
+
+**Unfinished:** The existing auction lifecycle automation gap remains separate backend/product work. No redesign implementation remains.

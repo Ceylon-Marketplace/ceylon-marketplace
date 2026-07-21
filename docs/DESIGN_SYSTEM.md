@@ -55,6 +55,14 @@ The `/auctions` index uses a commerce-first discovery layout: a compact page hea
 
 List responses expose bid totals as `_count.bids` and media as URL-only objects. The server page serializes Prisma price decimals before passing them to the client. Countdown text initializes with stable server-safe copy and starts time calculations only after hydration. A scheduled lot whose start time has already passed displays "Awaiting start" because auction lifecycle automation does not currently exist; see `docs/PRODUCT.md`.
 
+## Auction detail
+
+The `/auctions/[id]` route is a responsive bidding workspace. On large screens it pairs a restrained product gallery with a sticky 400px bidding column; on smaller screens the content stacks without changing the decision hierarchy. The first viewport should expose the item, auction status, current or starting price, countdown state, increment, and available bid action. Coral is reserved for live state and primary bidding feedback; scheduled, ended, and cancelled states remain neutral.
+
+The bidding form must communicate the calculated minimum, preserve signed-out redirection, disable submission while auth hydration or mutation is pending, and show contextual success or error feedback. Live auctions continue polling every three seconds. Scheduled records whose start time is already past display "Awaiting start" rather than a misleading ended countdown until lifecycle automation updates the database.
+
+Below the primary decision area, show factual item details, masked recent bid activity, seller identity, schedule, and only rules enforced by the current API: minimum increment, no seller self-bidding, and the two-minute anti-snipe extension. Use Lucide fallbacks for missing media rather than emoji. Loading and unavailable states should retain the page's final shape and provide a clear recovery route.
+
 ## Public homepage
 
 The public `/` route is a dynamic, discovery-first marketplace entry point rather than a generic marketing landing page. Its hero pairs concise buyer/seller actions with listing imagery already present in the marketplace, followed by active categories, recent active listings, and currently live or scheduled auctions. If the database has no suitable listing imagery, the hero falls back to the local marketplace collection image used by the authentication screens. Keep the route dynamically rendered so inventory changes do not depend on a redeploy.
