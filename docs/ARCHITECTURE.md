@@ -51,6 +51,7 @@ If real-time push becomes a real requirement, it needs to be designed and record
 Public marketplace reads use Next.js and Netlify's built-in route/data cache rather than an application cache layer:
 
 - Home and Listings use 30-second route revalidation; Auctions uses 15 seconds because auction state changes more frequently. Their initial Prisma reads can therefore be reused across visitors within those bounded windows.
+- Active listing detail routes also use 30-second revalidation and pass the public listing into the interactive client as initial query data. This removes the client-JavaScript → API-function → database waterfall from the first useful render; authenticated save state and non-active owner access still reconcile through the uncached listing API.
 - Authenticated and user-specific data is not put in the shared route cache. It continues to load through protected API routes and TanStack Query.
 - `src/app/api/listings/route.ts` also sets `Cache-Control: public, s-maxage=30, stale-while-revalidate=60` for interactive listing-filter requests.
 - The notification bell polls only an unread-count summary while closed. The 50-record grouped feed is enabled only while its popup is open.

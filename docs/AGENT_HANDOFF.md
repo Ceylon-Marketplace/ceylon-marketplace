@@ -215,3 +215,10 @@ Active ownership and task status live in `docs/tasks/`, not in this log. Handoff
 **Important findings:** The scanner matched `SUPABASE_URL` inside generated Netlify route blobs, which is expected because the project URL is runtime configuration rather than an authentication secret. The exception is key-scoped instead of disabling scanning or excluding generated output paths. Type checking and the 41-page production build passed.
 
 **Unfinished:** Trigger a new Netlify deploy to verify the remote scanner result; no implementation work remains.
+### 2026-07-21 — Codex (GPT-5) — CM-024
+
+**Outcome:** Removed the listing-detail client/API/database waterfall by server-providing active listing data through a 30-second bounded cache, while retaining authenticated save-state reconciliation and API-only owner access to non-active listings. The completed record is [`docs/tasks/completed/CM-024-listing-detail-performance.md`](tasks/completed/CM-024-listing-detail-performance.md).
+
+**Important findings:** The deployed target took roughly 6–7 seconds to reach network idle because the route initially sent only a client skeleton and started its listing API request after JavaScript loaded. The old detail API also loaded complete seller user/profile records; both new and existing detail paths now return only the public seller fields the UI consumes. Local populated QA rendered the complete target listing without browser errors; a warm development repeat completed in approximately 146 ms, used only to verify cache reuse. Type checking and the final production build passed.
+
+**Unfinished:** Deploy to Netlify and remeasure the live URL after the cache is warm. No implementation work remains.
