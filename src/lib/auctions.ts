@@ -10,14 +10,12 @@ type SerializableAuction = {
 };
 
 export function serializeAuction<T extends SerializableAuction>(auction: T) {
-  const { _count, ...rest } = auction;
   return {
-    ...rest,
+    ...auction,
     startPrice: Number(auction.startPrice),
     currentPrice: Number(auction.currentPrice),
     reservePrice: auction.reservePrice ? Number(auction.reservePrice) : null,
     endTime: auction.endTime.toISOString(),
     startTime: auction.startTime.toISOString(),
-    bidCount: _count.bids,
   };
 }

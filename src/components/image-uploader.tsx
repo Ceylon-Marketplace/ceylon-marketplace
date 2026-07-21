@@ -215,11 +215,11 @@ export function ImageUploader({
     <div className="space-y-4">
       {/* Image Grid */}
       {validImages.length > 0 && (
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {validImages.map((image, i) => (
             <div
               key={`${image.url}-${i}`}
-              className="group relative aspect-square overflow-hidden rounded-lg bg-gray-100"
+              className={`group relative aspect-square overflow-hidden rounded-xl border bg-gray-100 ${i === 0 ? "border-brand-300" : "border-gray-200"}`}
             >
               {image.isUploading ? (
                 <div className="flex h-full items-center justify-center bg-gray-100">
@@ -238,20 +238,16 @@ export function ImageUploader({
                     fill
                     className="object-cover"
                   />
-                  {i === 0 && (
-                    <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1 text-[10px] text-white">
-                      Cover
-                    </span>
-                  )}
                 </>
               )}
               <button
                 type="button"
                 onClick={() => removeImage(i)}
                 disabled={image.isUploading}
-                className="absolute right-1 top-1 hidden rounded-full bg-black/60 p-0.5 text-white hover:bg-black/80 disabled:opacity-50 group-hover:flex"
+                aria-label={`Remove image ${i + 1}`}
+                className="absolute right-2 top-2 flex rounded-full bg-gray-950/75 p-1.5 text-white opacity-100 transition hover:bg-gray-950 disabled:opacity-50 sm:opacity-0 sm:group-hover:opacity-100"
               >
-                <X className="h-3 w-3" />
+                <X className="h-3.5 w-3.5" />
               </button>
             </div>
           ))}
@@ -285,10 +281,10 @@ export function ImageUploader({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`relative rounded-lg border-2 border-dashed p-6 transition-colors ${
+        className={`relative rounded-2xl border border-dashed px-6 py-10 transition-colors ${
           isDragging
             ? "border-brand-500 bg-brand-50"
-            : "border-gray-300 bg-gray-50"
+            : "border-gray-300 bg-gray-50/70 hover:border-gray-400"
         } ${validImages.length >= maxImages ? "opacity-50" : ""}`}
       >
         <input
@@ -301,19 +297,22 @@ export function ImageUploader({
           disabled={validImages.length >= maxImages}
         />
         <div className="flex flex-col items-center">
-          <Upload className="h-8 w-8 text-gray-400" />
-          <p className="mt-2 text-sm font-medium text-gray-700">
-            Drag images here or click to browse
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-gray-500 shadow-sm">
+            <Upload className="h-5 w-5" />
+          </span>
+          <p className="mt-4 text-sm font-semibold text-gray-800">
+            Drop photos here or browse files
           </p>
           <p className="mt-1 text-xs text-gray-500">
-            JPEG, PNG, WebP or GIF • Up to 10MB each
+            JPEG, PNG, WebP or GIF. Up to 10MB each.
           </p>
         </div>
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={validImages.length >= maxImages}
-          className="absolute inset-0 rounded-lg"
+          aria-label="Choose listing photos"
+          className="absolute inset-0 rounded-2xl"
         />
       </div>
 

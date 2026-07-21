@@ -42,16 +42,19 @@ The README describes WebSocket support for auctions and messaging. **There is no
 
 - Auctions: `AuctionsClient.tsx` polls via TanStack Query with `refetchInterval: 15_000` (15s).
 - Bidding correctness (not "real-time-ness") is handled server-side in `src/app/api/auctions/[id]/bid/route.ts`: a preliminary cheap check rejects self-bids, then the actual validation (auction is `LIVE`, not expired, bid ≥ current price + increment) and all writes (bid insert, auction update, anti-snipe extension) happen inside a single `prisma.$transaction` to avoid race conditions between concurrent bidders. This is the pattern to follow for any other flow needing race-safe read-then-write (e.g. offer accept/reject).
-- Messaging: no polling or push mechanism was found at all in the pages inspected — treat message delivery as request-driven (loads on navigation/refetch), not live.
+- Messaging: the active visible conversation polls every 3 seconds and the conversation inbox polls every 15 seconds. Both stop when the browser tab is hidden or the user has been idle for 2 minutes, then refresh immediately when activity resumes. Sending uses an optimistic client message that is replaced by the persisted API response or retained with a retry state on failure. This is responsive database-backed polling, not WebSocket push.
 
 If real-time push becomes a real requirement, it needs to be designed and recorded in `docs/DECISIONS.md` — don't assume the README's description reflects a plan already in motion.
 
 ## Caching
 
-"Caching" in this codebase means HTTP response caching, not an application cache layer:
+Public marketplace reads use Next.js and Netlify's built-in route/data cache rather than an application cache layer:
 
-- `src/app/api/listings/route.ts` sets `Cache-Control: public, s-maxage=30, stale-while-revalidate=60` on the listings list response.
-- Redis is provisioned in `docker-compose.yml`/env but **not imported anywhere in `src/`.** Don't assume a Redis client is available — it isn't wired up.
+- Home and Listings use 30-second route revalidation; Auctions uses 15 seconds because auction state changes more frequently. Their initial Prisma reads can therefore be reused across visitors within those bounded windows.
+- Authenticated and user-specific data is not put in the shared route cache. It continues to load through protected API routes and TanStack Query.
+- `src/app/api/listings/route.ts` also sets `Cache-Control: public, s-maxage=30, stale-while-revalidate=60` for interactive listing-filter requests.
+- The notification bell polls only an unread-count summary while closed. The 50-record grouped feed is enabled only while its popup is open.
+- Redis is provisioned in `docker-compose.yml`/env but **not imported anywhere in `src/`.** It is not required for the current cache strategy; see proposed ADR 0003.
 
 ## Image/video storage
 

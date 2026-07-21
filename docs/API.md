@@ -21,7 +21,7 @@ Auth convention throughout: `Authorization: Bearer <accessToken>`, checked per-r
 | POST | `/api/listings` | Requires `SELLER`/`BUSINESS_SELLER` role. Enforces: no duplicate title (case-insensitive) among the seller's non-archived/sold listings, max 10 media items, at least 1 media item required |
 | GET / PATCH / DELETE | `/api/listings/[id]` | |
 | GET | `/api/listings/mine` | Own listings |
-| GET | `/api/listings/saved` | Own saved listings |
+| GET | `/api/listings/saved` | Own saved listings, newest first, with listing media and category; excludes unused seller profile data |
 | POST / DELETE | `/api/listings/[id]/save` | Save/unsave |
 | POST | `/api/listings/upload-image` | Uploads to Supabase Storage |
 | DELETE | `/api/listings/delete-image` | |
@@ -71,7 +71,7 @@ If you touch listing creation, this is a good opportunity to either implement th
 
 | Method | Path | Notes |
 | --- | --- | --- |
-| GET | `/api/users/[id]` | Public profile |
+| GET | `/api/users/[id]` | Public profile with name, avatar, bio, and location; private phone and email fields are excluded |
 | PATCH | `/api/users/me` | Update own profile |
 | PATCH | `/api/users/me/become-seller` | `USER` → `SELLER` role upgrade |
 | GET | `/api/storefront/[slug]` | Public storefront page |
@@ -81,7 +81,7 @@ If you touch listing creation, this is a good opportunity to either implement th
 
 | Method | Path | Notes |
 | --- | --- | --- |
-| GET | `/api/reviews/[userId]` | Reviews received by a user |
+| GET | `/api/reviews/[userId]` | Paginated reviews received by a user, with `total` and an `avgRating` aggregated across all matching reviews |
 | POST | `/api/reviews` | One review per (reviewer, listing) — schema-enforced unique constraint |
 | GET / POST | `/api/reports` | |
 | PATCH | `/api/reports/[id]/resolve` | Admin |
@@ -92,7 +92,7 @@ If you touch listing creation, this is a good opportunity to either implement th
 
 | Method | Path | Notes |
 | --- | --- | --- |
-| GET / PATCH | `/api/notifications` | PATCH marks read |
+| GET / PATCH | `/api/notifications` | GET accepts `?summary=1` for an unread-count-only response; the normal GET returns paginated records plus totals. PATCH marks read and accepts `{ id }` for one notification, `{ ids }` for an atomic group update, or an empty body for all unread notifications. Every read and update remains scoped to the authenticated user. |
 
 ## Admin
 

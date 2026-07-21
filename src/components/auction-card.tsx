@@ -1,49 +1,79 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
-import { Clock, Gavel } from "lucide-react";
-import { formatPrice, timeUntil } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowUpRight,
+  CalendarClock,
+  Clock,
+  Gavel,
+  ImageIcon,
+  MapPin,
+} from "lucide-react";
+import { cn, formatPrice, timeUntil } from "@/lib/utils";
 
-interface AuctionCardProps {
-  auction: {
+export interface AuctionSummary {
+  id: string;
+  currentPrice: number | string;
+  startPrice: number | string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  _count: { bids: number };
+  listing: {
     id: string;
-    currentPrice: number | string;
-    startPrice: number | string;
-    endTime: string;
-    status: string;
-    bidCount: number;
-    listing: {
-      id: string;
-      title: string;
-      location: string;
-      media: { url: string; type: string }[];
-    };
+    title: string;
+    location: string;
+    media: { url: string }[];
+    category: { id: string; name: string };
   };
 }
 
-export function AuctionCard({ auction }: AuctionCardProps) {
-  const [timeLeft, setTimeLeft] = useState(timeUntil(auction.endTime));
-  const coverImage = auction.listing.media.find((m) => m.type === "IMAGE");
+export function AuctionCard({
+  auction,
+  featured = false,
+  priority = false,
+}: {
+  auction: AuctionSummary;
+  featured?: boolean;
+  priority?: boolean;
+}) {
+  const [countdown, setCountdown] = useState("Updating time");
+  const [isEndingSoon, setIsEndingSoon] = useState(false);
+  const isLive = auction.status === "LIVE";
+  const coverImage = auction.listing.media[0];
+  const bidCount = auction._count.bids;
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeLeft(timeUntil(auction.endTime));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [auction.endTime]);
+    const updateCountdown = () => {
+      const target = isLive ? auction.endTime : auction.startTime;
+      const nextCountdown = timeUntil(target);
+      setCountdown(!isLive && nextCountdown === "Ended" ? "Awaiting start" : nextCountdown);
+      setIsEndingSoon(
+        isLive && new Date(auction.endTime).getTime() - Date.now() < 5 * 60 * 1000,
+      );
+    };
 
-  const isLive = auction.status === "LIVE";
-  const isEnding =
-    isLive && new Date(auction.endTime).getTime() - Date.now() < 5 * 60 * 1000;
+    updateCountdown();
+    const interval = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(interval);
+  }, [auction.endTime, auction.startTime, isLive]);
 
   return (
     <Link
       href={`/auctions/${auction.id}`}
-      className="card group flex flex-col overflow-hidden transition-shadow hover:shadow-md"
+      className={cn(
+        "group overflow-hidden rounded-2xl border border-gray-200 bg-white transition duration-300 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-[0_18px_45px_-28px_rgba(17,24,39,0.35)] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-100",
+        featured && "md:grid md:grid-cols-[minmax(0,1.25fr)_minmax(300px,0.75fr)]",
+      )}
     >
-      <div className="relative aspect-[4/3] bg-gray-100">
+      <div
+        className={cn(
+          "relative aspect-[4/3] overflow-hidden bg-gray-100",
+          featured && "md:aspect-auto md:min-h-[350px]",
+        )}
+      >
         {coverImage ? (
           <Image
             src={coverImage.url}
@@ -53,51 +83,89 @@ export function AuctionCard({ auction }: AuctionCardProps) {
             className="object-cover transition-transform group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-4xl text-gray-300">
-            🔨
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-gray-400">
+            <ImageIcon className="h-8 w-8" />
+            <span className="text-xs font-medium">No image available</span>
           </div>
         )}
-        <span
-          className={`absolute left-2 top-2 badge ${
-            isLive
-              ? "bg-green-500 text-white"
-              : auction.status === "SCHEDULED"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-400 text-white"
-          }`}
-        >
-          {isLive ? "● Live" : auction.status}
-        </span>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 p-3">
-        <p className="line-clamp-2 text-sm font-medium text-gray-900">
-          {auction.listing.title}
-        </p>
-
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs text-gray-400">Current Bid</p>
-            <p className="text-lg font-bold text-brand-600">
-              {formatPrice(auction.currentPrice)}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs text-gray-400">Bids</p>
-            <p className="flex items-center gap-1 font-semibold text-gray-700">
-              <Gavel className="h-4 w-4" />
-              {auction.bidCount}
-            </p>
-          </div>
+      <div className={cn("flex min-w-0 flex-col p-4", featured && "p-6 md:p-8")}>
+        <div className="flex items-center justify-between gap-3">
+          <span
+            className={cn(
+              "inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em]",
+              isLive ? "text-brand-600" : "text-gray-500",
+            )}
+          >
+            <span
+              className={cn(
+                "h-2 w-2 rounded-full",
+                isLive ? "bg-brand-500" : "bg-gray-300",
+              )}
+            />
+            {isLive ? "Live now" : "Upcoming"}
+          </span>
+          <span className="truncate text-xs text-gray-400">
+            {auction.listing.category.name}
+          </span>
         </div>
 
-        <div
-          className={`flex items-center gap-1 text-sm font-medium ${
-            isEnding ? "text-red-600" : "text-gray-500"
-          }`}
+        <h2
+          className={cn(
+            "mt-3 line-clamp-2 font-semibold leading-snug tracking-[-0.02em] text-gray-950",
+            featured ? "text-2xl md:text-3xl" : "text-base",
+          )}
         >
-          <Clock className="h-4 w-4" />
-          {isLive ? timeLeft : "Starts soon"}
+          {auction.listing.title}
+        </h2>
+
+        <div className={cn("mt-5", featured && "mt-7")}>
+          <p className="text-xs font-medium text-gray-500">
+            {isLive ? "Current bid" : "Starting price"}
+          </p>
+          <p
+            className={cn(
+              "mt-1 font-semibold tracking-[-0.03em] text-gray-950",
+              featured ? "text-3xl" : "text-2xl",
+            )}
+          >
+            {formatPrice(isLive ? auction.currentPrice : auction.startPrice)}
+          </p>
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-3 text-sm text-gray-500">
+          <span className="flex min-w-0 items-center gap-2">
+            <Gavel className="h-4 w-4 shrink-0" />
+            {bidCount} {bidCount === 1 ? "bid" : "bids"}
+          </span>
+          <span className="flex min-w-0 items-center gap-2 truncate">
+            <MapPin className="h-4 w-4 shrink-0" />
+            <span className="truncate">{auction.listing.location}</span>
+          </span>
+        </div>
+
+        <div className="mt-auto pt-6">
+          <div className="flex items-center justify-between gap-3 border-t border-gray-100 pt-4">
+            <span
+              className={cn(
+                "flex items-center gap-2 text-sm font-semibold",
+                isEndingSoon ? "text-brand-600" : "text-gray-700",
+              )}
+            >
+              {isLive ? (
+                <Clock className="h-4 w-4" />
+              ) : (
+                <CalendarClock className="h-4 w-4" />
+              )}
+              {isLive
+                ? `${countdown} left`
+                : countdown === "Awaiting start"
+                  ? countdown
+                  : `Starts in ${countdown}`}
+            </span>
+            <ArrowUpRight className="h-5 w-5 text-gray-300 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand-500 motion-reduce:transform-none" />
+          </div>
         </div>
       </div>
     </Link>

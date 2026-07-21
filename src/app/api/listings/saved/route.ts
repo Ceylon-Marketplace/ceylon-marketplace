@@ -12,7 +12,6 @@ export async function GET(req: NextRequest) {
           include: {
             media: { orderBy: { order: "asc" }, take: 1 },
             category: true,
-            seller: { include: { profile: true } },
           },
         },
       },
