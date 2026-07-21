@@ -6,6 +6,14 @@ export async function GET(req: NextRequest) {
   try {
     const user = requireAuth(req);
     const q = req.nextUrl.searchParams;
+
+    if (q.get("summary") === "1") {
+      const unreadCount = await prisma.notification.count({
+        where: { userId: user.sub, isRead: false },
+      });
+      return Response.json({ unreadCount });
+    }
+
     const page = Number(q.get("page") || 1);
     const limit = Number(q.get("limit") || 20);
 

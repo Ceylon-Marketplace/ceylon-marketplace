@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     "Discover listings, follow auctions, and sell products across Sri Lanka on Ceylon Marketplace.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 const CONDITION_LABELS: Record<string, string> = {
   NEW: "New",

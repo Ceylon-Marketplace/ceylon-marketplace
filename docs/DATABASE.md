@@ -36,7 +36,7 @@ These reflect actual query patterns identified in that work — if you add a new
 - `Auction`: `(status, endTime)`
 - `Conversation`: `(buyerId)`, `(sellerId)` — plus the unique `(listingId, buyerId)`
 - `Message`: `(conversationId, createdAt)`
-- `Notification`: `(userId, isRead)`
+- `Notification`: `(userId, isRead)`, `(userId, createdAt desc)`; the latter supports the newest-first notification popup query
 
 ## Migrations
 

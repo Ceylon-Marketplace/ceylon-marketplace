@@ -183,3 +183,27 @@ Active ownership and task status live in `docs/tasks/`, not in this log. Handoff
 **Important findings:** Offer notifications include both `offerId` and `listingId`, so listing identity is intentionally evaluated first to consolidate activity for the same product. Group read updates use a new additive `{ ids }` notification PATCH payload and one scoped `updateMany` call, avoiding partial multi-request read state. Type checking, the production build, and live authenticated 50-record loading passed.
 
 **Unfinished:** Group counts cover the latest 50 notification records loaded by the popover; no implementation work remains.
+
+### 2026-07-21 — Codex (GPT-5) — CM-020
+
+**Outcome:** Audited the authenticated page-render slowdown without changing behavior. The completed record is [`docs/tasks/completed/CM-020-page-render-performance-audit.md`](tasks/completed/CM-020-page-render-performance-audit.md).
+
+**Important findings:** The notification popover eagerly loads 50 records on every authenticated main-page mount while closed and repeats the full request every 30 seconds. Each request performs three database queries, and live development timings were approximately 0.7 to 3.6 seconds. The record query orders by creation time, but Notification only has a `[userId, isRead]` index, not `[userId, createdAt DESC]`. The main layout is also force-dynamic, though the eager popover query is the clearest recent regression.
+
+**Unfinished:** Recommended follow-up is a lightweight badge-count query, full-feed loading only while open, closed-state polling removal, and a composite notification index, followed by remeasurement.
+
+### 2026-07-21 — Codex (GPT-5) — CM-021
+
+**Outcome:** Extended the performance audit to Home and Listings without changing behavior. The completed record is [`docs/tasks/completed/CM-021-home-listings-navigation-audit.md`](tasks/completed/CM-021-home-listings-navigation-audit.md).
+
+**Important findings:** Home and Listings are uncached server-rendered routes that each wait for three direct Prisma queries against the remote Supabase pooler. The data overlaps, especially active listings and categories, but is queried again on navigation. Browser measurements were approximately 15.45 seconds for first Home load, 4.30 seconds for warm Home, 1.68 seconds for warm Listings, and 3.17 seconds for the actual Home-to-Listings client transition. Development compilation explains part of the first load, but not the warm multi-second transition.
+
+**Unfinished:** Recommended follow-up is bounded revalidation/shared caching for public data, route-level loading UI, notification lazy loading, then database and image profiling.
+
+### 2026-07-21 — Codex (GPT-5) — CM-022
+
+**Outcome:** Implemented the audited render-performance fixes: Home, Listings, and Auctions now use bounded first-party route caching; Listings has an immediate shaped loading state; and the notification bell keeps a lightweight unread summary while loading its 50-record grouped feed only when open. The completed record is [`docs/tasks/completed/CM-022-marketplace-render-performance.md`](tasks/completed/CM-022-marketplace-render-performance.md).
+
+**Important findings:** The optimized build now emits all three public marketplace indexes as static routes, while authenticated data remains in protected API/TanStack Query flows. Redis is not needed for this stage. Proposed ADR 0003 records the pattern pending Naveen's review. Type checking, two production builds, populated Home/Listings browser QA, and console-error inspection passed; lint remains unconfigured and interactive.
+
+**Unfinished:** Apply the new notification composite-index migration through the normal deployment migration process. Naveen should review proposed ADR 0003; no implementation work remains.

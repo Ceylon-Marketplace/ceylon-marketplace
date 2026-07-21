@@ -42,6 +42,10 @@ type NotificationsResponse = {
   limit: number;
 };
 
+type NotificationSummary = {
+  unreadCount: number;
+};
+
 type NotificationGroup = {
   key: string;
   latest: MarketplaceNotification;
@@ -50,6 +54,7 @@ type NotificationGroup = {
 };
 
 const POPOVER_QUERY_KEY = ["notifications", "popover"] as const;
+const SUMMARY_QUERY_KEY = ["notifications", "summary"] as const;
 
 export function NotificationPopover({
   open,
@@ -62,14 +67,22 @@ export function NotificationPopover({
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const notificationsQuery = useQuery<NotificationsResponse>({
-    queryKey: POPOVER_QUERY_KEY,
-    queryFn: async () => (await api.get("/notifications?limit=50")).data,
+  const summaryQuery = useQuery<NotificationSummary>({
+    queryKey: SUMMARY_QUERY_KEY,
+    queryFn: async () => (await api.get("/notifications?summary=1")).data,
     refetchInterval: 30_000,
     refetchOnWindowFocus: true,
   });
+  const notificationsQuery = useQuery<NotificationsResponse>({
+    queryKey: POPOVER_QUERY_KEY,
+    queryFn: async () => (await api.get("/notifications?limit=50")).data,
+    enabled: open,
+    refetchInterval: open ? 30_000 : false,
+    refetchOnWindowFocus: open,
+  });
 
-  const unreadCount = notificationsQuery.data?.unreadCount ?? 0;
+  const unreadCount =
+    summaryQuery.data?.unreadCount ?? notificationsQuery.data?.unreadCount ?? 0;
   const notificationGroups = useMemo(
     () => groupNotifications(notificationsQuery.data?.notifications ?? []),
     [notificationsQuery.data?.notifications],
@@ -78,18 +91,24 @@ export function NotificationPopover({
   const markGroupRead = useMutation({
     mutationFn: (ids: string[]) => api.patch("/notifications", { ids }),
     onMutate: async (ids) => {
-      await queryClient.cancelQueries({ queryKey: POPOVER_QUERY_KEY });
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: POPOVER_QUERY_KEY }),
+        queryClient.cancelQueries({ queryKey: SUMMARY_QUERY_KEY }),
+      ]);
       const previous = queryClient.getQueryData<NotificationsResponse>(
         POPOVER_QUERY_KEY,
       );
+      const previousSummary =
+        queryClient.getQueryData<NotificationSummary>(SUMMARY_QUERY_KEY);
+      const idSet = new Set(ids);
+      const groupUnreadCount =
+        previous?.notifications.filter(
+          (notification) => idSet.has(notification.id) && !notification.isRead,
+        ).length ?? 0;
       queryClient.setQueryData<NotificationsResponse>(
         POPOVER_QUERY_KEY,
         (current) => {
           if (!current) return current;
-          const idSet = new Set(ids);
-          const groupUnreadCount = current.notifications.filter(
-            (notification) => idSet.has(notification.id) && !notification.isRead,
-          ).length;
           return {
             ...current,
             unreadCount: Math.max(0, current.unreadCount - groupUnreadCount),
@@ -101,11 +120,23 @@ export function NotificationPopover({
           };
         },
       );
-      return { previous };
+      queryClient.setQueryData<NotificationSummary>(
+        SUMMARY_QUERY_KEY,
+        (current) =>
+          current
+            ? {
+                unreadCount: Math.max(0, current.unreadCount - groupUnreadCount),
+              }
+            : current,
+      );
+      return { previous, previousSummary };
     },
     onError: (_error, _ids, context) => {
       if (context?.previous) {
         queryClient.setQueryData(POPOVER_QUERY_KEY, context.previous);
+      }
+      if (context?.previousSummary) {
+        queryClient.setQueryData(SUMMARY_QUERY_KEY, context.previousSummary);
       }
     },
     onSettled: () =>
@@ -115,10 +146,15 @@ export function NotificationPopover({
   const markAllRead = useMutation({
     mutationFn: () => api.patch("/notifications"),
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: POPOVER_QUERY_KEY });
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: POPOVER_QUERY_KEY }),
+        queryClient.cancelQueries({ queryKey: SUMMARY_QUERY_KEY }),
+      ]);
       const previous = queryClient.getQueryData<NotificationsResponse>(
         POPOVER_QUERY_KEY,
       );
+      const previousSummary =
+        queryClient.getQueryData<NotificationSummary>(SUMMARY_QUERY_KEY);
       queryClient.setQueryData<NotificationsResponse>(
         POPOVER_QUERY_KEY,
         (current) =>
@@ -133,11 +169,17 @@ export function NotificationPopover({
               }
             : current,
       );
-      return { previous };
+      queryClient.setQueryData<NotificationSummary>(SUMMARY_QUERY_KEY, {
+        unreadCount: 0,
+      });
+      return { previous, previousSummary };
     },
     onError: (_error, _variables, context) => {
       if (context?.previous) {
         queryClient.setQueryData(POPOVER_QUERY_KEY, context.previous);
+      }
+      if (context?.previousSummary) {
+        queryClient.setQueryData(SUMMARY_QUERY_KEY, context.previousSummary);
       }
     },
     onSettled: () =>

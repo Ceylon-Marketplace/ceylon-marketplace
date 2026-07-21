@@ -48,10 +48,13 @@ If real-time push becomes a real requirement, it needs to be designed and record
 
 ## Caching
 
-"Caching" in this codebase means HTTP response caching, not an application cache layer:
+Public marketplace reads use Next.js and Netlify's built-in route/data cache rather than an application cache layer:
 
-- `src/app/api/listings/route.ts` sets `Cache-Control: public, s-maxage=30, stale-while-revalidate=60` on the listings list response.
-- Redis is provisioned in `docker-compose.yml`/env but **not imported anywhere in `src/`.** Don't assume a Redis client is available — it isn't wired up.
+- Home and Listings use 30-second route revalidation; Auctions uses 15 seconds because auction state changes more frequently. Their initial Prisma reads can therefore be reused across visitors within those bounded windows.
+- Authenticated and user-specific data is not put in the shared route cache. It continues to load through protected API routes and TanStack Query.
+- `src/app/api/listings/route.ts` also sets `Cache-Control: public, s-maxage=30, stale-while-revalidate=60` for interactive listing-filter requests.
+- The notification bell polls only an unread-count summary while closed. The 50-record grouped feed is enabled only while its popup is open.
+- Redis is provisioned in `docker-compose.yml`/env but **not imported anywhere in `src/`.** It is not required for the current cache strategy; see proposed ADR 0003.
 
 ## Image/video storage
 

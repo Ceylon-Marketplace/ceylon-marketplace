@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { serializeAuction } from "@/lib/auctions";
 import { AuctionsClient } from "./AuctionsClient";
 
+export const revalidate = 15;
+
 async function getInitialAuctions() {
   const [auctions, total] = await Promise.all([
     prisma.auction.findMany({

@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { ListingsClient } from "./ListingsClient";
 
+export const revalidate = 30;
+
 async function getInitialData() {
   const [listings, total, categories] = await Promise.all([
     prisma.listing.findMany({
