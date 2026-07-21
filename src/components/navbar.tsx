@@ -18,7 +18,6 @@ import {
   Settings,
   ShoppingBag,
   Store,
-  TrendingUp,
   UserRound,
   X,
 } from "lucide-react";
@@ -119,7 +118,6 @@ export function Navbar() {
 
                 <div className="hidden items-center gap-1 md:flex">
                   <IconLink href="/messages" label="Messages" active={isRouteActive(pathname, "/messages")} icon={MessageSquare} />
-                  <IconLink href="/offers" label="Offers" active={isRouteActive(pathname, "/offers")} icon={TrendingUp} />
                 </div>
 
                 <div ref={notificationsRef}>
@@ -225,7 +223,6 @@ function MobileMenu({ user, pathname, isSeller, isBuyerOnly, isAdmin, inSellerMo
         {primaryLinks.map((link) => <MobileLink key={link.href} {...link} active={isRouteActive(pathname, link.href)} />)}
         {user ? <>
           <MobileLink href="/messages" label="Messages" active={isRouteActive(pathname, "/messages")} icon={MessageSquare} />
-          <MobileLink href="/offers" label="Offers" active={isRouteActive(pathname, "/offers")} icon={TrendingUp} />
           <MobileLink href="/dashboard" label="Dashboard" active={isRouteActive(pathname, "/dashboard")} icon={LayoutDashboard} />
           <MobileLink href="/listings/saved" label="Saved listings" active={isRouteActive(pathname, "/listings/saved")} icon={Bookmark} />
           {inSellerMode && <MobileLink href="/listings/mine" label="My listings" active={isRouteActive(pathname, "/listings/mine")} icon={Store} />}
