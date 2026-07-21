@@ -63,6 +63,22 @@ The bidding form must communicate the calculated minimum, preserve signed-out re
 
 Below the primary decision area, show factual item details, masked recent bid activity, seller identity, schedule, and only rules enforced by the current API: minimum increment, no seller self-bidding, and the two-minute anti-snipe extension. Use Lucide fallbacks for missing media rather than emoji. Loading and unavailable states should retain the page's final shape and provide a clear recovery route.
 
+## Listings discovery and detail
+
+The `/listings` route is a product-scanning surface with an editorial page heading, horizontally scrollable top-level category shortcuts, one prominent search field, collapsible detailed filters, sorting, active filter chips, result feedback, and simple previous/next pagination. Listing cards use 16px corners and keep metadata out of the image: category and condition lead the content, followed by title, price, listing type, location, and relative time. Do not use emoji, colored photo overlays, featured rings, or view/save counters on discovery cards.
+
+The `/listings/[id]` route shares the auction detail composition: a restrained product gallery and item information on the left, with a sticky 400px decision column on large screens. Price, condition, availability, and the correct buyer action belong in the first viewport. The action adapts to fixed-price, offer, auction, unavailable, signed-out, and seller-owned states. Seller identity and storefront context remain separate from the primary price panel.
+
+Missing media uses a Lucide fallback. Loading states mirror the final two-column shape, and unavailable states include retry and browse actions. Contact seller must call `POST /api/conversations` with `{ listingId }`; there is no `/api/conversations/listing/[id]` route. Offer, save, and contact mutations use inline status feedback rather than browser alerts. Only active listings are public, so completed-transaction review UI does not belong on this route under the current API contract.
+
+## Messages workspace
+
+The authenticated `/messages` route is a dense marketplace workspace rather than a generic chat panel. Desktop uses a 340px conversation rail beside the active thread; mobile shows either the rail or the selected thread with an explicit back action. The workspace fills the available viewport below the main navigation and uses 16px outer corners, 12px product thumbnails and controls, and coral only for unread state, the sender's message bubbles, and the send action.
+
+Conversation rows expose the other participant, listing thumbnail and title, latest message, relative time, and unread state. Selecting a row keeps `conversationId` synchronized in the URL. The active thread header identifies the participant, and a separate compact listing strip links back to the product and shows its current price and status.
+
+Messages poll every 15 seconds. Own messages use coral bubbles and incoming messages use bordered white bubbles; both keep readable timestamps, and read state appears only when the API reports it. The composer uses a bounded textarea, Enter to send, Shift+Enter for a new line, a disabled empty state, and inline send errors. Do not clear the draft until the send succeeds. Conversation-list, thread, empty, invalid-selection, error, and authentication-loading states must all retain useful structure.
+
 ## Public homepage
 
 The public `/` route is a dynamic, discovery-first marketplace entry point rather than a generic marketing landing page. Its hero pairs concise buyer/seller actions with listing imagery already present in the marketplace, followed by active categories, recent active listings, and currently live or scheduled auctions. If the database has no suitable listing imagery, the hero falls back to the local marketplace collection image used by the authentication screens. Keep the route dynamically rendered so inventory changes do not depend on a redeploy.

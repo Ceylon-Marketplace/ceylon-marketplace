@@ -87,3 +87,19 @@ Active ownership and task status live in `docs/tasks/`, not in this log. Handoff
 **Important findings:** The target seed auction remains `SCHEDULED` even though its start time has passed. The detail page now follows the auction index convention and displays "Awaiting start" until lifecycle automation updates the record. Unsupported reserve and winner-contact claims were removed; the page only explains constraints enforced by the bid API. Type checking, production build, and populated desktop browser QA passed.
 
 **Unfinished:** The existing auction lifecycle automation gap remains separate backend/product work. No redesign implementation remains.
+
+### 2026-07-21 — Codex (GPT-5) — CM-008
+
+**Outcome:** Redesigned `/listings` and `/listings/[id]` as a coordinated marketplace journey with clearer discovery controls, quieter product cards, a product-led gallery, state-aware buyer actions, factual seller context, and complete loading, empty, error, and mutation feedback. The completed record is [`docs/tasks/completed/CM-008-listings-experience-redesign.md`](tasks/completed/CM-008-listings-experience-redesign.md).
+
+**Important findings:** The old contact action called a nonexistent `/api/conversations/listing/[id]` route; it now uses the implemented `POST /api/conversations` contract with `{ listingId }`. The old review controls were unreachable because they were nested under the active-listing action branch while also requiring a non-active status, and the detail API hides non-active listings from non-owners. That dead UI was removed rather than preserved as a false capability. Type checking, production build, populated desktop QA, and filter interaction passed.
+
+**Unfinished:** No redesign work remains. Completed-transaction reviews need a separate, reachable transaction-history surface if the product wants buyers to submit reviews after a sale.
+
+### 2026-07-21 — Codex (GPT-5) — CM-009
+
+**Outcome:** Redesigned `/messages` into a responsive marketplace conversation workspace with a searchable inbox, listing and participant context, unread indicators, clearer message states, a reliable multiline composer, URL-synchronized selection, and mobile thread navigation. The completed record is [`docs/tasks/completed/CM-009-messages-workspace-redesign.md`](tasks/completed/CM-009-messages-workspace-redesign.md).
+
+**Important findings:** The previous composer cleared its draft before the API confirmed delivery, so failed sends could lose the user's text. It now clears only after success and reports errors inline. Conversation changes previously did not update the URL; the selected `conversationId` is now preserved for refresh and sharing. Type checking and the production build passed, and signed-out QA confirmed the requested destination survives the login redirect.
+
+**Unfinished:** No implementation work remains. The available test browser was signed out, so a populated authenticated screenshot was not claimed; a future signed-in session can provide final visual-density feedback on long threads.
