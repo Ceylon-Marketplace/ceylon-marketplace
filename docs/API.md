@@ -81,7 +81,7 @@ If you touch listing creation, this is a good opportunity to either implement th
 
 | Method | Path | Notes |
 | --- | --- | --- |
-| GET | `/api/reviews/[userId]` | Reviews received by a user |
+| GET | `/api/reviews/[userId]` | Paginated reviews received by a user, with `total` and an `avgRating` aggregated across all matching reviews |
 | POST | `/api/reviews` | One review per (reviewer, listing) — schema-enforced unique constraint |
 | GET / POST | `/api/reports` | |
 | PATCH | `/api/reports/[id]/resolve` | Admin |

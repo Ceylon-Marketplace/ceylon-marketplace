@@ -87,6 +87,14 @@ Selling formats are explicit radio cards using the existing fixed-price, offer, 
 
 The readiness panel communicates five essential states and keeps draft and review submission available on desktop. It is guidance rather than a new validation contract; the existing submit handler and API remain authoritative. Coral is the only accent, 12px controls pair with 16px sections and panels, and photos use the shared image uploader with larger targets and persistent mobile remove controls. Hydration uses a shaped skeleton, signed-out redirects preserve `/listings/create`, and seller-role, buyer-mode, error, success, draft, upload, and submission states remain explicit.
 
+## Public profile
+
+The `/profile/[id]` route is a public marketplace identity surface. It leads with the member's real avatar or initials, role, verification level, location when available, membership date, bio, and implemented actions. A bordered metric strip summarizes active listings, received reviews, and the all-review average. Coral is reserved for verification, rating, and marketplace actions; other profile information stays neutral.
+
+Below the identity header, active listings and transaction-linked reviews share a main column while a compact sticky profile-facts panel provides context on desktop. Both content sections remain visible when empty so visitors can distinguish zero activity from missing UI. Listings use the canonical `ListingCard`; reviews use two-column 16px cards with factual reviewer, time, rating, comment, and linked-listing data.
+
+Direct messaging is listing-scoped in the current API, so public profiles must not link to `/messages?userId=...`. Visitors contact a member through an active listing, while storefront owners receive a storefront action and profile owners receive Edit profile. Loading, unavailable, partial-query error, empty, own-profile, storefront, desktop, and mobile states must remain useful. `GET /api/reviews/[userId]` supplies `avgRating` across all received reviews rather than only the current page.
+
 ## Messages workspace
 
 The authenticated `/messages` route is a dense marketplace workspace rather than a generic chat panel. Desktop uses a 340px conversation rail beside the active thread; mobile shows either the rail or the selected thread with an explicit back action. The workspace fills the available viewport below the main navigation and uses 16px outer corners, 12px product thumbnails and controls, and coral only for unread state, the sender's message bubbles, and the send action.

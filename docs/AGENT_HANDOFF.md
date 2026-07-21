@@ -143,3 +143,11 @@ Active ownership and task status live in `docs/tasks/`, not in this log. Handoff
 **Important findings:** The old mobile header hid Listings and Auctions entirely, and buyer/seller mode introduced unrelated blue and green palettes. The new mobile menu restores primary navigation, while the account menu groups marketplace, role, and account actions. Route changes and Escape now close open menus, and `aria-current` and expanded state expose navigation context. Type checking, the production build, desktop QA, and 390px mobile QA passed.
 
 **Unfinished:** Authenticated role variants remain implemented from the existing store conditions, but the isolated visual QA browser was signed out. The active local application continued to exercise authenticated notification requests during implementation; no code work remains.
+
+### 2026-07-21 — Codex (GPT-5) — CM-015
+
+**Outcome:** Revamped `/profile/[id]` into a trust-focused marketplace identity page with factual role and verification context, a marketplace summary, active listings, transaction-linked reviews, complete empty and error states, and responsive profile facts. The completed record is [`docs/tasks/completed/CM-015-public-profile-revamp.md`](tasks/completed/CM-015-public-profile-revamp.md).
+
+**Important findings:** The old profile Message action linked to `/messages?userId=...`, but messaging is listing-scoped and the workspace does not support that parameter. The dead action was removed and visitors are directed through active listings. `GET /api/reviews/[userId]` also calculated `avgRating` from only the current page; it now uses a database aggregate across all matching reviews without changing the response shape. Type checking, production build, target-profile desktop QA, and 390px mobile QA passed.
+
+**Unfinished:** None.
