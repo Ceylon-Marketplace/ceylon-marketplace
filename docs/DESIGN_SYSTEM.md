@@ -55,6 +55,14 @@ The `/auctions` index uses a commerce-first discovery layout: a compact page hea
 
 List responses expose bid totals as `_count.bids` and media as URL-only objects. The server page serializes Prisma price decimals before passing them to the client. Countdown text initializes with stable server-safe copy and starts time calculations only after hydration. A scheduled lot whose start time has already passed displays "Awaiting start" because auction lifecycle automation does not currently exist; see `docs/PRODUCT.md`.
 
+## Public homepage
+
+The public `/` route is a dynamic, discovery-first marketplace entry point rather than a generic marketing landing page. Its hero pairs concise buyer/seller actions with listing imagery already present in the marketplace, followed by active categories, recent active listings, and currently live or scheduled auctions. If the database has no suitable listing imagery, the hero falls back to the local marketplace collection image used by the authentication screens. Keep the route dynamically rendered so inventory changes do not depend on a redeploy.
+
+Homepage content must remain data-backed and honest: avoid inventory counts, trust promises, fee claims, or availability language that the application cannot verify. Empty listing and auction states should preserve the section structure and offer a single relevant next action. Prisma decimals and dates are serialized in the server page before auction data reaches client components.
+
+The visual direction uses white and neutral surfaces with coral as the only interaction accent, large editorial type in the hero, 16–24px corner radii, and an asymmetric image composition on large screens that collapses into a stacked mobile layout. Product photography carries the visual interest; do not add decorative emoji, gradients, or overlay badges to the homepage.
+
 ## Icons
 
 `lucide-react` throughout — no other icon set is used. Reach for an existing Lucide icon before adding a new icon dependency.

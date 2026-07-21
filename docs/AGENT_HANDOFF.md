@@ -71,3 +71,11 @@ Active ownership and task status live in `docs/tasks/`, not in this log. Handoff
 **Important findings:** The list card contract was wrong in two places: the query returns `_count.bids` rather than `bidCount`, and URL-only media rather than typed media, so valid images and bid totals could be lost. Server price decimals are now serialized before entering the client. The database also contains scheduled auctions whose start times have passed, and no lifecycle scheduler was found; this existing product gap is now recorded in `docs/PRODUCT.md` while the UI displays "Awaiting start."
 
 **Unfinished:** The auction lifecycle automation question remains open as separate backend/product work. The index redesign itself is complete; type checking, production build, populated desktop QA, and filter interaction passed. Mobile screenshot capture timed out on remote Supabase images, so mobile was verified structurally rather than claimed as a completed visual capture.
+
+### 2026-07-21 — Codex (GPT-5) — CM-006
+
+**Outcome:** Redesigned the public `/` homepage into a discovery-first marketplace experience with a data-backed image hero, buyer and seller actions, active categories, recent listings, available auctions, honest empty states, and a focused seller CTA. The completed record is [`docs/tasks/completed/CM-006-public-homepage-redesign.md`](tasks/completed/CM-006-public-homepage-redesign.md).
+
+**Important findings:** The existing homepage promoted unsupported inventory and fee claims; the redesign uses only capabilities and content verified by current repository data. The local seed data includes a screenshot-style listing image, so the homepage correctly displays it as the newest available product image. Type checking, production build, and populated desktop browser QA passed.
+
+**Unfinished:** No implementation work remains. Future content seeding should prefer clean product photographs so the data-driven hero presents the marketplace at its best.
