@@ -35,7 +35,53 @@ type Message = {
   isRead: boolean;
   createdAt: string;
   sender?: Person;
+  deliveryState?: "sending" | "failed";
 };
+
+type SendMessageInput = {
+  content: string;
+  retryId?: string;
+};
+
+const CHAT_IDLE_TIMEOUT_MS = 2 * 60 * 1000;
+
+function useChatActivity() {
+  const lastActivityRef = useRef(Date.now());
+  const [isActive, setIsActive] = useState(true);
+
+  useEffect(() => {
+    const markActive = () => {
+      lastActivityRef.current = Date.now();
+      if (document.visibilityState === "visible") setIsActive(true);
+    };
+    const updateActivity = () => {
+      setIsActive(
+        document.visibilityState === "visible" &&
+          Date.now() - lastActivityRef.current < CHAT_IDLE_TIMEOUT_MS,
+      );
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") markActive();
+      else setIsActive(false);
+    };
+
+    window.addEventListener("pointerdown", markActive);
+    window.addEventListener("keydown", markActive);
+    window.addEventListener("focus", markActive);
+    document.addEventListener("visibilitychange", handleVisibility);
+    const interval = window.setInterval(updateActivity, 15_000);
+
+    return () => {
+      window.removeEventListener("pointerdown", markActive);
+      window.removeEventListener("keydown", markActive);
+      window.removeEventListener("focus", markActive);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  return isActive;
+}
 
 type Conversation = {
   id: string;
@@ -67,6 +113,7 @@ function MessagesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const isChatActive = useChatActivity();
   const initialConversationId = searchParams.get("conversationId");
   const [activeConversationId, setActiveConversationId] = useState<string | null>(initialConversationId);
   const [newMessage, setNewMessage] = useState("");
@@ -74,12 +121,14 @@ function MessagesContent() {
   const [sendError, setSendError] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const previousMessageCountRef = useRef(0);
+  const wasChatActiveRef = useRef(isChatActive);
 
   const conversationsQuery = useQuery<Conversation[]>({
     queryKey: ["conversations"],
     queryFn: async () => (await api.get("/conversations")).data,
     enabled: !!user,
-    refetchInterval: 15_000,
+    refetchInterval: isChatActive ? 15_000 : false,
+    refetchOnWindowFocus: true,
   });
 
   const messagesQuery = useQuery<Message[]>({
@@ -89,19 +138,60 @@ function MessagesContent() {
       return [...response.data].reverse();
     },
     enabled: !!user && !!activeConversationId,
-    refetchInterval: 15_000,
+    refetchInterval: isChatActive ? 3_000 : false,
+    refetchOnWindowFocus: true,
   });
 
   const sendMutation = useMutation({
-    mutationFn: async (content: string) =>
+    mutationFn: async ({ content }: SendMessageInput) =>
       (await api.post(`/conversations/${activeConversationId}/messages`, { content })).data,
-    onSuccess: () => {
-      setNewMessage("");
+    onMutate: async ({ content, retryId }: SendMessageInput) => {
+      const queryKey = ["messages", activeConversationId];
+      await queryClient.cancelQueries({ queryKey });
+      const optimisticId = retryId ?? `optimistic-${Date.now()}`;
+      const optimisticMessage: Message = {
+        id: optimisticId,
+        senderId: user!.id,
+        content,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        deliveryState: "sending",
+      };
+
+      queryClient.setQueryData<Message[]>(queryKey, (current = []) =>
+        retryId
+          ? current.map((message) =>
+              message.id === retryId ? optimisticMessage : message,
+            )
+          : [...current, optimisticMessage],
+      );
+      if (!retryId) setNewMessage("");
+      setSendError("");
+      return { optimisticId };
+    },
+    onSuccess: (message: Message, _input, context) => {
+      const queryKey = ["messages", activeConversationId];
+      queryClient.setQueryData<Message[]>(queryKey, (current = []) =>
+        current.map((currentMessage) =>
+          currentMessage.id === context.optimisticId ? message : currentMessage,
+        ),
+      );
       setSendError("");
       queryClient.invalidateQueries({ queryKey: ["messages", activeConversationId] });
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
-    onError: (error: unknown) => {
+    onError: (error: unknown, _input, context) => {
+      if (context) {
+        queryClient.setQueryData<Message[]>(
+          ["messages", activeConversationId],
+          (current = []) =>
+            current.map((message) =>
+              message.id === context.optimisticId
+                ? { ...message, deliveryState: "failed" }
+                : message,
+            ),
+        );
+      }
       const message =
         typeof error === "object" &&
         error !== null &&
@@ -125,6 +215,18 @@ function MessagesContent() {
       router.replace(`/login?next=${encodeURIComponent(destination)}`);
     }
   }, [hasHydrated, initialConversationId, router, user]);
+
+  useEffect(() => {
+    if (isChatActive && !wasChatActiveRef.current) {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      if (activeConversationId) {
+        queryClient.invalidateQueries({
+          queryKey: ["messages", activeConversationId],
+        });
+      }
+    }
+    wasChatActiveRef.current = isChatActive;
+  }, [activeConversationId, isChatActive, queryClient]);
 
   useEffect(() => {
     if (messagesQuery.data && messagesQuery.data.length > previousMessageCountRef.current) {
@@ -162,7 +264,7 @@ function MessagesContent() {
     const content = newMessage.trim();
     if (!content || !activeConversationId || sendMutation.isPending) return;
     setSendError("");
-    sendMutation.mutate(content);
+    sendMutation.mutate({ content });
   };
 
   if (!hasHydrated || !user) return <MessagesSkeleton />;
@@ -266,7 +368,36 @@ function MessagesContent() {
                               {message.mediaUrl && <div className="relative mb-2 aspect-video overflow-hidden rounded-xl"><Image src={message.mediaUrl} alt="Shared attachment" fill sizes="400px" className="object-cover" /></div>}
                               <p className="whitespace-pre-wrap break-words">{message.content}</p>
                             </div>
-                            <p className={cn("mt-1.5 flex items-center gap-1 text-[11px] text-gray-400", isMine && "justify-end")}>{timeAgo(message.createdAt)}{isMine && message.isRead && <><Check className="h-3 w-3" /> Read</>}</p>
+                            <p className={cn("mt-1.5 flex items-center gap-1 text-[11px] text-gray-400", isMine && "justify-end")}>
+                              {message.deliveryState === "sending" ? (
+                                "Sending"
+                              ) : message.deliveryState === "failed" ? (
+                                <>
+                                  <span className="text-red-600">Not sent</span>
+                                  <button
+                                    onClick={() =>
+                                      sendMutation.mutate({
+                                        content: message.content,
+                                        retryId: message.id,
+                                      })
+                                    }
+                                    disabled={sendMutation.isPending}
+                                    className="font-medium text-red-600 underline underline-offset-2 disabled:opacity-50"
+                                  >
+                                    Retry
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  {timeAgo(message.createdAt)}
+                                  {isMine && message.isRead ? (
+                                    <><Check className="h-3 w-3" /> Read</>
+                                  ) : isMine ? (
+                                    <><Check className="h-3 w-3" /> Sent</>
+                                  ) : null}
+                                </>
+                              )}
+                            </p>
                           </div>
                         </div>
                       );

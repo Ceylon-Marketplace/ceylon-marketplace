@@ -103,3 +103,11 @@ Active ownership and task status live in `docs/tasks/`, not in this log. Handoff
 **Important findings:** The previous composer cleared its draft before the API confirmed delivery, so failed sends could lose the user's text. It now clears only after success and reports errors inline. Conversation changes previously did not update the URL; the selected `conversationId` is now preserved for refresh and sharing. Type checking and the production build passed, and signed-out QA confirmed the requested destination survives the login redirect.
 
 **Unfinished:** No implementation work remains. The available test browser was signed out, so a populated authenticated screenshot was not claimed; a future signed-in session can provide final visual-density feedback on long threads.
+
+### 2026-07-21 — Codex (GPT-5) — CM-010
+
+**Outcome:** Improved the database-backed chat with adaptive polling and an optimistic send lifecycle. Active threads poll every three seconds, inboxes every 15 seconds, and both pause while the tab is hidden or after two minutes of inactivity. New messages appear immediately as "Sending," transition to the persisted sent/read flow, or remain retryable as "Not sent." The completed record is [`docs/tasks/completed/CM-010-adaptive-chat-delivery.md`](tasks/completed/CM-010-adaptive-chat-delivery.md).
+
+**Important findings:** The prior mutation waited for the POST and subsequent refetch before a sent message could appear, which made delivery seem broken on slower database responses. The optimistic cache entry now provides immediate feedback without weakening the database/API as the source of truth. Type checking and production build passed.
+
+**Unfinished:** No implementation work remains. True WebSocket delivery remains optional future architecture and still requires a separately approved decision.

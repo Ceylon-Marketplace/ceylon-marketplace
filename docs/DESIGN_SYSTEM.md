@@ -77,7 +77,9 @@ The authenticated `/messages` route is a dense marketplace workspace rather than
 
 Conversation rows expose the other participant, listing thumbnail and title, latest message, relative time, and unread state. Selecting a row keeps `conversationId` synchronized in the URL. The active thread header identifies the participant, and a separate compact listing strip links back to the product and shows its current price and status.
 
-Messages poll every 15 seconds. Own messages use coral bubbles and incoming messages use bordered white bubbles; both keep readable timestamps, and read state appears only when the API reports it. The composer uses a bounded textarea, Enter to send, Shift+Enter for a new line, a disabled empty state, and inline send errors. Do not clear the draft until the send succeeds. Conversation-list, thread, empty, invalid-selection, error, and authentication-loading states must all retain useful structure.
+While the tab is visible and the user remains active, the selected message thread polls every 3 seconds and the conversation list every 15 seconds. Both pause when the tab is hidden or after 2 minutes without interaction, then refresh when activity resumes. Own messages use coral bubbles and incoming messages use bordered white bubbles; both keep readable timestamps, and read state appears only when the API reports it.
+
+Sending is optimistic: a new bubble appears immediately with `Sending`, is replaced by the persisted server message on success, and remains visible as `Not sent` with a retry action on failure. The composer uses a bounded textarea, Enter to send, Shift+Enter for a new line, a disabled empty state, and inline send errors. Conversation-list, thread, empty, invalid-selection, error, and authentication-loading states must all retain useful structure.
 
 ## Public homepage
 
