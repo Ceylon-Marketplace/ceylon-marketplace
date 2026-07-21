@@ -49,3 +49,4 @@ These are pulled from route handlers, not from aspiration — see `docs/API.md` 
 - Whether Sri Lanka/LKR (see `docs/PROJECT.md` — hardcoded in `formatPrice`) is a firm requirement worth enforcing elsewhere (e.g. phone number formats, location autocomplete) or just an assumption baked in once and never revisited
 - Monetization beyond the subscription schema shape (take rate on sales? auction fees? currently none found in code)
 - Whether "real-time" auctions/messaging via WebSockets is still a planned feature or was abandoned in favor of polling
+- How auction lifecycle transitions are intended to run. Records can remain `SCHEDULED` after `startTime` has passed; no background scheduler or request-time status transition was found. The auctions UI labels these records as "Awaiting start" instead of incorrectly claiming they are live.

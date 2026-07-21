@@ -49,6 +49,12 @@ The authenticated `/dashboard` is a role-aware marketplace home rather than an a
 
 Dashboard data surfaces must include shaped skeletons while queries load, a useful empty state with one next action, and a populated state. Selection and navigation panels use 16px corners, while existing listing cards retain their canonical 12px radius. Buyer offer totals come from `GET /api/offers`; there is no `/api/offers/sent` route.
 
+## Auctions index
+
+The `/auctions` index uses a commerce-first discovery layout: a compact page header, live/upcoming summary strip, accessible status tabs, an optional featured live lot, and a responsive card grid. Coral is the only page accent; scheduled state uses neutral grays. Auction cards keep status labels out of the image, expose category, location, price, bid count, and countdown in the content area, and use a 16px corner radius.
+
+List responses expose bid totals as `_count.bids` and media as URL-only objects. The server page serializes Prisma price decimals before passing them to the client. Countdown text initializes with stable server-safe copy and starts time calculations only after hydration. A scheduled lot whose start time has already passed displays "Awaiting start" because auction lifecycle automation does not currently exist; see `docs/PRODUCT.md`.
+
 ## Icons
 
 `lucide-react` throughout — no other icon set is used. Reach for an existing Lucide icon before adding a new icon dependency.

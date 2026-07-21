@@ -63,3 +63,11 @@ Active ownership and task status live in `docs/tasks/`, not in this log. Handoff
 **Important findings:** The hydration diff showed `cz-shortcut-listen="true"` injected on `<body>`, which comes from a browser extension rather than application rendering. The root body now tolerates extension-added attributes. The auth photo no longer uses `priority`, preventing Next.js from preloading a large responsive candidate that can remain unused. Type checking and the production build passed.
 
 **Unfinished:** None.
+
+### 2026-07-21 — Codex (GPT-5) — CM-005
+
+**Outcome:** Redesigned `/auctions` with live/upcoming summaries and filters, a live spotlight, responsive auction cards, complete query states, pagination, and preserved 15-second polling. The completed record is [`docs/tasks/completed/CM-005-auctions-page-redesign.md`](tasks/completed/CM-005-auctions-page-redesign.md).
+
+**Important findings:** The list card contract was wrong in two places: the query returns `_count.bids` rather than `bidCount`, and URL-only media rather than typed media, so valid images and bid totals could be lost. Server price decimals are now serialized before entering the client. The database also contains scheduled auctions whose start times have passed, and no lifecycle scheduler was found; this existing product gap is now recorded in `docs/PRODUCT.md` while the UI displays "Awaiting start."
+
+**Unfinished:** The auction lifecycle automation question remains open as separate backend/product work. The index redesign itself is complete; type checking, production build, populated desktop QA, and filter interaction passed. Mobile screenshot capture timed out on remote Supabase images, so mobile was verified structurally rather than claimed as a completed visual capture.
