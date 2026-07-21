@@ -59,3 +59,16 @@ Manoj answered the following setup questions for this system (Naveen should revi
 **Decision.** Give every non-trivial task a stable, never-reused `CM-###` ID and an individual file under `docs/tasks/`. Directory location records whether the task is in progress, blocked, or completed. Task metadata records ownership, affected areas, likely files, dependencies, acceptance criteria, and verification. The same ID is used in branches, commits, pull requests, and handoffs. `docs/AGENT_HANDOFF.md` remains append-only but no longer owns active status; it contains only concise cross-session context and links to task records.
 
 **Consequences.** Contributors must check active and blocked task files for semantic or file overlap before beginning non-trivial work, create their own task file before implementation, and move it through the documented lifecycle. This adds a small amount of per-task administration while reducing edits to one shared coordination section and making work traceable across artifacts. No automated workflow validator or external issue tracker is introduced in this iteration; those can be considered after the team has used the convention and identified which failures are worth enforcing.
+
+### 0003: Cache public marketplace reads with Next.js and Netlify primitives
+
+- **Date:** 2026-07-21
+- **Author:** Codex (GPT-5)
+- **Status:** Proposed
+- **Signed off by:** Manoj (requested the performance fix and approved the approach); pending — needs Naveen's review
+
+**Context.** Home and Listings each performed three direct Prisma queries against the remote Supabase database on every navigation. Warm browser measurements were approximately 4.30 seconds for Home, 1.68 seconds for Listings, and 3.17 seconds for the Home-to-Listings client transition. The shared main layout also forced every route to render dynamically. Redis is provisioned locally but is not wired into the application, while the live Netlify adapter already supports Next.js route/data caching and incremental static regeneration.
+
+**Decision.** Use bounded Next.js route revalidation for public, non-personalized marketplace reads: 30 seconds for Home and Listings and 15 seconds for Auctions. Keep authenticated and user-specific data outside the shared cache and load it through protected API routes plus TanStack Query. Use the same first-party platform primitives before introducing Redis; add an external cache only when a measured workload needs capabilities the built-in cache does not provide.
+
+**Consequences.** Initial public results can be up to one revalidation window behind a write, but repeated navigations and concurrent visitors avoid repeating the same remote database work. Auction clients continue their existing live polling after hydration. The approach adds no dependency or separately operated service and remains easy to reverse. If the marketplace later requires immediate post-write visibility, targeted path/tag invalidation should be added to those mutations. Because this is a project-wide caching precedent, it remains proposed until Naveen reviews it.

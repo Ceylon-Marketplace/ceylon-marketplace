@@ -1,564 +1,264 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import api from "@/lib/api";
-import { useAuthStore } from "@/store/auth.store";
-import { formatPrice, timeAgo } from "@/lib/utils";
 import {
-  MapPin,
-  Tag,
-  Eye,
-  MessageSquare,
+  AlertCircle,
   ArrowLeft,
-  TrendingUp,
-  ExternalLink,
+  CheckCircle2,
+  ChevronRight,
+  Edit3,
+  Eye,
+  Gavel,
   Heart,
-  Star,
-  Edit,
-  Package,
+  ImageIcon,
+  MapPin,
+  MessageSquare,
+  PackageSearch,
+  Store,
+  Tag,
+  TrendingUp,
 } from "lucide-react";
-import { useState } from "react";
+import api from "@/lib/api";
+import { formatPrice, timeAgo } from "@/lib/utils";
+import { useAuthStore } from "@/store/auth.store";
+
+type ListingDetail = {
+  id: string;
+  sellerId: string;
+  title: string;
+  description: string;
+  price: number | string;
+  quantity: number;
+  location: string;
+  condition: string;
+  listingType: "FIXED_PRICE" | "OFFER" | "AUCTION";
+  status: string;
+  viewCount: number;
+  saveCount: number;
+  createdAt: string;
+  isSaved: boolean;
+  media: { id: string; url: string; type: string }[];
+  category: { name: string; parent?: { name: string } | null };
+  seller: {
+    id: string;
+    profile: { firstName: string; lastName: string; location?: string | null } | null;
+    storefront?: { slug: string; name: string } | null;
+  };
+  auction?: { id: string } | null;
+  attributeValues?: { id: string; value: string; attribute?: { name: string } | null }[];
+};
 
 const CONDITION_LABELS: Record<string, string> = {
   NEW: "New",
-  LIKE_NEW: "Like New",
+  LIKE_NEW: "Like new",
   GOOD: "Good",
   FAIR: "Fair",
   POOR: "Poor",
 };
 
-const TYPE_LABELS: Record<string, { label: string; cls: string }> = {
-  FIXED_PRICE: { label: "Fixed Price", cls: "bg-gray-100 text-gray-600" },
-  OFFER: { label: "Accepts Offers", cls: "bg-blue-50 text-blue-600" },
-  AUCTION: { label: "Auction", cls: "bg-brand-50 text-brand-600" },
+const TYPE_LABELS = {
+  FIXED_PRICE: "Fixed price",
+  OFFER: "Offers considered",
+  AUCTION: "Auction listing",
 };
+
+function ListingDetailSkeleton() {
+  return (
+    <div className="animate-pulse">
+      <div className="mb-7 h-5 w-48 rounded bg-gray-100" />
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_400px]">
+        <div className="space-y-5"><div className="aspect-[4/3] rounded-2xl bg-gray-100" /><div className="h-8 w-3/4 rounded bg-gray-100" /><div className="h-4 w-1/3 rounded bg-gray-100" /></div>
+        <div className="space-y-4"><div className="h-72 rounded-2xl bg-gray-100" /><div className="h-40 rounded-2xl bg-gray-100" /></div>
+      </div>
+    </div>
+  );
+}
 
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { user, hasHydrated } = useAuthStore();
   const [activeImage, setActiveImage] = useState(0);
+  const [showOfferForm, setShowOfferForm] = useState(false);
   const [offerAmount, setOfferAmount] = useState("");
   const [offerMessage, setOfferMessage] = useState("");
-  const [showOfferForm, setShowOfferForm] = useState(false);
-  const [offerError, setOfferError] = useState("");
-  const [offerSuccess, setOfferSuccess] = useState(false);
-  const [reviewRating, setReviewRating] = useState(5);
-  const [reviewComment, setReviewComment] = useState("");
-  const [showReviewForm, setShowReviewForm] = useState(false);
-  const [reviewError, setReviewError] = useState("");
-  const [reviewSuccess, setReviewSuccess] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const [actionSuccess, setActionSuccess] = useState("");
 
-  const { data: listing, isLoading } = useQuery({
+  const { data: listing, isLoading, isError, refetch } = useQuery<ListingDetail>({
     queryKey: ["listing", id],
-    queryFn: async () => {
-      const { data } = await api.get(`/listings/${id}`);
-      return data;
-    },
+    queryFn: async () => (await api.get(`/listings/${id}`)).data,
   });
 
   const saveMutation = useMutation({
-    mutationFn: () =>
-      listing?.isSaved
-        ? api.delete(`/listings/${id}/save`)
-        : api.post(`/listings/${id}/save`),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["listing", id] }),
+    mutationFn: () => listing?.isSaved ? api.delete(`/listings/${id}/save`) : api.post(`/listings/${id}/save`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["listing", id] }),
+    onError: () => setActionError("We could not update your saved listings."),
   });
 
-  const submitOffer = useMutation({
-    mutationFn: (data: {
-      listingId: string;
-      amount: number;
-      message?: string;
-    }) => api.post("/offers", data),
+  const contactMutation = useMutation({
+    mutationFn: async () => (await api.post("/conversations", { listingId: id })).data,
+    onSuccess: (conversation) => router.push(`/messages?conversationId=${conversation.id}`),
+    onError: () => setActionError("We could not start a conversation with this seller."),
+  });
+
+  const offerMutation = useMutation({
+    mutationFn: (payload: { listingId: string; amount: number; message?: string }) => api.post("/offers", payload),
     onSuccess: () => {
-      setOfferSuccess(true);
+      setActionSuccess("Your offer has been sent to the seller.");
       setShowOfferForm(false);
       setOfferAmount("");
       setOfferMessage("");
     },
-    onError: (err: any) => {
-      setOfferError(err?.response?.data?.message || "Failed to submit offer");
+    onError: (error: unknown) => {
+      const message = typeof error === "object" && error !== null && "response" in error && typeof error.response === "object" && error.response !== null && "data" in error.response && typeof error.response.data === "object" && error.response.data !== null && "message" in error.response.data && typeof error.response.data.message === "string" ? error.response.data.message : "We could not submit your offer.";
+      setActionError(message);
     },
   });
 
-  const submitReview = useMutation({
-    mutationFn: (data: {
-      revieweeId: string;
-      listingId: string;
-      rating: number;
-      comment?: string;
-    }) => api.post("/reviews", data),
-    onSuccess: () => {
-      setReviewSuccess(true);
-      setShowReviewForm(false);
-    },
-    onError: (err: any) => {
-      setReviewError(err?.response?.data?.message || "Failed to submit review");
-    },
-  });
+  if (isLoading) return <ListingDetailSkeleton />;
 
-  const handleContact = async () => {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-    try {
-      const { data } = await api.post(`/conversations/listing/${id}`);
-      router.push(`/messages?conversationId=${data.id}`);
-    } catch (err: any) {
-      alert(err?.response?.data?.message || "Could not start conversation");
-    }
-  };
-
-  const handleSubmitOffer = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-    setOfferError("");
-    submitOffer.mutate({
-      listingId: id,
-      amount: parseFloat(offerAmount),
-      message: offerMessage || undefined,
-    });
-  };
-
-  const handleSubmitReview = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-    setReviewError("");
-    submitReview.mutate({
-      revieweeId: listing.seller.id,
-      listingId: id,
-      rating: reviewRating,
-      comment: reviewComment || undefined,
-    });
-  };
-
-  if (isLoading) {
+  if (isError || !listing) {
     return (
-      <div className="animate-pulse space-y-4">
-        <div className="h-80 rounded-xl bg-gray-100" />
-        <div className="h-8 w-1/2 rounded bg-gray-100" />
-        <div className="h-4 w-1/4 rounded bg-gray-100" />
+      <div className="mx-auto flex max-w-lg flex-col items-center py-24 text-center">
+        <PackageSearch className="h-10 w-10 text-gray-300" />
+        <h1 className="mt-5 text-2xl font-semibold tracking-[-0.03em] text-gray-950">Listing unavailable</h1>
+        <p className="mt-2 text-sm leading-6 text-gray-500">This listing may have been removed, or the marketplace could not load it.</p>
+        <div className="mt-6 flex gap-3"><button onClick={() => refetch()} className="btn-secondary">Try again</button><Link href="/listings" className="btn-primary">Browse listings</Link></div>
       </div>
     );
   }
 
-  if (!listing) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-        <Package className="mb-4 h-12 w-12 text-gray-300" />
-        <p>Listing not found.</p>
-        <Link href="/listings" className="btn-primary mt-4">
-          Browse Listings
-        </Link>
-      </div>
-    );
-  }
-
-  const images = listing.media.filter((m: any) => m.type === "IMAGE");
+  const images = listing.media.filter((media) => media.type === "IMAGE");
   const isOwnListing = user?.id === listing.seller.id;
-  const typeInfo = TYPE_LABELS[listing.listingType] ?? TYPE_LABELS.FIXED_PRICE;
   const isSold = listing.status === "SOLD";
   const isActive = listing.status === "ACTIVE";
+  const sellerName = listing.seller.profile ? `${listing.seller.profile.firstName} ${listing.seller.profile.lastName}` : "Marketplace seller";
+  const categoryPath = listing.category.parent ? `${listing.category.parent.name} / ${listing.category.name}` : listing.category.name;
+
+  const requireUser = (action: () => void) => {
+    if (!user) {
+      router.push(`/login?next=/listings/${id}`);
+      return;
+    }
+    setActionError("");
+    setActionSuccess("");
+    action();
+  };
 
   return (
-    <div>
-      <button
-        onClick={() => router.back()}
-        className="mb-4 flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
-      >
-        <ArrowLeft className="h-4 w-4" /> Back
-      </button>
+    <div className="pb-10">
+      <nav aria-label="Breadcrumb" className="mb-6 flex items-center gap-2 text-sm text-gray-500">
+        <Link href="/listings" className="inline-flex items-center gap-2 transition hover:text-gray-950"><ArrowLeft className="h-4 w-4" /> Listings</Link>
+        <ChevronRight className="h-3.5 w-3.5 text-gray-300" />
+        <span className="max-w-[220px] truncate text-gray-700">{listing.title}</span>
+      </nav>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr,400px]">
-        {/* Images */}
-        <div className="space-y-3">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-gray-100">
-            {isSold && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30">
-                <span className="rounded-lg bg-black/70 px-4 py-2 text-lg font-bold text-white">
-                  SOLD
-                </span>
-              </div>
-            )}
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_400px] xl:gap-14">
+        <div className="min-w-0">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
+            {isSold && <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-950/45"><span className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-gray-950">Sold</span></div>}
             {images[activeImage] ? (
-              <Image
-                src={images[activeImage].url}
-                alt={listing.title}
-                fill
-                className="object-contain"
-              />
+              <Image src={images[activeImage].url} alt={listing.title} fill priority sizes="(min-width: 1280px) 760px, (min-width: 1024px) 60vw, 100vw" className="object-contain p-4 sm:p-8" />
             ) : (
-              <div className="flex h-full items-center justify-center text-6xl">
-                📦
-              </div>
+              <div className="flex h-full flex-col items-center justify-center gap-3 text-gray-400"><ImageIcon className="h-10 w-10" /><p className="text-sm font-medium">No product image available</p></div>
             )}
           </div>
           {images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {images.map((img: any, i: number) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveImage(i)}
-                  className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border-2 ${
-                    i === activeImage
-                      ? "border-brand-500"
-                      : "border-transparent"
-                  }`}
-                >
-                  <Image src={img.url} alt="" fill className="object-cover" />
+            <div className="mt-3 flex gap-3 overflow-x-auto pb-1" aria-label="Product images">
+              {images.map((image, index) => (
+                <button key={image.id} onClick={() => setActiveImage(index)} aria-label={`View image ${index + 1}`} aria-pressed={activeImage === index} className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border bg-gray-50 transition focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-100 ${activeImage === index ? "border-brand-500" : "border-gray-200 hover:border-gray-400"}`}>
+                  <Image src={image.url} alt="" fill sizes="80px" className="object-cover" />
                 </button>
               ))}
             </div>
           )}
-        </div>
 
-        {/* Details panel */}
-        <div className="space-y-4">
-          <div>
-            <div className="flex items-start justify-between gap-2">
-              <h1 className="text-2xl font-bold text-gray-900">
-                {listing.title}
-              </h1>
-              <div className="flex gap-1.5">
-                {listing.isFeatured && (
-                  <span className="badge bg-brand-500 text-white">
-                    Featured
-                  </span>
-                )}
-                <span className={`badge ${typeInfo.cls}`}>
-                  {typeInfo.label}
-                </span>
-              </div>
+          <div className="mt-8 border-b border-gray-200 pb-8">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500">
+              <span className="inline-flex items-center gap-1.5"><Tag className="h-4 w-4" />{categoryPath}</span>
+              <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" />{listing.location}</span>
+              <span>{CONDITION_LABELS[listing.condition] ?? listing.condition}</span>
             </div>
-            <p className="mt-2 text-3xl font-bold text-brand-600">
-              {formatPrice(listing.price)}
-            </p>
+            <h1 className="mt-4 max-w-3xl text-3xl font-semibold leading-tight tracking-[-0.04em] text-gray-950 sm:text-4xl">{listing.title}</h1>
           </div>
 
-          <div className="flex flex-wrap gap-3 text-sm text-gray-500">
-            <span className="flex items-center gap-1">
-              <MapPin className="h-4 w-4" /> {listing.location}
-            </span>
-            <span className="flex items-center gap-1">
-              <Tag className="h-4 w-4" />{" "}
-              {CONDITION_LABELS[listing.condition] ?? listing.condition}
-            </span>
-            <span className="flex items-center gap-1">
-              <Eye className="h-4 w-4" /> {listing.viewCount} views
-            </span>
-            <span className="flex items-center gap-1">
-              <Heart className="h-4 w-4" /> {listing.saveCount}
-            </span>
-          </div>
+          <section className="border-b border-gray-200 py-8" aria-labelledby="description-title">
+            <h2 id="description-title" className="text-lg font-semibold text-gray-950">About this item</h2>
+            <p className="mt-3 max-w-3xl whitespace-pre-line text-sm leading-7 text-gray-600">{listing.description || "The seller has not added a description."}</p>
+          </section>
 
-          {/* Meta */}
-          <div className="card p-4 text-sm">
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <span className="text-gray-500">Category</span>
-                <p className="font-medium text-gray-900">
-                  {listing.category.parent
-                    ? `${listing.category.parent.name} › ${listing.category.name}`
-                    : listing.category.name}
-                </p>
-              </div>
-              {listing.quantity > 1 && (
-                <div>
-                  <span className="text-gray-500">Quantity</span>
-                  <p className="font-medium text-gray-900">
-                    {listing.quantity}
-                  </p>
-                </div>
-              )}
-              <div>
-                <span className="text-gray-500">Listed</span>
-                <p className="font-medium text-gray-900">
-                  {timeAgo(listing.createdAt)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Category attributes */}
-          {listing.attributeValues?.length > 0 && (
-            <div className="card p-4">
-              <p className="mb-2 text-sm font-semibold text-gray-700">
-                Specifications
-              </p>
-              <dl className="grid grid-cols-2 gap-1 text-sm">
-                {listing.attributeValues.map((av: any) => (
-                  <div key={av.id}>
-                    <dt className="text-gray-500">{av.attribute?.name}</dt>
-                    <dd className="font-medium text-gray-900">{av.value}</dd>
-                  </div>
-                ))}
+          {listing.attributeValues && listing.attributeValues.length > 0 && (
+            <section className="py-8" aria-labelledby="specifications-title">
+              <h2 id="specifications-title" className="text-lg font-semibold text-gray-950">Specifications</h2>
+              <dl className="mt-5 grid gap-x-8 border-y border-gray-200 sm:grid-cols-2">
+                {listing.attributeValues.map((value) => <div key={value.id} className="flex items-center justify-between gap-4 border-b border-gray-100 py-3 text-sm"><dt className="text-gray-500">{value.attribute?.name}</dt><dd className="font-medium text-gray-950">{value.value}</dd></div>)}
               </dl>
-            </div>
+            </section>
           )}
+        </div>
 
-          {/* Seller */}
-          <div className="card p-4">
-            <p className="mb-2 text-sm font-semibold text-gray-700">Seller</p>
-            <Link
-              href={`/profile/${listing.seller.id}`}
-              className="flex items-center gap-3 hover:opacity-80"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-lg font-bold text-gray-600">
-                {listing.seller.profile?.firstName?.[0] ?? "?"}
+        <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+          <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_20px_55px_-38px_rgba(17,24,39,0.35)]">
+            <div className="flex items-center justify-between gap-3 border-b border-gray-200 px-5 py-4 text-xs">
+              <span className="font-medium text-brand-600">{TYPE_LABELS[listing.listingType]}</span>
+              <span className="text-gray-400">Listed {timeAgo(listing.createdAt)}</span>
+            </div>
+            <div className="p-5 sm:p-6">
+              <p className="text-xs font-medium uppercase tracking-[0.1em] text-gray-400">Price</p>
+              <p className="mt-2 text-4xl font-semibold tracking-[-0.05em] text-gray-950">{formatPrice(listing.price)}</p>
+              <div className="mt-5 grid grid-cols-2 divide-x divide-gray-200 border-y border-gray-200 py-4 text-sm">
+                <div className="pr-4"><p className="text-xs text-gray-400">Condition</p><p className="mt-1 font-semibold text-gray-900">{CONDITION_LABELS[listing.condition] ?? listing.condition}</p></div>
+                <div className="pl-4"><p className="text-xs text-gray-400">Availability</p><p className="mt-1 font-semibold text-gray-900">{isSold ? "Sold" : listing.quantity > 1 ? `${listing.quantity} available` : "Available"}</p></div>
               </div>
-              <div>
-                <p className="font-medium text-gray-900">
-                  {listing.seller.profile?.firstName}{" "}
-                  {listing.seller.profile?.lastName}
-                </p>
-                {listing.seller.storefront && (
-                  <p className="flex items-center gap-1 text-xs text-brand-600">
-                    <ExternalLink className="h-3 w-3" />{" "}
-                    {listing.seller.storefront.name}
-                  </p>
+
+              {actionError && <div role="alert" className="mt-5 flex gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-700"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{actionError}</div>}
+              {actionSuccess && <div role="status" className="mt-5 flex gap-2 rounded-xl bg-brand-50 p-3 text-sm text-brand-700"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />{actionSuccess}</div>}
+
+              <div className="mt-5 space-y-3">
+                {isOwnListing ? (
+                  <Link href={`/listings/${id}/edit`} className="btn-primary flex h-12 w-full items-center justify-center gap-2"><Edit3 className="h-4 w-4" /> Edit listing</Link>
+                ) : isSold || !isActive ? (
+                  <div className="rounded-xl bg-gray-50 p-4 text-sm text-gray-600">This listing is no longer available.</div>
+                ) : listing.listingType === "AUCTION" && listing.auction ? (
+                  <Link href={`/auctions/${listing.auction.id}`} className="btn-primary flex h-12 w-full items-center justify-center gap-2"><Gavel className="h-4 w-4" /> View auction</Link>
+                ) : (
+                  <>
+                    <button onClick={() => requireUser(() => contactMutation.mutate())} disabled={contactMutation.isPending || !hasHydrated} className="btn-primary flex h-12 w-full items-center justify-center gap-2 disabled:opacity-60"><MessageSquare className="h-4 w-4" />{contactMutation.isPending ? "Opening conversation..." : user ? "Contact seller" : "Sign in to contact"}</button>
+                    {listing.listingType === "OFFER" && !actionSuccess && (
+                      <button onClick={() => requireUser(() => setShowOfferForm((visible) => !visible))} className="btn-secondary flex h-12 w-full items-center justify-center gap-2"><TrendingUp className="h-4 w-4" />{showOfferForm ? "Close offer form" : "Make an offer"}</button>
+                    )}
+                    <button onClick={() => requireUser(() => saveMutation.mutate())} disabled={saveMutation.isPending || !hasHydrated} className="btn-secondary flex h-12 w-full items-center justify-center gap-2 disabled:opacity-60"><Heart className={`h-4 w-4 ${listing.isSaved ? "fill-brand-500 text-brand-500" : ""}`} />{listing.isSaved ? "Saved" : "Save listing"}</button>
+                  </>
                 )}
               </div>
+
+              {showOfferForm && (
+                <form onSubmit={(event) => { event.preventDefault(); setActionError(""); const amount = Number(offerAmount); if (!Number.isFinite(amount) || amount <= 0) { setActionError("Enter a valid offer amount."); return; } offerMutation.mutate({ listingId: id, amount, message: offerMessage || undefined }); }} className="mt-5 space-y-4 border-t border-gray-200 pt-5">
+                  <label className="block"><span className="text-sm font-medium text-gray-900">Your offer</span><div className="relative mt-2"><span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-sm font-medium text-gray-400">LKR</span><input type="number" min={1} inputMode="decimal" value={offerAmount} onChange={(event) => setOfferAmount(event.target.value)} className="input h-12 pl-14" required /></div></label>
+                  <label className="block"><span className="text-sm font-medium text-gray-900">Message <span className="font-normal text-gray-400">optional</span></span><textarea value={offerMessage} onChange={(event) => setOfferMessage(event.target.value)} maxLength={300} rows={3} placeholder="Add a note for the seller" className="input mt-2 resize-none" /></label>
+                  <button type="submit" disabled={offerMutation.isPending} className="btn-primary h-12 w-full disabled:opacity-60">{offerMutation.isPending ? "Sending offer..." : "Send offer"}</button>
+                </form>
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-gray-200 bg-white p-5">
+            <p className="text-xs font-medium uppercase tracking-[0.1em] text-gray-400">Seller</p>
+            <Link href={`/profile/${listing.seller.id}`} className="mt-3 flex items-center gap-3 group">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">{listing.seller.profile?.firstName?.[0] ?? "?"}</span>
+              <div className="min-w-0"><p className="truncate text-sm font-semibold text-gray-950 group-hover:text-brand-600">{sellerName}</p>{listing.seller.profile?.location && <p className="mt-1 flex items-center gap-1 text-xs text-gray-400"><MapPin className="h-3 w-3" />{listing.seller.profile.location}</p>}</div>
             </Link>
-            {listing.seller.storefront && (
-              <Link
-                href={`/store/${listing.seller.storefront.slug}`}
-                className="mt-2 block text-center text-xs text-brand-600 hover:underline"
-              >
-                View store →
-              </Link>
-            )}
-          </div>
+            {listing.seller.storefront && <Link href={`/store/${listing.seller.storefront.slug}`} className="mt-4 flex items-center justify-between border-t border-gray-200 pt-4 text-sm font-medium text-gray-700 hover:text-brand-600"><span className="flex items-center gap-2"><Store className="h-4 w-4" />{listing.seller.storefront.name}</span><ChevronRight className="h-4 w-4" /></Link>}
+          </section>
 
-          {/* Feedback messages */}
-          {offerSuccess && (
-            <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
-              Offer submitted! The seller will respond within 3 days.
-            </div>
-          )}
-          {reviewSuccess && (
-            <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
-              Review submitted. Thank you!
-            </div>
-          )}
-
-          {/* Action buttons */}
-          {!isOwnListing && !isSold && isActive && (
-            <div className="space-y-2">
-              <button
-                onClick={handleContact}
-                className="btn-primary w-full gap-2"
-              >
-                <MessageSquare className="h-4 w-4" /> Contact Seller
-              </button>
-
-              {/* Save button */}
-              {user && (
-                <button
-                  onClick={() => saveMutation.mutate()}
-                  disabled={saveMutation.isPending}
-                  className={`w-full gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
-                    listing.isSaved
-                      ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
-                      : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <Heart
-                    className={`inline h-4 w-4 ${listing.isSaved ? "fill-red-500 text-red-500" : ""}`}
-                  />
-                  {listing.isSaved ? " Saved" : " Save listing"}
-                </button>
-              )}
-
-              {/* Offer flow */}
-              {listing.listingType === "OFFER" && !offerSuccess && (
-                <>
-                  <button
-                    onClick={() => {
-                      if (!user) {
-                        router.push("/login");
-                        return;
-                      }
-                      setShowOfferForm((v) => !v);
-                    }}
-                    className="btn-secondary w-full gap-2"
-                  >
-                    <TrendingUp className="h-4 w-4" />
-                    {showOfferForm ? "Cancel Offer" : "Make an Offer"}
-                  </button>
-                  {showOfferForm && (
-                    <form
-                      onSubmit={handleSubmitOffer}
-                      className="card space-y-3 p-4"
-                    >
-                      {offerError && (
-                        <p className="text-xs text-red-600">{offerError}</p>
-                      )}
-                      <div>
-                        <label className="mb-1 block text-xs font-medium text-gray-600">
-                          Your offer (LKR)
-                        </label>
-                        <input
-                          type="number"
-                          value={offerAmount}
-                          onChange={(e) => setOfferAmount(e.target.value)}
-                          className="input text-sm"
-                          placeholder={`Listed at ${formatPrice(listing.price)}`}
-                          min={1}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-xs font-medium text-gray-600">
-                          Message (optional)
-                        </label>
-                        <textarea
-                          value={offerMessage}
-                          onChange={(e) => setOfferMessage(e.target.value)}
-                          className="input min-h-[60px] text-sm"
-                          placeholder="Add a note to your offer…"
-                          maxLength={300}
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={submitOffer.isPending}
-                        className="btn-primary w-full text-sm"
-                      >
-                        {submitOffer.isPending ? "Submitting…" : "Submit Offer"}
-                      </button>
-                    </form>
-                  )}
-                </>
-              )}
-
-              {/* Auction link */}
-              {listing.listingType === "AUCTION" && listing.auction && (
-                <Link
-                  href={`/auctions/${listing.auction.id}`}
-                  className="btn-secondary w-full text-center"
-                >
-                  View Auction
-                </Link>
-              )}
-
-              {/* Review form for completed transactions */}
-              {!reviewSuccess && listing.status !== "ACTIVE" && (
-                <>
-                  <button
-                    onClick={() => {
-                      if (!user) {
-                        router.push("/login");
-                        return;
-                      }
-                      setShowReviewForm((v) => !v);
-                    }}
-                    className="btn-secondary w-full gap-2 text-sm"
-                  >
-                    <Star className="h-4 w-4" />
-                    {showReviewForm ? "Cancel" : "Leave a Review"}
-                  </button>
-                  {showReviewForm && (
-                    <form
-                      onSubmit={handleSubmitReview}
-                      className="card space-y-3 p-4"
-                    >
-                      {reviewError && (
-                        <p className="text-xs text-red-600">{reviewError}</p>
-                      )}
-                      <div>
-                        <label className="mb-1 block text-xs font-medium text-gray-600">
-                          Rating
-                        </label>
-                        <div className="flex gap-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              type="button"
-                              onClick={() => setReviewRating(star)}
-                              className="text-xl"
-                            >
-                              <Star
-                                className={`h-6 w-6 ${star <= reviewRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
-                              />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-xs font-medium text-gray-600">
-                          Comment (optional)
-                        </label>
-                        <textarea
-                          value={reviewComment}
-                          onChange={(e) => setReviewComment(e.target.value)}
-                          className="input min-h-[60px] text-sm"
-                          placeholder="Share your experience…"
-                          maxLength={500}
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={submitReview.isPending}
-                        className="btn-primary w-full text-sm"
-                      >
-                        {submitReview.isPending
-                          ? "Submitting…"
-                          : "Submit Review"}
-                      </button>
-                    </form>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Own listing actions */}
-          {isOwnListing && (
-            <div className="space-y-2">
-              <Link
-                href={`/listings/${id}/edit`}
-                className="btn-secondary w-full gap-2 text-center"
-              >
-                <Edit className="inline h-4 w-4" /> Edit Listing
-              </Link>
-            </div>
-          )}
-
-          {/* Saved but not logged in nudge */}
-          {!user && !isOwnListing && (
-            <Link
-              href="/login"
-              className="btn-secondary w-full gap-2 text-center text-sm"
-            >
-              <Heart className="inline h-4 w-4" /> Login to save
-            </Link>
-          )}
-        </div>
-      </div>
-
-      {/* Description */}
-      <div className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold text-gray-900">
-          Description
-        </h2>
-        <div className="card p-6">
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">
-            {listing.description}
-          </p>
-        </div>
+          <div className="flex items-center justify-between px-1 text-xs text-gray-400"><span className="flex items-center gap-1.5"><Eye className="h-3.5 w-3.5" />{listing.viewCount} views</span><span className="flex items-center gap-1.5"><Heart className="h-3.5 w-3.5" />{listing.saveCount} saves</span></div>
+        </aside>
       </div>
     </div>
   );

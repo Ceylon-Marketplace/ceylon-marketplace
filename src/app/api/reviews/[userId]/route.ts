@@ -12,7 +12,7 @@ export async function GET(
     const page = Number(q.get("page") || 1);
     const limit = Number(q.get("limit") || 20);
 
-    const [reviews, total] = await Promise.all([
+    const [reviews, total, ratingAggregate] = await Promise.all([
       prisma.review.findMany({
         where: { revieweeId: userId },
         include: {
@@ -24,12 +24,13 @@ export async function GET(
         take: limit,
       }),
       prisma.review.count({ where: { revieweeId: userId } }),
+      prisma.review.aggregate({
+        where: { revieweeId: userId },
+        _avg: { rating: true },
+      }),
     ]);
 
-    const avgRating =
-      reviews.length > 0
-        ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-        : null;
+    const avgRating = ratingAggregate._avg.rating;
     return Response.json({ reviews, total, page, limit, avgRating });
   } catch (err) {
     return handleError(err);
