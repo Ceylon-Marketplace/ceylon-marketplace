@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
@@ -101,6 +101,13 @@ export default function ListingDetailClient({
     enabled: initialListing ? hasHydrated : true,
     staleTime: initialListing && !user ? 30_000 : 0,
   });
+
+  const viewPingedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (viewPingedRef.current === id) return;
+    viewPingedRef.current = id;
+    api.post(`/listings/${id}/view`).catch(() => {});
+  }, [id]);
 
   const saveMutation = useMutation({
     mutationFn: () => listing?.isSaved ? api.delete(`/listings/${id}/save`) : api.post(`/listings/${id}/save`),

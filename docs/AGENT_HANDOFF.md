@@ -222,3 +222,11 @@ Active ownership and task status live in `docs/tasks/`, not in this log. Handoff
 **Important findings:** The deployed target took roughly 6–7 seconds to reach network idle because the route initially sent only a client skeleton and started its listing API request after JavaScript loaded. The old detail API also loaded complete seller user/profile records; both new and existing detail paths now return only the public seller fields the UI consumes. Local populated QA rendered the complete target listing without browser errors; a warm development repeat completed in approximately 146 ms, used only to verify cache reuse. Type checking and the final production build passed.
 
 **Unfinished:** Deploy to Netlify and remeasure the live URL after the cache is warm. No implementation work remains.
+
+### 2026-07-21 — Codex (GPT-5) — CM-025
+
+**Outcome:** Completed a project-wide loading audit spanning rendering, API/query shape, polling, database indexes, images, bundles, and dependency reproducibility. The ranked rollout is recorded in [`docs/tasks/completed/CM-025-project-wide-loading-audit.md`](tasks/completed/CM-025-project-wide-loading-audit.md).
+
+**Important findings:** Public auction detail, profile, and storefront still have post-hydration data waterfalls; profile starts three requests. Authenticated dashboards fetch entire collections for counts/previews, while seller listings, saved listings, offers, and conversations are unbounded and lack several matching newest-first indexes. Substring marketplace search will not scale on current B-tree indexes. Local dependencies also do not match the manifest: installed Next 15.1.11 is invalid against declared/locked 15.2.9, and installed React is 19.2.7 through caret ranges.
+
+**Unfinished:** First deploy and measure CM-022/CM-024 plus the notification migration. Then scope server-first public details, shaped dashboard endpoints, pagination/indexes, image processing, and dependency reconciliation as separate tasks. No implementation was performed in this audit.

@@ -64,11 +64,6 @@ export async function GET(
     if (listing.status !== "ACTIVE" && listing.sellerId !== userId)
       throw new ApiError("Listing not found", 404);
 
-    // Fire-and-forget — don't block the response on a view counter update
-    prisma.listing
-      .update({ where: { id }, data: { viewCount: { increment: 1 } } })
-      .catch(() => {});
-
     const isSaved = userId
       ? !!(await prisma.savedListing.findUnique({
           where: { userId_listingId: { userId, listingId: id } },
