@@ -35,6 +35,14 @@ Only four exist — everything else is built inline in page files:
 - `image-uploader.tsx`
 - `navbar.tsx` — client component (`"use client"`), reads auth state from `useAuthStore`, uses `lucide-react` icons
 
+## Global navigation
+
+The shared top navigation is a 72px sticky white header with a subtle border and backdrop blur. Desktop keeps the Ceylon mark, Listings and Auctions, contextual seller action, messaging, offers, notifications, and account control on one line. Current routes use a neutral filled state for primary links and coral for utility destinations; unread counts use the same coral accent.
+
+Below the `md` breakpoint, primary and account navigation moves into an explicit menu while notifications remain directly accessible for signed-in users. The mobile menu must include Listings and Auctions for every visitor, then add role-aware destinations without crowding the top row. Menu and account controls expose expanded state, support Escape, close after route changes, and use 12px controls with 16px menu containers.
+
+The account menu groups marketplace destinations, seller mode, account settings, and sign-out rather than presenting one undifferentiated list. Buyer and seller mode share neutral surfaces, with coral reserved for the active sell state and selling CTA. Do not reintroduce blue and green mode palettes. Existing route labels, admin access, buyer upgrade, notification polling, and role conditions remain stable.
+
 **Most pages do not extract components** — forms and page-specific UI (e.g. `listings/create/page.tsx`, `listings/[id]/edit/page.tsx`) are written directly in the page file rather than broken into subcomponents. This is the existing pattern; don't unilaterally start extracting shared components out of pages as a "cleanup" unless the task specifically calls for it — that's the kind of pattern change that belongs in `docs/DECISIONS.md` if it's actually being adopted going forward.
 
 ## Authentication screens

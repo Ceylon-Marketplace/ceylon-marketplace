@@ -135,3 +135,11 @@ Active ownership and task status live in `docs/tasks/`, not in this log. Handoff
 **Important findings:** Auction creation previously presented two separate starting-price inputs even though the listing and auction requests need the same opening value. The new auction opening-bid input synchronizes both existing payload fields without changing either API contract. The route now preserves its destination through sign-in, and the success state no longer promises a specific moderation time or automatic auction lifecycle behavior that the repository cannot guarantee. Type checking and the production build passed.
 
 **Unfinished:** None.
+
+### 2026-07-21 — Codex (GPT-5) — CM-014
+
+**Outcome:** Redesigned the shared top navigation as a 72px responsive marketplace header with active-route feedback, a complete mobile menu, clearer account grouping, a restrained seller CTA, and one coral accent across role and unread states. The completed record is [`docs/tasks/completed/CM-014-global-navigation-redesign.md`](tasks/completed/CM-014-global-navigation-redesign.md).
+
+**Important findings:** The old mobile header hid Listings and Auctions entirely, and buyer/seller mode introduced unrelated blue and green palettes. The new mobile menu restores primary navigation, while the account menu groups marketplace, role, and account actions. Route changes and Escape now close open menus, and `aria-current` and expanded state expose navigation context. Type checking, the production build, desktop QA, and 390px mobile QA passed.
+
+**Unfinished:** Authenticated role variants remain implemented from the existing store conditions, but the isolated visual QA browser was signed out. The active local application continued to exercise authenticated notification requests during implementation; no code work remains.
