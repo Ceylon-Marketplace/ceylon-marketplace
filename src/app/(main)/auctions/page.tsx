@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { serializeAuction } from "@/lib/auctions";
 import { AuctionsClient } from "./AuctionsClient";
 
 async function getInitialAuctions() {
@@ -19,7 +20,7 @@ async function getInitialAuctions() {
             title: true,
             location: true,
             media: {
-              select: { url: true },
+              select: { url: true, type: true },
               orderBy: { order: "asc" },
               take: 1,
             },
@@ -34,16 +35,8 @@ async function getInitialAuctions() {
     prisma.auction.count({ where: { status: { in: ["LIVE", "SCHEDULED"] } } }),
   ]);
 
-  // Serialize dates and Decimal fields for client transfer
   return {
-    auctions: auctions.map((a) => ({
-      ...a,
-      startPrice: Number(a.startPrice),
-      currentPrice: Number(a.currentPrice),
-      reservePrice: a.reservePrice ? Number(a.reservePrice) : null,
-      endTime: a.endTime.toISOString(),
-      startTime: a.startTime.toISOString(),
-    })),
+    auctions: auctions.map(serializeAuction),
     total,
     page: 1,
     limit: 20,

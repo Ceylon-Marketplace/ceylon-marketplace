@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, handleError, ApiError } from "@/lib/auth";
+import { serializeAuction } from "@/lib/auctions";
 
 export async function GET(req: NextRequest) {
   try {
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest) {
               title: true,
               location: true,
               media: {
-                select: { url: true },
+                select: { url: true, type: true },
                 orderBy: { order: "asc" },
                 take: 1,
               },
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
       }),
     ]);
     return Response.json(
-      { auctions, total, page, limit },
+      { auctions: auctions.map(serializeAuction), total, page, limit },
       { headers: { "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30" } },
     );
   } catch (err) {
