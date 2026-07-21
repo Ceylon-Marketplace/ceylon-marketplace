@@ -34,6 +34,8 @@ Netlify's build-time secrets scanner does a literal string match: it takes the v
 
 **If a build fails with a "secrets scanning found secrets" error:** check whether the flagged value is an actual secret (rotate it and never let it land in git) or a non-sensitive config value that happens to match incidental text (fix the incidental text, or add the key to `SECRETS_SCAN_OMIT_KEYS`). Don't add something to the omit list just to unblock a build without checking which case you're in.
 
+`netlify.toml` explicitly omits `SUPABASE_URL`, `S3_BUCKET`, and `CORS_ORIGIN` from environment-value matching because they are non-sensitive configuration values expected to appear in generated output or commonly collide with build text. Secrets scanning remains enabled. In particular, `SUPABASE_SERVICE_ROLE_KEY`, database credentials, and JWT signing keys are not exempted and must never appear in deploy output.
+
 ## Environment variables
 
 `.env.example` is the closest thing to a canonical list, but it's stale in places — it implies a separate API server (`API_PORT`, `API_URL`, `CORS_ORIGIN`) that doesn't exist in the current single-Next.js-app architecture (see `docs/ARCHITECTURE.md`).
