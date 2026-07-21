@@ -92,7 +92,7 @@ If you touch listing creation, this is a good opportunity to either implement th
 
 | Method | Path | Notes |
 | --- | --- | --- |
-| GET / PATCH | `/api/notifications` | PATCH marks read |
+| GET / PATCH | `/api/notifications` | PATCH marks read; accepts `{ id }` for one notification, `{ ids }` for an atomic group update, or an empty body for all unread notifications. Every update remains scoped to the authenticated user. |
 
 ## Admin
 

@@ -28,10 +28,16 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const user = requireAuth(req);
-    const { id } = await req.json().catch(() => ({}));
-    if (id) {
+    const { id, ids } = await req.json().catch(() => ({}));
+    const hasTargetedIds = Array.isArray(ids) || typeof id === "string";
+    const notificationIds = Array.isArray(ids)
+      ? ids.filter((value): value is string => typeof value === "string")
+      : typeof id === "string"
+        ? [id]
+        : [];
+    if (hasTargetedIds) {
       await prisma.notification.updateMany({
-        where: { id, userId: user.sub },
+        where: { id: { in: notificationIds }, userId: user.sub },
         data: { isRead: true },
       });
     } else {

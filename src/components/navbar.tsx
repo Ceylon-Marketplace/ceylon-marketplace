@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeftRight,
   Bell,
@@ -23,9 +22,9 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import api from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth.store";
+import { NotificationPopover } from "@/components/notification-popover";
 
 const primaryLinks = [
   { href: "/listings", label: "Listings" },
@@ -37,8 +36,10 @@ export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [accountOpen, setAccountOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
+  const notificationsRef = useRef<HTMLDivElement>(null);
 
   const isSeller = user?.role === "SELLER" || user?.role === "BUSINESS_SELLER";
   const isBuyerOnly = user?.role === "USER";
@@ -51,18 +52,11 @@ export function Navbar() {
     "SUPPORT_AGENT",
   ].includes(user?.role ?? "");
 
-  const { data: notificationData } = useQuery({
-    queryKey: ["notifications", "summary"],
-    queryFn: async () => (await api.get("/notifications?limit=1")).data,
-    enabled: Boolean(user),
-    refetchInterval: 30_000,
-  });
-
-  const unreadCount = notificationData?.unreadCount ?? 0;
   const initials = `${user?.profile?.firstName?.[0] ?? ""}${user?.profile?.lastName?.[0] ?? ""}` || "A";
 
   useEffect(() => {
     setAccountOpen(false);
+    setNotificationsOpen(false);
     setMobileOpen(false);
   }, [pathname]);
 
@@ -71,10 +65,14 @@ export function Navbar() {
       if (accountRef.current && !accountRef.current.contains(event.target as Node)) {
         setAccountOpen(false);
       }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setNotificationsOpen(false);
+      }
     };
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setAccountOpen(false);
+        setNotificationsOpen(false);
         setMobileOpen(false);
       }
     };
@@ -88,6 +86,7 @@ export function Navbar() {
 
   const handleLogout = () => {
     setAccountOpen(false);
+    setNotificationsOpen(false);
     setMobileOpen(false);
     logout();
     router.push("/");
@@ -121,13 +120,27 @@ export function Navbar() {
                 <div className="hidden items-center gap-1 md:flex">
                   <IconLink href="/messages" label="Messages" active={isRouteActive(pathname, "/messages")} icon={MessageSquare} />
                   <IconLink href="/offers" label="Offers" active={isRouteActive(pathname, "/offers")} icon={TrendingUp} />
-                  <IconLink href="/notifications" label="Notifications" active={isRouteActive(pathname, "/notifications")} icon={Bell} count={unreadCount} />
+                </div>
+
+                <div ref={notificationsRef}>
+                  <NotificationPopover
+                    open={notificationsOpen}
+                    onToggle={() => {
+                      setNotificationsOpen((open) => !open);
+                      setAccountOpen(false);
+                      setMobileOpen(false);
+                    }}
+                    onClose={() => setNotificationsOpen(false)}
+                  />
                 </div>
 
                 <div ref={accountRef} className="relative hidden md:block">
                   <button
                     type="button"
-                    onClick={() => setAccountOpen((open) => !open)}
+                    onClick={() => {
+                      setAccountOpen((open) => !open);
+                      setNotificationsOpen(false);
+                    }}
                     aria-expanded={accountOpen}
                     aria-haspopup="menu"
                     className={cn("ml-1 flex h-10 items-center gap-2 rounded-xl border px-2 pr-3 text-sm font-medium transition", accountOpen ? "border-gray-300 bg-gray-50 text-gray-950" : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50")}
@@ -139,10 +152,6 @@ export function Navbar() {
                   {accountOpen && <AccountMenu user={user} isAdmin={isAdmin} isSeller={isSeller} isBuyerOnly={isBuyerOnly} inSellerMode={inSellerMode} mode={mode} setMode={setMode} onClose={() => setAccountOpen(false)} onLogout={handleLogout} />}
                 </div>
 
-                <Link href="/notifications" aria-label="Notifications" className="relative flex h-10 w-10 items-center justify-center rounded-xl text-gray-500 transition hover:bg-gray-100 hover:text-gray-950 md:hidden">
-                  <Bell className="h-5 w-5" />
-                  {unreadCount > 0 && <NotificationCount count={unreadCount} />}
-                </Link>
                 <button type="button" onClick={() => setMobileOpen((open) => !open)} aria-expanded={mobileOpen} aria-controls="mobile-navigation" aria-label={mobileOpen ? "Close menu" : "Open menu"} className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-700 md:hidden">
                   {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                 </button>
@@ -169,12 +178,8 @@ function DesktopNavLink({ href, label, active }: { href: string; label: string; 
   return <Link href={href} aria-current={active ? "page" : undefined} className={cn("rounded-xl px-3.5 py-2.5 text-sm font-medium transition", active ? "bg-gray-100 text-gray-950" : "text-gray-500 hover:bg-gray-50 hover:text-gray-950")}>{label}</Link>;
 }
 
-function IconLink({ href, label, active, icon: Icon, count = 0 }: { href: string; label: string; active: boolean; icon: typeof Bell; count?: number }) {
-  return <Link href={href} aria-label={label} aria-current={active ? "page" : undefined} title={label} className={cn("relative flex h-10 w-10 items-center justify-center rounded-xl transition", active ? "bg-brand-50 text-brand-600" : "text-gray-500 hover:bg-gray-100 hover:text-gray-950")}><Icon className="h-[19px] w-[19px]" />{count > 0 && <NotificationCount count={count} />}</Link>;
-}
-
-function NotificationCount({ count }: { count: number }) {
-  return <span className="absolute -right-0.5 -top-0.5 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-brand-500 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">{count > 9 ? "9+" : count}</span>;
+function IconLink({ href, label, active, icon: Icon }: { href: string; label: string; active: boolean; icon: typeof Bell }) {
+  return <Link href={href} aria-label={label} aria-current={active ? "page" : undefined} title={label} className={cn("relative flex h-10 w-10 items-center justify-center rounded-xl transition", active ? "bg-brand-50 text-brand-600" : "text-gray-500 hover:bg-gray-100 hover:text-gray-950")}><Icon className="h-[19px] w-[19px]" /></Link>;
 }
 
 function AccountMenu({ user, isAdmin, isSeller, isBuyerOnly, inSellerMode, mode, setMode, onClose, onLogout }: { user: any; isAdmin: boolean; isSeller: boolean; isBuyerOnly: boolean; inSellerMode: boolean; mode: "buyer" | "seller" | null; setMode: (mode: "buyer" | "seller") => void; onClose: () => void; onLogout: () => void }) {

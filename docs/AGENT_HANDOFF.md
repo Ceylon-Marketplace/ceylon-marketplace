@@ -167,3 +167,19 @@ Active ownership and task status live in `docs/tasks/`, not in this log. Handoff
 **Important findings:** The prior removal affordance depended on desktop hover, which made it undiscoverable on touch devices. Removal now sits below every card and updates the collection immediately, restoring the item if the request fails. The saved-listings API also no longer loads unused seller profile data. Type checking, the production build, and signed-out destination-preserving browser QA passed.
 
 **Unfinished:** Authenticated removal was not submitted in the isolated browser session. No implementation work remains.
+
+### 2026-07-21 — Codex (GPT-5) — CM-018
+
+**Outcome:** Changed the top-navigation notification bell from a page link into a responsive Facebook-style popover with circular event identities, unread emphasis, relative time, bounded scrolling, and optimistic individual and bulk read actions. The completed record is [`docs/tasks/completed/CM-018-facebook-style-notifications.md`](tasks/completed/CM-018-facebook-style-notifications.md).
+
+**Important findings:** The first redesign still treated notifications as a destination page, but the requested interaction was an in-context navigation popup. The new popover keeps users on their current page, closes on outside click, Escape, route changes, and competing menus, and opens existing message, auction, listing, and offer destinations from its rows. Failed read mutations restore the previous cache. Type checking and the production build passed; lint remains unconfigured and opens an interactive setup prompt.
+
+**Unfinished:** None.
+
+### 2026-07-21 — Codex (GPT-5) — CM-019
+
+**Outcome:** Grouped repeated notification-popover activity by conversation, auction, listing, or offer metadata. Each group now shows its newest event plus `+N more`, stays unread while any member is unread, and opens the newest event destination. The completed record is [`docs/tasks/completed/CM-019-grouped-notification-popover.md`](tasks/completed/CM-019-grouped-notification-popover.md).
+
+**Important findings:** Offer notifications include both `offerId` and `listingId`, so listing identity is intentionally evaluated first to consolidate activity for the same product. Group read updates use a new additive `{ ids }` notification PATCH payload and one scoped `updateMany` call, avoiding partial multi-request read state. Type checking, the production build, and live authenticated 50-record loading passed.
+
+**Unfinished:** Group counts cover the latest 50 notification records loaded by the popover; no implementation work remains.
