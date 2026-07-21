@@ -19,7 +19,7 @@ Auth convention throughout: `Authorization: Bearer <accessToken>`, checked per-r
 | --- | --- | --- |
 | GET | `/api/listings` | Public. Filters: `keyword`, `categoryId`, `sellerId`, `location`, `condition`, `listingType`, `minPrice`/`maxPrice`, `sortBy`; paginated (`page`, `limit`, capped at 100); `Cache-Control: s-maxage=30, stale-while-revalidate=60` |
 | POST | `/api/listings` | Requires `SELLER`/`BUSINESS_SELLER` role. Enforces: no duplicate title (case-insensitive) among the seller's non-archived/sold listings, max 10 media items, at least 1 media item required |
-| GET / PATCH / DELETE | `/api/listings/[id]` | |
+| GET / PATCH / DELETE | `/api/listings/[id]` | GET returns the listing-detail fields plus public seller name/location/storefront data; private account and profile fields are excluded. |
 | GET | `/api/listings/mine` | Own listings |
 | GET | `/api/listings/saved` | Own saved listings, newest first, with listing media and category; excludes unused seller profile data |
 | POST / DELETE | `/api/listings/[id]/save` | Save/unsave |

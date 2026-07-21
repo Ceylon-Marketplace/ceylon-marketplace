@@ -13,22 +13,56 @@ export async function GET(
 
     const listing = await prisma.listing.findUnique({
       where: { id },
-      include: {
-        media: { orderBy: { order: "asc" } },
-        category: { include: { parent: true, attributes: true } },
-        seller: { include: { profile: true, storefront: true } },
-        auction: true,
-        attributeValues: { include: { attribute: true } },
+      select: {
+        id: true,
+        sellerId: true,
+        title: true,
+        description: true,
+        price: true,
+        quantity: true,
+        location: true,
+        condition: true,
+        listingType: true,
+        status: true,
+        viewCount: true,
+        saveCount: true,
+        createdAt: true,
+        media: {
+          orderBy: { order: "asc" },
+          select: { id: true, url: true, type: true },
+        },
+        category: {
+          select: {
+            name: true,
+            parent: { select: { name: true } },
+          },
+        },
+        seller: {
+          select: {
+            id: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+                location: true,
+              },
+            },
+            storefront: { select: { slug: true, name: true } },
+          },
+        },
+        auction: { select: { id: true } },
+        attributeValues: {
+          select: {
+            id: true,
+            value: true,
+            attribute: { select: { name: true } },
+          },
+        },
       },
     });
     if (!listing) throw new ApiError("Listing not found", 404);
     if (listing.status !== "ACTIVE" && listing.sellerId !== userId)
       throw new ApiError("Listing not found", 404);
-
-    // Fire-and-forget — don't block the response on a view counter update
-    prisma.listing
-      .update({ where: { id }, data: { viewCount: { increment: 1 } } })
-      .catch(() => {});
 
     const isSaved = userId
       ? !!(await prisma.savedListing.findUnique({
