@@ -127,3 +127,11 @@ Active ownership and task status live in `docs/tasks/`, not in this log. Handoff
 **Important findings:** The notification page and navbar used unrelated React Query keys, so reading notifications did not reliably refresh the global badge. Both now use the shared `['notifications']` prefix with separate page and summary subkeys, and read mutations invalidate the prefix after settling. Existing metadata can route message, auction, listing, and offer events to their relevant workspaces. Type checking and the production build passed; signed-out browser QA verified destination-preserving login redirection.
 
 **Unfinished:** No redesign work remains. The page continues to request the latest 50 records, matching the existing notification limit; pagination can be considered separately if notification histories grow beyond that product requirement.
+
+### 2026-07-21 — Codex (GPT-5) — CM-013
+
+**Outcome:** Redesigned `/listings/create` as a responsive seller publishing workspace with decision-led form sections, explicit selling-format selection, a stronger photo uploader, a sticky readiness panel, and restrained protected, role, error, loading, and success states. The completed record is [`docs/tasks/completed/CM-013-create-listing-redesign.md`](tasks/completed/CM-013-create-listing-redesign.md).
+
+**Important findings:** Auction creation previously presented two separate starting-price inputs even though the listing and auction requests need the same opening value. The new auction opening-bid input synchronizes both existing payload fields without changing either API contract. The route now preserves its destination through sign-in, and the success state no longer promises a specific moderation time or automatic auction lifecycle behavior that the repository cannot guarantee. Type checking and the production build passed.
+
+**Unfinished:** None.

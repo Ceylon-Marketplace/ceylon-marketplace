@@ -71,6 +71,14 @@ The `/listings/[id]` route shares the auction detail composition: a restrained p
 
 Missing media uses a Lucide fallback. Loading states mirror the final two-column shape, and unavailable states include retry and browse actions. Contact seller must call `POST /api/conversations` with `{ listingId }`; there is no `/api/conversations/listing/[id]` route. Offer, save, and contact mutations use inline status feedback rather than browser alerts. Only active listings are public, so completed-transaction review UI does not belong on this route under the current API contract.
 
+## Create listing workspace
+
+The authenticated seller `/listings/create` route is a publishing workspace rather than a single generic form card. Desktop pairs a linear form with a sticky 320px readiness and action panel; mobile collapses to one column. The form is grouped by seller decisions: item identity, selling format and price, photos, category-specific details, then auction configuration when applicable. Sections use spacing and single dividers instead of stacking equal elevated cards.
+
+Selling formats are explicit radio cards using the existing fixed-price, offer, and auction values. Fixed-price and offer listings expose the listing price directly. Auction listings expose one opening-bid control, which also supplies the listing price required by the existing API payload, avoiding duplicate pricing inputs. Auction reserve, increment, and schedule remain unchanged.
+
+The readiness panel communicates five essential states and keeps draft and review submission available on desktop. It is guidance rather than a new validation contract; the existing submit handler and API remain authoritative. Coral is the only accent, 12px controls pair with 16px sections and panels, and photos use the shared image uploader with larger targets and persistent mobile remove controls. Hydration uses a shaped skeleton, signed-out redirects preserve `/listings/create`, and seller-role, buyer-mode, error, success, draft, upload, and submission states remain explicit.
+
 ## Messages workspace
 
 The authenticated `/messages` route is a dense marketplace workspace rather than a generic chat panel. Desktop uses a 340px conversation rail beside the active thread; mobile shows either the rail or the selected thread with an explicit back action. The workspace fills the available viewport below the main navigation and uses 16px outer corners, 12px product thumbnails and controls, and coral only for unread state, the sender's message bubbles, and the send action.

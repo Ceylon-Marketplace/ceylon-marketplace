@@ -8,13 +8,20 @@ import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth.store";
 import { ImageUploader } from "@/components/image-uploader";
 import {
+  AlertCircle,
   ChevronLeft,
   Info,
   CheckCircle,
   Clock,
+  CircleDollarSign,
   Gavel,
   FileText,
+  Image as ImageIcon,
+  MapPin,
+  Package,
+  ShieldCheck,
   Store,
+  Tag,
 } from "lucide-react";
 
 const CONDITIONS = [
@@ -56,66 +63,45 @@ function SuccessScreen({
 }) {
   const router = useRouter();
   return (
-    <div className="mx-auto max-w-lg py-16 text-center">
-      <div className="mb-6 flex justify-center">
+    <div className="mx-auto max-w-2xl py-12 text-center sm:py-20">
+      <div className="mb-7 flex justify-center">
         {isDraft ? (
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-            <FileText className="h-8 w-8 text-gray-500" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100">
+            <FileText className="h-6 w-6 text-gray-500" />
           </div>
         ) : (
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle className="h-8 w-8 text-green-600" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50">
+            <CheckCircle className="h-6 w-6 text-brand-600" />
           </div>
         )}
       </div>
 
-      <h1 className="mb-2 text-2xl font-bold text-gray-900">
-        {isDraft ? "Draft saved!" : "Listing submitted!"}
+      <h1 className="text-3xl font-semibold tracking-[-0.035em] text-gray-950 sm:text-4xl">
+        {isDraft ? "Draft saved" : "Listing submitted"}
       </h1>
 
       {isDraft ? (
-        <p className="mb-6 text-gray-500">
-          Your listing has been saved as a draft. You can edit and submit it for
-          review whenever you&apos;re ready.
+        <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-gray-500">
+          Continue editing from My listings and submit it whenever it is ready.
         </p>
       ) : (
-        <>
-          <p className="mb-4 text-gray-500">
-            Your listing is now under review by our team. This usually takes{" "}
-            <strong>1–2 business days</strong>.
+        <div className="mx-auto mt-3 max-w-lg">
+          <p className="text-sm leading-6 text-gray-500">
+            Your listing is awaiting marketplace review. We will notify you when its status changes.
           </p>
           {hasAuction && (
-            <div className="mb-4 rounded-lg border border-brand-200 bg-brand-50 p-4 text-left text-sm text-brand-800">
-              <div className="mb-1 flex items-center gap-2 font-semibold">
-                <Gavel className="h-4 w-4" /> Auction configured
+            <div className="mt-6 flex items-start gap-3 rounded-2xl border border-brand-100 bg-brand-50/60 p-4 text-left text-sm text-gray-600">
+              <Gavel className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
+              <div>
+                <p className="font-semibold text-gray-900">Auction schedule saved</p>
+                <p className="mt-1 leading-6">Your auction settings are connected to this listing.</p>
               </div>
-              Your auction will go live automatically once the listing is
-              approved. You&apos;ll receive a notification when it&apos;s
-              active.
             </div>
           )}
-          <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-left text-sm text-amber-800">
-            <div className="mb-1 flex items-center gap-2 font-semibold">
-              <Clock className="h-4 w-4" /> What happens next?
-            </div>
-            <ul className="ml-4 list-disc space-y-1">
-              <li>
-                Our moderators will review your listing for quality and
-                compliance.
-              </li>
-              <li>
-                You&apos;ll be notified once it&apos;s approved or if changes
-                are needed.
-              </li>
-              <li>
-                Approved listings become visible to all buyers immediately.
-              </li>
-            </ul>
-          </div>
-        </>
+        </div>
       )}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
         <button
           onClick={() => router.push(`/listings/${listingId}`)}
           className="btn-primary"
@@ -184,14 +170,16 @@ export default function CreateListingPage() {
   }, [form.categoryId]);
 
   useEffect(() => {
-    if (hasHydrated && !user) router.push("/login");
+    if (hasHydrated && !user) {
+      router.replace(`/login?next=${encodeURIComponent("/listings/create")}`);
+    }
   }, [hasHydrated, user, router]);
 
-  if (!hasHydrated || !user) return null;
+  if (!hasHydrated || !user) return <CreateListingSkeleton />;
 
   const isSeller = user.role === "SELLER" || user.role === "BUSINESS_SELLER";
 
-  // Pure buyer — needs to upgrade account first
+  // Pure buyer needs to upgrade account first
   if (!isSeller) {
     return (
       <div className="mx-auto max-w-lg py-20 text-center">
@@ -200,8 +188,8 @@ export default function CreateListingPage() {
           Seller account required
         </h2>
         <p className="mb-4 text-sm text-gray-500">
-          You need a seller account to create listings. Upgrading is free — you
-          only pay for a subscription plan when you're ready to list.
+          You need a seller account to create listings. Upgrading is free. You
+          only pay for a subscription plan when you&apos;re ready to list.
         </p>
         <Link href="/become-seller" className="btn-primary">
           Become a Seller
@@ -273,6 +261,12 @@ export default function CreateListingPage() {
   const setAuction =
     (field: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
       setAuctionForm((f) => ({ ...f, [field]: e.target.value }));
+
+  const setAuctionStartPrice = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setAuctionForm((current) => ({ ...current, startPrice: value }));
+    setForm((current) => ({ ...current, price: value }));
+  };
 
   const validateAuction = (): string | null => {
     if (!auctionForm.startPrice || Number(auctionForm.startPrice) <= 0)
@@ -377,366 +371,185 @@ export default function CreateListingPage() {
   };
 
   const isAuction = form.listingType === "AUCTION";
+  const validImageCount = uploadedImages.filter(
+    (image) => image.url && !image.error && !image.isUploading,
+  ).length;
+  const completedEssentials = [
+    form.title.length >= 10,
+    Boolean(form.categoryId),
+    Boolean(form.location.trim()),
+    validImageCount > 0,
+    isAuction
+      ? Boolean(auctionForm.startPrice && auctionForm.startTime && auctionForm.endTime)
+      : Boolean(form.price),
+  ].filter(Boolean).length;
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <button
-        onClick={() => router.back()}
-        className="mb-6 flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
-      >
-        <ChevronLeft className="h-4 w-4" /> Back
+    <div className="mx-auto max-w-6xl pb-12">
+      <button onClick={() => router.back()} className="mb-6 flex items-center gap-2 text-sm font-medium text-gray-500 transition hover:text-gray-950">
+        <ChevronLeft className="h-4 w-4" /> Back to listings
       </button>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Create Listing</h1>
 
-      <div className="space-y-6">
-        {error && (
-          <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
-            {error}
-          </div>
-        )}
+      <header className="border-b border-gray-200 pb-7">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-600">Seller workspace</p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.045em] text-gray-950 sm:text-5xl">Create a listing</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-500">Give buyers the details they need to understand your item and decide with confidence.</p>
+      </header>
 
-        {/* Basic details */}
-        <section className="card space-y-5 p-6">
-          <h2 className="font-semibold text-gray-900">Basic Details</h2>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Title <span className="text-red-500">*</span>
-              <span className="ml-1 text-xs text-gray-400">
-                (10–120 characters)
-              </span>
-            </label>
-            <input
-              type="text"
-              value={form.title}
-              onChange={set("title")}
-              className="input"
-              placeholder="e.g. iPhone 14 Pro Max 256GB Space Black"
-              maxLength={120}
-            />
-            <p className="mt-1 text-right text-xs text-gray-400">
-              {form.title.length}/120
-            </p>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Description <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              value={form.description}
-              onChange={set("description")}
-              className="input min-h-[140px] resize-y"
-              placeholder="Describe your item in detail — condition, history, included accessories…"
-            />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Category <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={form.categoryId}
-                onChange={set("categoryId")}
-                className="input"
-              >
-                <option value="">Select category…</option>
-                {categories?.map((c: any) => (
-                  <optgroup key={c.id} label={c.name}>
-                    <option value={c.id}>{c.name}</option>
-                    {c.children?.map((sub: any) => (
-                      <option key={sub.id} value={sub.id}>
-                        — {sub.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Condition <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={form.condition}
-                onChange={set("condition")}
-                className="input"
-              >
-                {CONDITIONS.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                {isAuction ? "Starting Bid (LKR)" : "Price (LKR)"}
-                <span className="ml-1 text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                value={form.price}
-                onChange={set("price")}
-                className="input"
-                placeholder="0.00"
-                min={0}
-                step={0.01}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Quantity
-              </label>
-              <input
-                type="number"
-                value={form.quantity}
-                onChange={set("quantity")}
-                className="input"
-                min={1}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Listing Type
-              </label>
-              <select
-                value={form.listingType}
-                onChange={set("listingType")}
-                className="input"
-              >
-                <option value="FIXED_PRICE">Fixed Price</option>
-                <option value="OFFER">Accept Offers</option>
-                <option value="AUCTION">Auction</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Location <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={form.location}
-              onChange={set("location")}
-              className="input"
-              placeholder="e.g. Colombo 03, Sri Lanka"
-            />
-          </div>
-        </section>
-
-        {/* Auction settings — shown only when type is AUCTION */}
-        {isAuction && (
-          <section className="card space-y-5 p-6">
-            <div className="flex items-center gap-2">
-              <Gavel className="h-5 w-5 text-brand-600" />
-              <h2 className="font-semibold text-gray-900">Auction Settings</h2>
-            </div>
-            <p className="text-sm text-gray-500">
-              Configure your auction. It will go live automatically once your
-              listing is approved.
-            </p>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Start Price (LKR) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={auctionForm.startPrice}
-                  onChange={setAuction("startPrice")}
-                  className="input"
-                  placeholder="0.00"
-                  min={1}
-                  step={0.01}
-                />
-                <p className="mt-1 text-xs text-gray-400">
-                  Minimum opening bid
-                </p>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Reserve Price (LKR)
-                  <span className="ml-1 text-xs text-gray-400">(optional)</span>
-                </label>
-                <input
-                  type="number"
-                  value={auctionForm.reservePrice}
-                  onChange={setAuction("reservePrice")}
-                  className="input"
-                  placeholder="Hidden minimum"
-                  min={0}
-                  step={0.01}
-                />
-                <p className="mt-1 text-xs text-gray-400">
-                  Auction completes only if bidding exceeds this
-                </p>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Bid Increment (LKR) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={auctionForm.bidIncrement}
-                  onChange={setAuction("bidIncrement")}
-                  className="input"
-                  placeholder="100"
-                  min={1}
-                  step={1}
-                />
-                <p className="mt-1 text-xs text-gray-400">
-                  Each new bid must exceed current by at least this amount
-                </p>
-              </div>
-
-              <div />
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Start Time <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  value={auctionForm.startTime}
-                  onChange={setAuction("startTime")}
-                  className="input"
-                  min={new Date(Date.now() + 60000).toISOString().slice(0, 16)}
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  End Time <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  value={auctionForm.endTime}
-                  onChange={setAuction("endTime")}
-                  className="input"
-                  min={
-                    auctionForm.startTime ||
-                    new Date(Date.now() + 60000).toISOString().slice(0, 16)
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-700">
-              <strong>Anti-sniping:</strong> Bids placed in the last 2 minutes
-              automatically extend the auction by 2 minutes.
-            </div>
-          </section>
-        )}
-
-        {/* Category attributes */}
-        {categoryAttributes.length > 0 && (
-          <section className="card space-y-4 p-6">
-            <h2 className="font-semibold text-gray-900">
-              {selectedCategory?.name} Details
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {categoryAttributes.map((attr: any, idx: number) => (
-                <div key={attr.id}>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    {attr.name}
-                    {attr.required && (
-                      <span className="ml-1 text-red-500">*</span>
-                    )}
-                  </label>
-                  {attr.options?.length > 0 ? (
-                    <select
-                      value={attributes[idx]?.value ?? ""}
-                      onChange={(e) =>
-                        setAttributes((prev) =>
-                          prev.map((a, i) =>
-                            i === idx ? { ...a, value: e.target.value } : a,
-                          ),
-                        )
-                      }
-                      className="input"
-                    >
-                      <option value="">Select…</option>
-                      {attr.options.map((opt: string) => (
-                        <option key={opt} value={opt}>
-                          {opt}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={attributes[idx]?.value ?? ""}
-                      onChange={(e) =>
-                        setAttributes((prev) =>
-                          prev.map((a, i) =>
-                            i === idx ? { ...a, value: e.target.value } : a,
-                          ),
-                        )
-                      }
-                      className="input"
-                      placeholder={attr.name}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Photos */}
-        <section className="card space-y-4 p-6">
-          <h2 className="font-semibold text-gray-900">Photos</h2>
-          <ImageUploader
-            images={uploadedImages}
-            onImagesChange={setUploadedImages}
-            maxImages={10}
-          />
-          <p className="text-xs text-gray-500">
-            Upload high-quality photos of your item. The first image will be
-            used as the cover photo.
-          </p>
-        </section>
-
-        {/* Actions */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="btn-secondary"
-            disabled={submitting}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={() => doSubmit("DRAFT")}
-            disabled={submitting}
-            className="btn-secondary gap-1.5 disabled:opacity-50"
-          >
-            <FileText className="h-4 w-4" />
-            {submitting ? "Saving…" : "Save as Draft"}
-          </button>
-          <button
-            type="button"
-            onClick={() => doSubmit("PENDING_REVIEW")}
-            disabled={submitting}
-            className="btn-primary gap-1.5 disabled:opacity-50"
-          >
-            <CheckCircle className="h-4 w-4" />
-            {submitting ? "Submitting…" : "Submit for Review"}
-          </button>
+      {error && (
+        <div role="alert" className="mt-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{error}</span>
         </div>
+      )}
+
+      <div className="mt-8 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="space-y-10">
+          <FormSection icon={Tag} title="What are you selling?" description="Start with the details buyers scan first.">
+            <div>
+              <div className="mb-2 flex items-center justify-between gap-4">
+                <label htmlFor="listing-title" className="text-sm font-medium text-gray-800">Listing title <span className="text-brand-600">*</span></label>
+                <span className="text-xs tabular-nums text-gray-400">{form.title.length}/120</span>
+              </div>
+              <input id="listing-title" type="text" value={form.title} onChange={set("title")} className="input h-12" placeholder="iPhone 14 Pro Max, 256GB, Space Black" maxLength={120} />
+              <p className="mt-2 text-xs text-gray-500">Use 10-120 characters. Include the brand, model, and defining detail.</p>
+            </div>
+            <div>
+              <label htmlFor="listing-description" className="mb-2 block text-sm font-medium text-gray-800">Description <span className="text-brand-600">*</span></label>
+              <textarea id="listing-description" value={form.description} onChange={set("description")} className="input min-h-[160px] resize-y py-3" placeholder="Describe the condition, history, included accessories, and anything a buyer should know." />
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Field label="Category" required>
+                <select value={form.categoryId} onChange={set("categoryId")} className="input h-12">
+                  <option value="">Choose a category</option>
+                  {categories?.map((category: any) => (
+                    <optgroup key={category.id} label={category.name}>
+                      <option value={category.id}>{category.name}</option>
+                      {category.children?.map((child: any) => <option key={child.id} value={child.id}>{child.name}</option>)}
+                    </optgroup>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Condition" required>
+                <select value={form.condition} onChange={set("condition")} className="input h-12">
+                  {CONDITIONS.map((condition) => <option key={condition.value} value={condition.value}>{condition.label}</option>)}
+                </select>
+              </Field>
+            </div>
+          </FormSection>
+
+          <FormSection icon={CircleDollarSign} title="Choose how to sell" description="Pick one format. You can save the listing as a draft at any time.">
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                { value: "FIXED_PRICE", title: "Fixed price", body: "Sell at one set price.", icon: Tag },
+                { value: "OFFER", title: "Accept offers", body: "Let buyers negotiate.", icon: CircleDollarSign },
+                { value: "AUCTION", title: "Auction", body: "Let buyers compete.", icon: Gavel },
+              ].map((option) => {
+                const OptionIcon = option.icon;
+                const selected = form.listingType === option.value;
+                return <label key={option.value} className={`cursor-pointer rounded-2xl border p-4 transition ${selected ? "border-brand-500 bg-brand-50/60" : "border-gray-200 hover:border-gray-300"}`}>
+                  <input type="radio" name="listingType" value={option.value} checked={selected} onChange={set("listingType")} className="sr-only" />
+                  <OptionIcon className={`h-5 w-5 ${selected ? "text-brand-600" : "text-gray-400"}`} />
+                  <span className="mt-4 block text-sm font-semibold text-gray-950">{option.title}</span>
+                  <span className="mt-1 block text-xs leading-5 text-gray-500">{option.body}</span>
+                </label>;
+              })}
+            </div>
+
+            {!isAuction && <div className="grid gap-5 sm:grid-cols-2">
+              <Field label="Price (LKR)" required><input type="number" value={form.price} onChange={set("price")} className="input h-12" placeholder="0.00" min={0} step={0.01} /></Field>
+              <Field label="Quantity"><input type="number" value={form.quantity} onChange={set("quantity")} className="input h-12" min={1} /></Field>
+            </div>}
+
+            <Field label="Item location" required icon={MapPin}><input type="text" value={form.location} onChange={set("location")} className="input h-12" placeholder="Colombo 03, Sri Lanka" /></Field>
+          </FormSection>
+
+          <FormSection icon={ImageIcon} title="Add clear photos" description="The first image becomes the cover. Add up to 10 images from different angles.">
+            <ImageUploader images={uploadedImages} onImagesChange={setUploadedImages} maxImages={10} />
+          </FormSection>
+
+          {categoryAttributes.length > 0 && (
+            <FormSection icon={Package} title={`${selectedCategory?.name} details`} description="These details help buyers compare similar listings.">
+              <div className="grid gap-5 sm:grid-cols-2">
+                {categoryAttributes.map((attribute: any, index: number) => (
+                  <Field key={attribute.id} label={attribute.name} required={attribute.required}>
+                    {attribute.options?.length > 0 ? (
+                      <select value={attributes[index]?.value ?? ""} onChange={(event) => setAttributes((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, value: event.target.value } : item))} className="input h-12">
+                        <option value="">Choose {attribute.name.toLowerCase()}</option>
+                        {attribute.options.map((option: string) => <option key={option} value={option}>{option}</option>)}
+                      </select>
+                    ) : (
+                      <input type="text" value={attributes[index]?.value ?? ""} onChange={(event) => setAttributes((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, value: event.target.value } : item))} className="input h-12" placeholder={attribute.name} />
+                    )}
+                  </Field>
+                ))}
+              </div>
+            </FormSection>
+          )}
+
+          {isAuction && (
+            <FormSection icon={Gavel} title="Configure the auction" description="Set the opening bid and schedule before submitting for review.">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="Opening bid (LKR)" required hint="The first accepted bid."><input type="number" value={auctionForm.startPrice} onChange={setAuctionStartPrice} className="input h-12" placeholder="0.00" min={1} step={0.01} /></Field>
+                <Field label="Reserve price (LKR)" hint="Optional hidden minimum."><input type="number" value={auctionForm.reservePrice} onChange={setAuction("reservePrice")} className="input h-12" placeholder="Optional" min={0} step={0.01} /></Field>
+                <Field label="Bid increment (LKR)" required hint="Minimum increase for each bid."><input type="number" value={auctionForm.bidIncrement} onChange={setAuction("bidIncrement")} className="input h-12" min={1} step={1} /></Field>
+                <div className="hidden sm:block" />
+                <Field label="Starts" required><input type="datetime-local" value={auctionForm.startTime} onChange={setAuction("startTime")} className="input h-12" /></Field>
+                <Field label="Ends" required><input type="datetime-local" value={auctionForm.endTime} onChange={setAuction("endTime")} className="input h-12" min={auctionForm.startTime || undefined} /></Field>
+              </div>
+              <div className="flex items-start gap-3 rounded-2xl border border-brand-100 bg-brand-50/50 p-4 text-sm leading-6 text-gray-600">
+                <Clock className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
+                <p>Bids placed in the final two minutes extend the auction by two minutes.</p>
+              </div>
+            </FormSection>
+          )}
+        </div>
+
+        <aside className="lg:sticky lg:top-24">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_18px_50px_rgba(17,24,39,0.06)]">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm font-semibold text-gray-950">Ready to publish?</p>
+              <span className="text-xs font-medium tabular-nums text-gray-400">{completedEssentials}/5 ready</span>
+            </div>
+            <div className="mt-5 space-y-3 text-sm">
+              <SummaryCheck done={form.title.length >= 10} label="A descriptive title" />
+              <SummaryCheck done={Boolean(form.categoryId)} label="Category selected" />
+              <SummaryCheck done={Boolean(form.location.trim())} label="Location added" />
+              <SummaryCheck done={validImageCount > 0} label="At least one photo" />
+              <SummaryCheck done={isAuction ? Boolean(auctionForm.startPrice && auctionForm.startTime && auctionForm.endTime) : Boolean(form.price)} label={isAuction ? "Auction schedule set" : "Price added"} />
+            </div>
+            <div className="mt-6 space-y-3 border-t border-gray-200 pt-5">
+              <button type="button" onClick={() => doSubmit("PENDING_REVIEW")} disabled={submitting} className="btn-primary h-12 w-full gap-2 whitespace-nowrap disabled:opacity-50">
+                <CheckCircle className="h-4 w-4" /> {submitting ? "Submitting..." : "Submit for review"}
+              </button>
+              <button type="button" onClick={() => doSubmit("DRAFT")} disabled={submitting} className="btn-secondary h-12 w-full gap-2 whitespace-nowrap disabled:opacity-50">
+                <FileText className="h-4 w-4" /> {submitting ? "Saving..." : "Save as draft"}
+              </button>
+            </div>
+            <div className="mt-5 flex items-start gap-2 text-xs leading-5 text-gray-500">
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+              Submitted listings are reviewed before they appear publicly.
+            </div>
+          </div>
+          <button type="button" onClick={() => router.back()} disabled={submitting} className="mt-4 w-full text-center text-sm font-medium text-gray-500 hover:text-gray-950">Cancel listing</button>
+        </aside>
       </div>
     </div>
   );
+}
+
+function FormSection({ icon: Icon, title, description, children }: { icon: typeof Tag; title: string; description: string; children: React.ReactNode }) {
+  return <section className="border-b border-gray-200 pb-10 last:border-b-0"><div className="mb-6 flex items-start gap-4"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-500"><Icon className="h-5 w-5" /></span><div><h2 className="text-lg font-semibold text-gray-950">{title}</h2><p className="mt-1 text-sm leading-6 text-gray-500">{description}</p></div></div><div className="space-y-5 sm:pl-14">{children}</div></section>;
+}
+
+function Field({ label, required = false, hint, icon: Icon, children }: { label: string; required?: boolean; hint?: string; icon?: typeof MapPin; children: React.ReactNode }) {
+  return <label className="block"><span className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-800">{Icon && <Icon className="h-4 w-4 text-gray-400" />}{label}{required && <span className="text-brand-600">*</span>}</span>{children}{hint && <span className="mt-2 block text-xs text-gray-500">{hint}</span>}</label>;
+}
+
+function SummaryCheck({ done, label }: { done: boolean; label: string }) {
+  return <div className="flex items-center gap-3"><span className={`flex h-5 w-5 items-center justify-center rounded-full ${done ? "bg-brand-500 text-white" : "border border-gray-300 text-transparent"}`}><CheckCircle className="h-3.5 w-3.5" /></span><span className={done ? "text-gray-800" : "text-gray-500"}>{label}</span></div>;
+}
+
+function CreateListingSkeleton() {
+  return <div className="mx-auto max-w-6xl animate-pulse pb-12"><div className="h-5 w-32 rounded bg-gray-100" /><div className="mt-8 border-b border-gray-200 pb-7"><div className="h-3 w-28 rounded bg-gray-100" /><div className="mt-4 h-11 w-72 rounded bg-gray-100" /><div className="mt-4 h-4 max-w-lg rounded bg-gray-100" /></div><div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px]"><div className="space-y-10"><div className="h-80 rounded-2xl bg-gray-100" /><div className="h-64 rounded-2xl bg-gray-100" /><div className="h-72 rounded-2xl bg-gray-100" /></div><div className="hidden h-80 rounded-2xl bg-gray-100 lg:block" /></div></div>;
 }
