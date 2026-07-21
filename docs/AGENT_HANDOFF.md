@@ -207,3 +207,11 @@ Active ownership and task status live in `docs/tasks/`, not in this log. Handoff
 **Important findings:** The optimized build now emits all three public marketplace indexes as static routes, while authenticated data remains in protected API/TanStack Query flows. Redis is not needed for this stage. Proposed ADR 0003 records the pattern pending Naveen's review. Type checking, two production builds, populated Home/Listings browser QA, and console-error inspection passed; lint remains unconfigured and interactive.
 
 **Unfinished:** Apply the new notification composite-index migration through the normal deployment migration process. Naveen should review proposed ADR 0003; no implementation work remains.
+
+### 2026-07-21 — Codex (GPT-5) — CM-023
+
+**Outcome:** Added a narrow Netlify secrets-scanner hotfix for the non-sensitive Supabase project URL and the two already-known non-sensitive configuration keys. Scanning remains enabled, and credential keys—including `SUPABASE_SERVICE_ROLE_KEY`—remain protected. The completed record is [`docs/tasks/completed/CM-023-netlify-supabase-url-scan-hotfix.md`](tasks/completed/CM-023-netlify-supabase-url-scan-hotfix.md).
+
+**Important findings:** The scanner matched `SUPABASE_URL` inside generated Netlify route blobs, which is expected because the project URL is runtime configuration rather than an authentication secret. The exception is key-scoped instead of disabling scanning or excluding generated output paths. Type checking and the 41-page production build passed.
+
+**Unfinished:** Trigger a new Netlify deploy to verify the remote scanner result; no implementation work remains.
