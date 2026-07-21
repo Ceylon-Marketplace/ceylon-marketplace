@@ -40,6 +40,7 @@ type Message = {
 
 type SendMessageInput = {
   content: string;
+  conversationId: string;
   retryId?: string;
 };
 
@@ -143,12 +144,12 @@ function MessagesContent() {
   });
 
   const sendMutation = useMutation({
-    mutationFn: async ({ content }: SendMessageInput) =>
-      (await api.post(`/conversations/${activeConversationId}/messages`, { content })).data,
-    onMutate: async ({ content, retryId }: SendMessageInput) => {
-      const queryKey = ["messages", activeConversationId];
-      await queryClient.cancelQueries({ queryKey });
-      const optimisticId = retryId ?? `optimistic-${Date.now()}`;
+    mutationFn: async ({ content, conversationId }: SendMessageInput) =>
+      (await api.post(`/conversations/${conversationId}/messages`, { content })).data,
+    onMutate: ({ content, conversationId, retryId }: SendMessageInput) => {
+      const queryKey = ["messages", conversationId];
+      void queryClient.cancelQueries({ queryKey });
+      const optimisticId = retryId ?? `optimistic-${crypto.randomUUID()}`;
       const optimisticMessage: Message = {
         id: optimisticId,
         senderId: user!.id,
@@ -167,23 +168,22 @@ function MessagesContent() {
       );
       if (!retryId) setNewMessage("");
       setSendError("");
-      return { optimisticId };
+      return { optimisticId, queryKey, conversationId };
     },
     onSuccess: (message: Message, _input, context) => {
-      const queryKey = ["messages", activeConversationId];
-      queryClient.setQueryData<Message[]>(queryKey, (current = []) =>
+      queryClient.setQueryData<Message[]>(context.queryKey, (current = []) =>
         current.map((currentMessage) =>
           currentMessage.id === context.optimisticId ? message : currentMessage,
         ),
       );
       setSendError("");
-      queryClient.invalidateQueries({ queryKey: ["messages", activeConversationId] });
+      queryClient.invalidateQueries({ queryKey: context.queryKey });
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
     onError: (error: unknown, _input, context) => {
       if (context) {
         queryClient.setQueryData<Message[]>(
-          ["messages", activeConversationId],
+          context.queryKey,
           (current = []) =>
             current.map((message) =>
               message.id === context.optimisticId
@@ -262,9 +262,9 @@ function MessagesContent() {
 
   const sendMessage = () => {
     const content = newMessage.trim();
-    if (!content || !activeConversationId || sendMutation.isPending) return;
+    if (!content || !activeConversationId) return;
     setSendError("");
-    sendMutation.mutate({ content });
+    sendMutation.mutate({ content, conversationId: activeConversationId });
   };
 
   if (!hasHydrated || !user) return <MessagesSkeleton />;
@@ -370,7 +370,7 @@ function MessagesContent() {
                             </div>
                             <p className={cn("mt-1.5 flex items-center gap-1 text-[11px] text-gray-400", isMine && "justify-end")}>
                               {message.deliveryState === "sending" ? (
-                                "Sending"
+                                "Sending..."
                               ) : message.deliveryState === "failed" ? (
                                 <>
                                   <span className="text-red-600">Not sent</span>
@@ -378,11 +378,11 @@ function MessagesContent() {
                                     onClick={() =>
                                       sendMutation.mutate({
                                         content: message.content,
+                                        conversationId: activeConversation.id,
                                         retryId: message.id,
                                       })
                                     }
-                                    disabled={sendMutation.isPending}
-                                    className="font-medium text-red-600 underline underline-offset-2 disabled:opacity-50"
+                                    className="font-medium text-red-600 underline underline-offset-2"
                                   >
                                     Retry
                                   </button>
@@ -412,7 +412,7 @@ function MessagesContent() {
                   {sendError && <div role="alert" className="mb-3 flex items-start gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-700"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{sendError}</div>}
                   <div className="flex items-end gap-2 rounded-2xl border border-gray-200 bg-white p-2 focus-within:border-gray-400 focus-within:ring-4 focus-within:ring-brand-50">
                     <label className="min-w-0 flex-1"><span className="sr-only">Message</span><textarea value={newMessage} onChange={(event) => setNewMessage(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); sendMessage(); } }} rows={1} maxLength={2000} placeholder={`Message ${otherPerson.profile?.firstName ?? "seller"}`} className="max-h-32 min-h-10 w-full resize-none border-0 bg-transparent px-2 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400" /></label>
-                    <button onClick={sendMessage} disabled={!newMessage.trim() || sendMutation.isPending} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white transition hover:bg-brand-600 active:translate-y-px disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400" aria-label="Send message"><Send className="h-4 w-4" /></button>
+                    <button onClick={sendMessage} disabled={!newMessage.trim()} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white transition hover:bg-brand-600 active:translate-y-px disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400" aria-label="Send message"><Send className="h-4 w-4" /></button>
                   </div>
                   <p className="mt-2 px-1 text-[11px] text-gray-400">Enter to send · Shift + Enter for a new line</p>
                 </div>

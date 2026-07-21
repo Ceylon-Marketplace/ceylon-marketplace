@@ -79,7 +79,7 @@ Conversation rows expose the other participant, listing thumbnail and title, lat
 
 While the tab is visible and the user remains active, the selected message thread polls every 3 seconds and the conversation list every 15 seconds. Both pause when the tab is hidden or after 2 minutes without interaction, then refresh when activity resumes. Own messages use coral bubbles and incoming messages use bordered white bubbles; both keep readable timestamps, and read state appears only when the API reports it.
 
-Sending is optimistic: a new bubble appears immediately with `Sending`, is replaced by the persisted server message on success, and remains visible as `Not sent` with a retry action on failure. The composer uses a bounded textarea, Enter to send, Shift+Enter for a new line, a disabled empty state, and inline send errors. Conversation-list, thread, empty, invalid-selection, error, and authentication-loading states must all retain useful structure.
+Sending is optimistic: Enter or the send button synchronously inserts a new bubble and clears the composer before cancellation or network work begins. Every temporary bubble has its own conversation-scoped ID and displays `Sending...`; successful responses replace only their matching bubble, while failures remain visible as `Not sent` with an independent retry action. Do not block the composer while another message is pending, because users can queue multiple sends. The composer uses a bounded textarea, Enter to send, Shift+Enter for a new line, a disabled empty state, and inline send errors. Conversation-list, thread, empty, invalid-selection, error, and authentication-loading states must all retain useful structure.
 
 ## Public homepage
 

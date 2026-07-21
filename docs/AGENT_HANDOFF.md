@@ -111,3 +111,11 @@ Active ownership and task status live in `docs/tasks/`, not in this log. Handoff
 **Important findings:** The prior mutation waited for the POST and subsequent refetch before a sent message could appear, which made delivery seem broken on slower database responses. The optimistic cache entry now provides immediate feedback without weakening the database/API as the source of truth. Type checking and production build passed.
 
 **Unfinished:** No implementation work remains. True WebSocket delivery remains optional future architecture and still requires a separately approved decision.
+
+### 2026-07-21 — Codex (GPT-5) — CM-011
+
+**Outcome:** Made chat submission unconditionally immediate and independently queued. Every Enter or send-button action inserts its bubble synchronously, clears the composer, shows "Sending...", and allows the next message while prior requests are pending. Responses are scoped to the originating conversation and temporary bubble. The completed record is [`docs/tasks/completed/CM-011-immediate-chat-queue.md`](tasks/completed/CM-011-immediate-chat-queue.md).
+
+**Important findings:** CM-010's first optimistic implementation awaited query cancellation before inserting the bubble and disabled sending while any mutation was pending. Slow cancellation could therefore delay visual insertion, and users could not queue messages. Both constraints are removed while preserving retry and server-backed sent/read states. Type checking and the production build passed.
+
+**Unfinished:** None.
