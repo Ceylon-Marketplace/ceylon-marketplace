@@ -49,6 +49,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
             src={coverImage.url}
             alt={auction.listing.title}
             fill
+            sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
             className="object-cover transition-transform group-hover:scale-105"
           />
         ) : (

@@ -34,10 +34,13 @@ async function getInitialAuctions() {
     prisma.auction.count({ where: { status: { in: ["LIVE", "SCHEDULED"] } } }),
   ]);
 
-  // Serialize dates for client transfer
+  // Serialize dates and Decimal fields for client transfer
   return {
     auctions: auctions.map((a) => ({
       ...a,
+      startPrice: Number(a.startPrice),
+      currentPrice: Number(a.currentPrice),
+      reservePrice: a.reservePrice ? Number(a.reservePrice) : null,
       endTime: a.endTime.toISOString(),
       startTime: a.startTime.toISOString(),
     })),
