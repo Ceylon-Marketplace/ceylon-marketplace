@@ -37,6 +37,18 @@ Only four exist — everything else is built inline in page files:
 
 **Most pages do not extract components** — forms and page-specific UI (e.g. `listings/create/page.tsx`, `listings/[id]/edit/page.tsx`) are written directly in the page file rather than broken into subcomponents. This is the existing pattern; don't unilaterally start extracting shared components out of pages as a "cleanup" unless the task specifically calls for it — that's the kind of pattern change that belongs in `docs/DECISIONS.md` if it's actually being adopted going forward.
 
+## Authentication screens
+
+The login and registration routes use `src/components/auth/auth-shell.tsx` for a shared, responsive split layout. The form remains the primary surface; a generated marketplace product photograph supports the retail context on large screens and is hidden below the `lg` breakpoint. Auth screens use Manrope through `next/font` and the `font-auth` Tailwind family, retain the coral `brand` scale as their single interaction accent, and use a consistent rounded system: 12px controls, 16px selection cards, and a 24px media panel.
+
+The registration page keeps buyer and seller selection as native radio inputs with visible label cards. Account fields use persistent labels, browser autofill attributes, inline error feedback, and a role-aware submit label. Avoid adding product promises to authentication screens unless the underlying capability is verified in `docs/PRODUCT.md`.
+
+## Marketplace dashboard
+
+The authenticated `/dashboard` is a role-aware marketplace home rather than an administrative analytics screen. Buyer and seller modes share the same visual grammar: a left-aligned welcome header, one coral primary action, a bordered metric strip, activity and quick-action panels, and contextual listing sections. Keep dashboard accents within the coral `brand` scale and neutral grays; unread dots are semantic state indicators, not decoration.
+
+Dashboard data surfaces must include shaped skeletons while queries load, a useful empty state with one next action, and a populated state. Selection and navigation panels use 16px corners, while existing listing cards retain their canonical 12px radius. Buyer offer totals come from `GET /api/offers`; there is no `/api/offers/sent` route.
+
 ## Icons
 
 `lucide-react` throughout — no other icon set is used. Reach for an existing Lucide icon before adding a new icon dependency.

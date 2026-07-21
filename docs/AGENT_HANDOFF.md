@@ -39,3 +39,27 @@ Active ownership and task status live in `docs/tasks/`, not in this log. Handoff
 **Important findings:** The production build passes but reports Next.js 15.1.11, while `package.json` and `AGENTS.md` identify 15.1.12. This pre-existing lockfile/package documentation discrepancy was not changed as part of the workflow task. Lint remains unavailable because no ESLint configuration exists.
 
 **Unfinished:** No implementation work remains. Naveen should review proposed ADRs 0001 and 0002; workflow automation is deliberately deferred until practical usage shows which rules are worth enforcing.
+
+### 2026-07-21 — Codex (GPT-5) — CM-002
+
+**Outcome:** Redesigned the registration experience into a responsive, marketplace-focused split layout with concise buyer/seller selection, accessible account fields, role-aware submission copy, and a generated product collection visual. The completed record is [`docs/tasks/completed/CM-002-marketplace-registration-redesign.md`](tasks/completed/CM-002-marketplace-registration-redesign.md).
+
+**Important findings:** The previous auth concept included unverified “escrow-backed payments” and “verified sellers” claims plus an auction-ticket treatment that did not match the product's general marketplace role; those claims were removed rather than promoted. Type checking, production build, and desktop/mobile browser QA passed. The production build still reports the pre-existing Next.js 15.1.11 mismatch documented in CM-001.
+
+**Unfinished:** No implementation work remains. The generated marketplace image is intentionally local at `public/images/auth/marketplace-collection.jpg`; future visual changes should preserve the current accessible form semantics and avoid adding claims not supported by `docs/PRODUCT.md`.
+
+### 2026-07-21 — Codex (GPT-5) — CM-003
+
+**Outcome:** Redesigned `/dashboard` into distinct buyer and seller marketplace workspaces with linked summaries, quick actions, recent activity, responsive listing sections, and explicit skeleton and empty states. The completed record is [`docs/tasks/completed/CM-003-marketplace-dashboard-redesign.md`](tasks/completed/CM-003-marketplace-dashboard-redesign.md).
+
+**Important findings:** The old buyer dashboard requested `/offers/sent`, but that route does not exist; the canonical offers page and API use `GET /offers`, so the dashboard now follows that contract. Type checking and the production build passed. Browser QA verified the unauthenticated redirect without errors, but the available browser had no signed-in local account, so no populated live walkthrough was claimed.
+
+**Unfinished:** No implementation work remains. A future manual session with a populated buyer and seller account can provide final content-density feedback using real marketplace data; no test records were created solely for this visual task.
+
+### 2026-07-21 — Codex (GPT-5) — CM-004
+
+**Outcome:** Removed the two auth-page console warnings reported after CM-002. The completed record is [`docs/tasks/completed/CM-004-auth-console-warnings.md`](tasks/completed/CM-004-auth-console-warnings.md).
+
+**Important findings:** The hydration diff showed `cz-shortcut-listen="true"` injected on `<body>`, which comes from a browser extension rather than application rendering. The root body now tolerates extension-added attributes. The auth photo no longer uses `priority`, preventing Next.js from preloading a large responsive candidate that can remain unused. Type checking and the production build passed.
+
+**Unfinished:** None.
