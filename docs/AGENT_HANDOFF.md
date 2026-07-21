@@ -119,3 +119,11 @@ Active ownership and task status live in `docs/tasks/`, not in this log. Handoff
 **Important findings:** CM-010's first optimistic implementation awaited query cancellation before inserting the bubble and disabled sending while any mutation was pending. Slow cancellation could therefore delay visual insertion, and users could not queue messages. Both constraints are removed while preserving retry and server-backed sent/read states. Type checking and the production build passed.
 
 **Unfinished:** None.
+
+### 2026-07-21 — Codex (GPT-5) — CM-012
+
+**Outcome:** Redesigned `/notifications` into a responsive marketplace activity center with total and unread summaries, accessible filters, destination-aware rows, optimistic read actions, and complete loading, error, and empty states. The completed record is [`docs/tasks/completed/CM-012-notifications-activity-center.md`](tasks/completed/CM-012-notifications-activity-center.md).
+
+**Important findings:** The notification page and navbar used unrelated React Query keys, so reading notifications did not reliably refresh the global badge. Both now use the shared `['notifications']` prefix with separate page and summary subkeys, and read mutations invalidate the prefix after settling. Existing metadata can route message, auction, listing, and offer events to their relevant workspaces. Type checking and the production build passed; signed-out browser QA verified destination-preserving login redirection.
+
+**Unfinished:** No redesign work remains. The page continues to request the latest 50 records, matching the existing notification limit; pagination can be considered separately if notification histories grow beyond that product requirement.

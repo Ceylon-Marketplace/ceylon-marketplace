@@ -60,7 +60,7 @@ export function Navbar() {
   ].includes(user?.role ?? "");
 
   const { data: notifData } = useQuery({
-    queryKey: ["notifications"],
+    queryKey: ["notifications", "summary"],
     queryFn: async () => {
       const { data } = await api.get("/notifications?limit=1");
       return data;

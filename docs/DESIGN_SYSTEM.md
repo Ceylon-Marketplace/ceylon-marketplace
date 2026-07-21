@@ -81,6 +81,14 @@ While the tab is visible and the user remains active, the selected message threa
 
 Sending is optimistic: Enter or the send button synchronously inserts a new bubble and clears the composer before cancellation or network work begins. Every temporary bubble has its own conversation-scoped ID and displays `Sending...`; successful responses replace only their matching bubble, while failures remain visible as `Not sent` with an independent retry action. Do not block the composer while another message is pending, because users can queue multiple sends. The composer uses a bounded textarea, Enter to send, Shift+Enter for a new line, a disabled empty state, and inline send errors. Conversation-list, thread, empty, invalid-selection, error, and authentication-loading states must all retain useful structure.
 
+## Notifications activity center
+
+The authenticated `/notifications` route is a compact marketplace activity center. Its hierarchy is an editorial page heading, a total/unread summary strip, accessible all/unread tabs, and a single continuous activity list. Notification types use consistent Lucide icons and neutral surfaces; coral is reserved for unread rows, unread dots, counts, and interactive emphasis rather than assigning a separate color to every event type.
+
+Rows should provide a useful destination whenever the notification metadata permits it: messages open their conversation, auction events open the auction, listing events open the listing, and offer events open the offers workspace. A row without a destination still supports marking an unread item as read. Loading, unavailable, no-activity, no-unread, and protected-route states must all provide clear feedback or recovery.
+
+Read actions are optimistic so the activity center responds immediately. Notification queries share the `['notifications']` React Query prefix: the page uses an `all` subkey and the navbar badge uses a `summary` subkey. Individual and mark-all mutations invalidate that shared prefix after settling so the page and global unread badge reconcile with the API together.
+
 ## Public homepage
 
 The public `/` route is a dynamic, discovery-first marketplace entry point rather than a generic marketing landing page. Its hero pairs concise buyer/seller actions with listing imagery already present in the marketplace, followed by active categories, recent active listings, and currently live or scheduled auctions. If the database has no suitable listing imagery, the hero falls back to the local marketplace collection image used by the authentication screens. Keep the route dynamically rendered so inventory changes do not depend on a redeploy.
