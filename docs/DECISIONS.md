@@ -46,3 +46,16 @@ Manoj answered the following setup questions for this system (Naveen should revi
 **Decision.** Adopt `AGENTS.md` + `docs/` as the mandatory source of truth for architecture, product context, and decisions, with `docs/AGENT_HANDOFF.md` as an append-only session log. Full protocol is in `AGENTS.md`.
 
 **Consequences.** Every non-trivial task from here forward is expected to read the relevant docs before starting and update them (plus append a handoff entry) before being called done. This is a process change affecting both developers equally, which is why it's logged here rather than just being an unrecorded convention — and why it needs Naveen's explicit sign-off rather than standing on Manoj's alone.
+
+### 0002: Track work with individual task files and stable IDs
+
+- **Date:** 2026-07-21
+- **Author:** Codex (GPT-5)
+- **Status:** Proposed
+- **Signed off by:** Manoj (requested the workflow improvement); pending — needs Naveen's review
+
+**Context.** The shared "Currently in progress" section in `docs/AGENT_HANDOFF.md` mixed mutable task state into an append-only session log. As concurrent developer and agent work grows, that creates a common edit hotspot, weak ownership visibility, and no stable identifier connecting a request to its branch, commits, pull request, handoff, and completion evidence.
+
+**Decision.** Give every non-trivial task a stable, never-reused `CM-###` ID and an individual file under `docs/tasks/`. Directory location records whether the task is in progress, blocked, or completed. Task metadata records ownership, affected areas, likely files, dependencies, acceptance criteria, and verification. The same ID is used in branches, commits, pull requests, and handoffs. `docs/AGENT_HANDOFF.md` remains append-only but no longer owns active status; it contains only concise cross-session context and links to task records.
+
+**Consequences.** Contributors must check active and blocked task files for semantic or file overlap before beginning non-trivial work, create their own task file before implementation, and move it through the documented lifecycle. This adds a small amount of per-task administration while reducing edits to one shared coordination section and making work traceable across artifacts. No automated workflow validator or external issue tracker is introduced in this iteration; those can be considered after the team has used the convention and identified which failures are worth enforcing.

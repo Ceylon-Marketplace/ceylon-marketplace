@@ -24,9 +24,24 @@ This project has already lived through what happens without this discipline: the
 8. [docs/CODING_STANDARDS.md](docs/CODING_STANDARDS.md) — actual lint/TS rules
 9. [docs/TESTING.md](docs/TESTING.md) — what QA coverage actually exists
 10. [docs/DECISIONS.md](docs/DECISIONS.md) — architectural decision log (ADRs)
-11. [docs/AGENT_HANDOFF.md](docs/AGENT_HANDOFF.md) — read **only the last 2–3 entries**
+11. [docs/tasks/README.md](docs/tasks/README.md) — task ownership, lifecycle, and coordination rules
+12. [docs/AGENT_HANDOFF.md](docs/AGENT_HANDOFF.md) — read **only the last 2–3 entries**
 
-Not every task needs all ten. A one-line copy fix doesn't need the database doc. A schema change needs at least ARCHITECTURE, DATABASE, API, and DECISIONS (if it establishes a new pattern).
+Not every task needs every document. A one-line copy fix doesn't need the database doc. A schema change needs at least ARCHITECTURE, DATABASE, API, and DECISIONS (if it establishes a new pattern).
+
+## Task IDs and traceability
+
+Every non-trivial task gets one stable `CM-###` ID and a file created from [`docs/tasks/TASK_TEMPLATE.md`](docs/tasks/TASK_TEMPLATE.md). Use the same ID everywhere the task appears:
+
+- Task file: `docs/tasks/in-progress/CM-042-seller-verification.md`
+- Branch: `feature/CM-042-seller-verification`
+- Commit: `CM-042: add seller verification endpoint`
+- Pull request: `[CM-042] Add seller verification`
+- Handoff entry: `### 2026-07-21 — Codex (GPT-5) — CM-042`
+
+When there is no externally assigned ID, find the highest `CM-###` already present anywhere under `docs/tasks/` and use the next number. IDs are never reused, including for abandoned tasks.
+
+Git commits and pull requests are authoritative for the exact implementation diff. Domain docs describe current behavior, `docs/DECISIONS.md` describes architectural rationale, task files describe ownership and delivery state, and handoffs preserve only context that is useful across sessions.
 
 ## The AGENT_HANDOFF.md protocol
 
@@ -34,7 +49,7 @@ Not every task needs all ten. A one-line copy fix doesn't need the database doc.
 
 - **Before starting:** read the latest entries (last 2–3 is usually enough; scroll back further if you need to trace when something was introduced).
 - **After finishing:** append a new entry. Never edit or delete a prior entry.
-- Each entry includes: date, author (see attribution convention below), task description, what was done and why, files changed, technical decisions made, known issues/stubs left behind, and a recommended next task.
+- Keep entries concise. Include the task ID, outcome, a link to the task file, important findings that cannot be inferred easily from Git or current docs, and unfinished work. Do not duplicate full file lists, current system behavior, or implementation details already recorded elsewhere.
 - **This file is append-only.** If a merge conflict occurs on it, resolve it by keeping **both** entries in chronological order — never by dropping one side. A conflict here is not a real conflict; it's two people writing to the end of a log at once.
 
 ### Attribution convention
@@ -54,13 +69,21 @@ Routine implementation choices (which library function to call, how to name a va
 
 ## Work-in-progress coordination
 
-There is no issue tracker wired into this workflow. To avoid two people (or a person and an agent) colliding on the same area on the same day, `docs/AGENT_HANDOFF.md` keeps a running **"Currently in progress"** section at the top of the file, above the log entries. Before starting non-trivial work:
+There is no issue tracker wired into this workflow. The directories under `docs/tasks/` are the coordination source of truth:
 
-1. Check that section for anything overlapping what you're about to touch.
-2. Add a line for your own task before you start.
-3. Remove your line when you append your completed handoff entry.
+- `in-progress/` — actively owned work
+- `blocked/` — paused work that cannot proceed, with the blocker recorded
+- `completed/` — finished work and its verification record
 
-If the section is empty, you're clear to proceed. If it's stale (a line describing something clearly already shipped), it's fine to remove it — but say so in your handoff entry.
+Before starting non-trivial work:
+
+1. Read every file in `docs/tasks/in-progress/` and `docs/tasks/blocked/`.
+2. Compare the `Areas` and `Likely files` fields with the work you intend to do. File overlap is not automatically a blocker, but shared API contracts, schema, migrations, generated files, or competing behavior changes require explicit coordination before editing.
+3. Create your task file in `docs/tasks/in-progress/` before changing implementation files.
+4. Keep its status, coordination notes, and remaining work current during the task.
+5. Move it to `blocked/` if work pauses on an external dependency, or to `completed/` only after its acceptance criteria and verification record are complete.
+
+Never silently delete a stale task. Move it to the correct directory and record why in the task file and handoff. If an external issue tracker is adopted later, record that change in `docs/DECISIONS.md` and define which system owns status.
 
 ## Docs-as-part-of-implementation
 
@@ -91,5 +114,6 @@ Before calling any non-trivial task done:
 - [ ] Docs updated to match the change (this is not optional, see above)
 - [ ] No dead code left behind
 - [ ] No unnecessary new dependencies added
+- [ ] Task file moved to `docs/tasks/completed/` with acceptance criteria and verification updated
 - [ ] `docs/AGENT_HANDOFF.md` entry appended
 - [ ] `docs/DECISIONS.md` entry added if the change was architecturally significant, with sign-off status noted

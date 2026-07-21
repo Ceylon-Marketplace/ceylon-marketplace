@@ -24,8 +24,8 @@ TBD — needs input from Manoj/Naveen: confirm whether this is live anywhere for
 
 Two developers, everything shared — **no fixed ownership split** between backend/infra and frontend. Either developer works anywhere in the codebase. This means:
 
-- Don't assume a change to `src/app/api/**` or `prisma/schema.prisma` is "someone else's area" — check `docs/AGENT_HANDOFF.md`'s in-progress section (see `AGENTS.md`) instead of assuming based on file location.
-- Because there's no ownership split to fall back on, `docs/AGENT_HANDOFF.md` and `docs/DECISIONS.md` carry more weight than they would on a team with clearer lanes — they're the only mechanism for "who knows about this part of the code."
+- Don't assume a change to `src/app/api/**` or `prisma/schema.prisma` is "someone else's area" — check `docs/tasks/in-progress/` and `docs/tasks/blocked/` (see `AGENTS.md`) instead of assuming based on file location.
+- Because there's no ownership split to fall back on, task files, `docs/AGENT_HANDOFF.md`, and `docs/DECISIONS.md` carry more weight than they would on a team with clearer lanes — together they record who owns current work, what context must survive, and why durable patterns were chosen.
 
 | Name | GitHub | Role |
 | --- | --- | --- |

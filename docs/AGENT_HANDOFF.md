@@ -1,10 +1,8 @@
 # AGENT_HANDOFF.md
 
-**This file is append-only.** Read the protocol in `AGENTS.md` before using it: read the latest 2–3 entries before starting non-trivial work, append (never edit or overwrite) an entry when you finish, and if a merge conflict ever occurs here, resolve it by keeping **both** entries in chronological order — never by dropping one side.
+**This file is append-only.** Read the protocol in `AGENTS.md` before using it: read the latest 2–3 entries before starting non-trivial work, append (never edit or overwrite) a concise entry when you finish, and if a merge conflict ever occurs here, resolve it by keeping **both** entries in chronological order — never by dropping one side.
 
-## Currently in progress
-
-_(empty — nothing in flight as of the entry below. Add a line here before starting non-trivial work; remove it when you append your completed entry.)_
+Active ownership and task status live in `docs/tasks/`, not in this log. Handoffs should point to task files and preserve only important findings or unfinished context that is not obvious from Git and the current domain documentation.
 
 ## Log
 
@@ -33,3 +31,11 @@ _(empty — nothing in flight as of the entry below. Add a line here before star
 - The deployment ambiguity in `docs/DEPLOYMENT.md` is documented but not resolved — no config was deleted, no target was chosen.
 
 **Recommended next task:** Get Naveen's review on `docs/DECISIONS.md` 0001 (the process itself) and resolve the deployment target ambiguity in `docs/DEPLOYMENT.md` — that's the highest-leverage unresolved item since it blocks confidently shipping to production.
+
+### 2026-07-21 — Codex (GPT-5) — CM-001
+
+**Outcome:** Replaced the shared in-progress list with per-task files and stable `CM-###` traceability across tasks, branches, commits, pull requests, and handoffs. The completed record is [`docs/tasks/completed/CM-001-improve-multi-contributor-workflow.md`](tasks/completed/CM-001-improve-multi-contributor-workflow.md); the team-wide convention is proposed in `docs/DECISIONS.md` 0002 pending Naveen's review.
+
+**Important findings:** The production build passes but reports Next.js 15.1.11, while `package.json` and `AGENTS.md` identify 15.1.12. This pre-existing lockfile/package documentation discrepancy was not changed as part of the workflow task. Lint remains unavailable because no ESLint configuration exists.
+
+**Unfinished:** No implementation work remains. Naveen should review proposed ADRs 0001 and 0002; workflow automation is deliberately deferred until practical usage shows which rules are worth enforcing.
