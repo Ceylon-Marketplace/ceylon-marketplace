@@ -77,6 +77,8 @@ The `/listings` route is a product-scanning surface with an editorial page headi
 
 The `/listings/[id]` route shares the auction detail composition: a restrained product gallery and item information on the left, with a sticky 400px decision column on large screens. Price, condition, availability, and the correct buyer action belong in the first viewport. The action adapts to fixed-price, offer, auction, unavailable, signed-out, and seller-owned states. Seller identity and storefront context remain separate from the primary price panel.
 
+Active listing detail content is server-provided as initial TanStack Query data and reused for 30 seconds through bounded route revalidation. The client query still reconciles authenticated `isSaved` state and preserves API-only owner access to non-active listings, but public visitors must not wait for that follow-up request before seeing the product.
+
 Missing media uses a Lucide fallback. Loading states mirror the final two-column shape, and unavailable states include retry and browse actions. Contact seller must call `POST /api/conversations` with `{ listingId }`; there is no `/api/conversations/listing/[id]` route. Offer, save, and contact mutations use inline status feedback rather than browser alerts. Only active listings are public, so completed-transaction review UI does not belong on this route under the current API contract.
 
 The authenticated `/listings/saved` route is a personal buyer collection. It leads with the collection purpose and item count, then reuses the canonical `ListingCard` in a responsive one-, two-, or three-column scanning grid. The remove action belongs below every card so it remains visible to touch, keyboard, and desktop users; do not hide it in a hover-only image overlay.
