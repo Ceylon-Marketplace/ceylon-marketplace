@@ -55,10 +55,10 @@ export function AuthShell({
         <aside className="relative m-3 hidden min-h-[calc(100dvh-1.5rem)] overflow-hidden rounded-3xl bg-gray-900 lg:block">
           <Image
             src="/images/auth/marketplace-collection.jpg"
-            alt="A camera, ceramic vase, trainers, woven bag, and wooden stool arranged as marketplace finds"
+            alt="Ceylon Marketplace shown on a laptop and phone, surrounded by live auction and buy-now listing cards for vehicles, electronics, and real estate"
             fill
             sizes="(min-width: 1024px) 45vw, 0px"
-            className="object-cover"
+            className="object-cover object-right"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-gray-950/5 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 p-8 text-white xl:p-12">
